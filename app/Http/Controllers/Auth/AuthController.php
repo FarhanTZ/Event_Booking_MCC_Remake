@@ -2,52 +2,84 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\LoginUserAction;
+use App\Actions\Auth\RegisterUserAction;
+use App\DataTransferObjects\LoginUserData;
+use App\DataTransferObjects\RegisterUserData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function showLogin(Request $request)
+    /**
+     * Show the login page.
+     */
+    public function showLogin(Request $request): View
     {
-        return view("auth.login");
+        return view('auth.login');
     }
 
-    public function login(Request $request)
+    /**
+     * Handle user login authentication.
+     */
+    public function login(LoginRequest $request, LoginUserAction $action): RedirectResponse
     {
-        $request->validate([
-            "email" => "required|email",
-            "password" => "required",
-        ]);
+        $dto = LoginUserData::fromRequest($request);
+        $user = $action->execute($dto);
 
-        if ($request->filled("redirect_slot")) {
-            return redirect("/booking/wizard?" . $request->input("redirect_slot"))->with("success", "Berhasil masuk! Slot jadwal Anda siap diisi.");
+        if ($dto->redirectSlot) {
+            return redirect('/booking/wizard?' . $dto->redirectSlot)
+                ->with('success', "Selamat datang kembali, {$user->full_name}! Slot reservasi Anda siap dilanjutkan.");
         }
 
-        return redirect("/dashboard")->with("success", "Selamat datang di Portal Pemohon MCC.");
+        return redirect()->intended(route('dashboard'))
+            ->with('success', "Selamat datang kembali, {$user->full_name}!");
     }
 
-    public function showRegister(Request $request)
+    /**
+     * Show the registration page.
+     */
+    public function showRegister(Request $request): View
     {
-        return view("auth.register");
+        return view('auth.register');
     }
 
-    public function register(Request $request)
+    /**
+     * Handle user registration.
+     */
+    public function register(RegisterRequest $request, RegisterUserAction $action): RedirectResponse
     {
-        $request->validate([
-            "name" => "required|string|max:255",
-            "phone" => "required|string|max:20",
-            "email" => "required|string|email|max:255|unique:users",
-            "institution_name" => "required|string|max:255",
-            "institution_type" => "required|string",
-            "password" => "required|string|min:8|confirmed",
-            "terms" => "accepted",
-        ]);
+        $dto = RegisterUserData::fromRequest($request);
+        $user = $action->execute($dto);
 
-        return redirect("/dashboard")->with("success", "Registrasi berhasil! Akun Anda siap digunakan.");
+        // Auto-login user after successful registration
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        if ($request->filled('redirect_slot')) {
+            return redirect('/booking/wizard?' . $request->input('redirect_slot'))
+                ->with('success', 'Pendaftaran berhasil! Silakan lengkapi formulir reservasi Anda.');
+        }
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Pendaftaran berhasil! Selamat datang di Portal Reservasi MCC.');
     }
 
-    public function logout(Request $request)
+    /**
+     * Handle user logout.
+     */
+    public function logout(Request $request): RedirectResponse
     {
-        return redirect("/")->with("success", "Anda telah berhasil keluar.");
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home')
+            ->with('success', 'Anda telah berhasil keluar dari akun.');
     }
 }

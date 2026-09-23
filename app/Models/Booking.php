@@ -2,46 +2,48 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
-    protected  = [
+    protected $fillable = [
         'booking_code',
         'user_id',
-        'room_id',
         'status',
-        'rate_type',
-        'revision_deadline',
+        'clearance_status',
+        'pricing_scheme',
+        'nominal_amount',
+        'payment_notes',
+        'paid_at',
+        'confirmed_by',
         'checkin_token',
         'checked_in_at',
+        'checked_in_by',
+        'completed_at',
+        'completed_by',
+        'revision_deadline',
+        'version',
     ];
 
-    protected  = [
-        'revision_deadline' => 'datetime',
+    protected $casts = [
+        'paid_at' => 'datetime',
         'checked_in_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'revision_deadline' => 'datetime',
+        'nominal_amount' => 'decimal:2',
     ];
 
     public function user()
     {
-        return ->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function room()
+    public function confirmedBy()
     {
-        return ->belongsTo(Room::class);
-    }
-
-    public function slots()
-    {
-        return ->hasMany(BookingSlot::class);
-    }
-
-    public function eventDetail()
-    {
-        return ->hasOne(EventDetail::class);
+        return $this->belongsTo(User::class, 'confirmed_by');
     }
 }

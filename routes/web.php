@@ -37,7 +37,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 | Public User / Authenticated Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/booking/wizard', [BookingWizardController::class, 'index'])->name('booking.wizard');
-Route::post('/booking/wizard', [BookingWizardController::class, 'store'])->name('booking.store');
-Route::get('/my-bookings', [DashboardController::class, 'index'])->name('my-bookings');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/booking/wizard', [BookingWizardController::class, 'index'])->name('booking.wizard');
+    Route::post('/booking/wizard', [BookingWizardController::class, 'store'])->name('booking.store');
+    Route::get('/my-bookings', [DashboardController::class, 'index'])->name('my-bookings');
+});
