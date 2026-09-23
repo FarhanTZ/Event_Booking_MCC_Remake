@@ -1,5 +1,15 @@
 @import "flatpickr/dist/flatpickr.min.css";
+@import "lenis/dist/lenis.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+    /* GPU acceleration helper */
+    .gpu-accelerated {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        perspective: 1000px;
+    }
+}
