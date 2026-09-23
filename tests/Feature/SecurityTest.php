@@ -97,4 +97,38 @@ class SecurityTest extends TestCase
         $responseLettersOnly->assertSessionHasErrors('password');
         $this->assertGuest();
     }
+
+    public function test_security_headers_are_present_on_web_responses(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
+        $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $response->assertHeader('X-XSS-Protection', '1; mode=block');
+        $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    }
+
+    public function test_honeypot_traps_bot_submission_and_aborts_registration(): void
+    {
+        $response = $this->post('/register', [
+            'account_type' => 'komunitas',
+            'full_name' => 'Spam Bot',
+            'email' => 'spambot@mcc.id',
+            'phone_number' => '081234567899',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'institution_name' => 'Bot Automation Inc',
+            'address' => 'Cyber City',
+            'terms' => 'on',
+            'mcc_security_trap' => 'I am an automated bot', // Filled trap
+        ]);
+
+        // Should silently redirect back without saving to database
+        $response->assertRedirect('/');
+        $this->assertDatabaseMissing('users', [
+            'email' => 'spambot@mcc.id'
+        ]);
+        $this->assertGuest();
+    }
 }
+

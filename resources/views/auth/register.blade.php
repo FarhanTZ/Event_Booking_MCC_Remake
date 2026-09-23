@@ -78,6 +78,12 @@
                 @csrf
                 <input type="hidden" name="redirect_slot" value="{{ request('redirect_slot', session('preserved_slot')) }}">
 
+                <!-- Honeypot Security Field (Anti-Bot Trap) -->
+                <div style="display:none !important;" aria-hidden="true">
+                    <label for="mcc_security_trap">Leave this blank</label>
+                    <input type="text" id="mcc_security_trap" name="mcc_security_trap" tabindex="-1" autocomplete="off">
+                </div>
+
                 <!-- 1. Tipe Akun Selector -->
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5">
