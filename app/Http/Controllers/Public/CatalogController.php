@@ -47,7 +47,7 @@ class CatalogController extends Controller
             ->firstOrFail();
 
         // Rekomendasi ruangan lain di lantai yang sama atau lantai terdekat
-        $relatedRooms = Room::with('facilities')
+        $relatedRooms = Room::with(['facilities', 'images'])
             ->where('is_active', true)
             ->where('id', '!=', $room->id)
             ->where('floor_level', $room->floor_level)
@@ -55,7 +55,7 @@ class CatalogController extends Controller
             ->get();
 
         if ($relatedRooms->isEmpty()) {
-            $relatedRooms = Room::with('facilities')
+            $relatedRooms = Room::with(['facilities', 'images'])
                 ->where('is_active', true)
                 ->where('id', '!=', $room->id)
                 ->take(3)
