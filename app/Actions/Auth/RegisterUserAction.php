@@ -18,9 +18,9 @@ class RegisterUserAction
         return DB::transaction(function () use ($data) {
             $logoPath = null;
 
-            // Handle logo / photo upload to storage/app/public/logos
+            // Handle logo / photo upload to storage with security sanitization
             if ($data->logoFile) {
-                $logoPath = $data->logoFile->store('logos', 'public');
+                $logoPath = \App\Services\FileUploadSecurityService::storeImage($data->logoFile, 'logos');
             }
 
             return User::create([

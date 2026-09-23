@@ -396,13 +396,14 @@
                                        id="password" 
                                        name="password" 
                                        required 
-                                       placeholder="Min. 8 karakter"
+                                       placeholder="Kombinasi huruf & angka (min. 8)"
                                        class="block w-full pl-10 pr-10 py-2.5 sm:text-sm rounded-brand border border-slate-300 text-slate-900 focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72] placeholder:text-slate-400 transition-colors">
                                 <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
                                     <i x-show="!showPassword" data-lucide="eye" class="w-4 h-4"></i>
                                     <i x-show="showPassword" data-lucide="eye-off" class="w-4 h-4"></i>
                                 </button>
                             </div>
+                            <p class="mt-1 text-[11px] text-slate-500">Wajib minimal 8 karakter dengan kombinasi huruf dan angka.</p>
                         </div>
 
                         <div>

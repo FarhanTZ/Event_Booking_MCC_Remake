@@ -4,6 +4,7 @@ namespace App\Actions\Auth;
 
 use App\DataTransferObjects\LoginUserData;
 use App\Models\User;
+use App\Services\SecurityAuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
@@ -23,6 +24,8 @@ class LoginUserAction
         ];
 
         if (! Auth::attempt($credentials, $data->remember)) {
+            SecurityAuditLogger::logLoginFailure($data->email, 'Invalid password or email mismatch');
+
             throw ValidationException::withMessages([
                 'email' => ['Kombinasi email dan kata sandi yang Anda masukkan tidak sesuai.'],
             ]);
@@ -33,9 +36,13 @@ class LoginUserAction
 
         // Guard: Check if user is suspended by admin
         if ($user->isSuspended()) {
+            SecurityAuditLogger::logSuspendedAccess($user);
+
             Auth::logout();
-            Session::invalidate();
-            Session::regenerateToken();
+            if (request()->hasSession()) {
+                Session::invalidate();
+                Session::regenerateToken();
+            }
 
             $reason = $user->suspension_reason ? ": {$user->suspension_reason}" : '.';
             throw ValidationException::withMessages([
@@ -47,6 +54,8 @@ class LoginUserAction
         if (request()->hasSession()) {
             request()->session()->regenerate();
         }
+
+        SecurityAuditLogger::logLoginSuccess($user);
 
         return $user;
     }

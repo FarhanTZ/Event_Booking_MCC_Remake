@@ -34,8 +34,13 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'email:rfc,filter', 'max:150', 'unique:users,email'],
             'phone_number' => ['required', 'string', 'max:25', 'unique:users,phone_number'],
             
-            // Password
-            'password' => ['required', 'string', 'confirmed', Password::min(8)],
+            // Password: Minimal 8 karakter, wajib kombinasi huruf dan angka
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(8)->letters()->numbers(),
+            ],
 
             // Identitas Lembaga / Komunitas / Sekolah
             'institution_name' => ['required', 'string', 'max:150'],

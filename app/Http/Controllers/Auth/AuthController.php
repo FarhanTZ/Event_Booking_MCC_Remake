@@ -12,6 +12,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -25,20 +26,32 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle user login authentication.
+     * Handle user login authentication with Anti Brute-Force Rate Limiting.
      */
     public function login(LoginRequest $request, LoginUserAction $action): RedirectResponse
     {
-        $dto = LoginUserData::fromRequest($request);
-        $user = $action->execute($dto);
+        // 1. Guard Anti Brute-Force (Throttle Check)
+        $request->ensureIsNotRateLimited();
 
-        if ($dto->redirectSlot) {
-            return redirect('/booking/wizard?' . $dto->redirectSlot)
-                ->with('success', "Selamat datang kembali, {$user->full_name}! Slot reservasi Anda siap dilanjutkan.");
+        try {
+            $dto = LoginUserData::fromRequest($request);
+            $user = $action->execute($dto);
+
+            // 2. Clear rate limiter on successful authentication
+            $request->clearRateLimiter();
+
+            if ($dto->redirectSlot) {
+                return redirect('/booking/wizard?' . $dto->redirectSlot)
+                    ->with('success', "Selamat datang kembali, {$user->full_name}! Slot reservasi Anda siap dilanjutkan.");
+            }
+
+            return redirect()->intended(route('dashboard'))
+                ->with('success', "Selamat datang kembali, {$user->full_name}!");
+        } catch (ValidationException $e) {
+            // 3. Increment failed attempts counter
+            $request->hitRateLimiter();
+            throw $e;
         }
-
-        return redirect()->intended(route('dashboard'))
-            ->with('success', "Selamat datang kembali, {$user->full_name}!");
     }
 
     /**
@@ -57,7 +70,7 @@ class AuthController extends Controller
         $dto = RegisterUserData::fromRequest($request);
         $user = $action->execute($dto);
 
-        // Auto-login user after successful registration
+        // Auto-login user after successful registration with fresh session
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -71,7 +84,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle user logout.
+     * Handle user logout securely.
      */
     public function logout(Request $request): RedirectResponse
     {
