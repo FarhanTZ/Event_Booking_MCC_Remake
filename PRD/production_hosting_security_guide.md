@@ -131,6 +131,32 @@ Saat deploy ke production, pastikan file `.env` di server memiliki nilai konfigu
   pg_dump -U mcc_user -d mcc_booking_db | gzip > /backup/mcc_db_$(date +\%Y\%m\%d).sql.gz
   ```
 
+- [ ] **PostgreSQL Engine Performance Tuning (`postgresql.conf`)**:
+  Konfigurasi parameter memori pada server VPS produksi:
+  - `shared_buffers = 25% dari total RAM VPS` (contoh: 1GB jika VPS 4GB RAM)
+  - `effective_cache_size = 50% - 75% dari RAM VPS` (contoh: 2GB - 3GB)
+  - `maintenance_work_mem = 256MB`
+  - `checkpoint_completion_target = 0.9`
+  - `wal_buffers = 16MB`
+  - `default_statistics_target = 100`
+
+- [ ] **Connection Pooling (PgBouncer) [Sangat Direkomendasikan untuk Lonjakan Trafik]**:
+  Gunakan PgBouncer sebagai perantara koneksi Laravel ke PostgreSQL agar ribuan request bersamaan tidak memicu error *"FATAL: remaining connection slots are reserved for non-replication superuser connections"*:
+  ```ini
+  # /etc/pgbouncer/pgbouncer.ini
+  [databases]
+  mcc_booking_db = host=127.0.0.1 port=5432 dbname=mcc_booking_db
+
+  [pgbouncer]
+  listen_port = 6432
+  listen_addr = 127.0.0.1
+  auth_type = md5
+  pool_mode = transaction
+  max_client_conn = 500
+  default_pool_size = 25
+  ```
+  *(Di file `.env` Laravel, ubah `DB_PORT=6432` saat menggunakan PgBouncer)*.
+
 ---
 
 ## 📋 Checklist Ringkas Sebelum Go-Live / Launching

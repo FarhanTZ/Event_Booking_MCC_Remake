@@ -35,6 +35,21 @@ class Room extends Model
         'room_size_sqm' => 'decimal:2',
     ];
 
+    /**
+     * The "booted" method of the model.
+     * Invalidate catalog cache whenever a room is created, updated, or deleted.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            \Illuminate\Support\Facades\Cache::forget('mcc_active_rooms_catalog');
+        });
+
+        static::deleted(function () {
+            \Illuminate\Support\Facades\Cache::forget('mcc_active_rooms_catalog');
+        });
+    }
+
     public function images()
     {
         return $this->hasMany(RoomImage::class, 'room_id')->orderBy('sort_order');

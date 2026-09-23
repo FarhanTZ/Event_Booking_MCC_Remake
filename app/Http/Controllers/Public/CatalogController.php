@@ -14,11 +14,13 @@ class CatalogController extends Controller
      */
     public function index(Request $request): View
     {
-        $rooms = Room::with(['facilities', 'images'])
-            ->where('is_active', true)
-            ->orderBy('floor_level')
-            ->orderBy('name')
-            ->get();
+        $rooms = \Illuminate\Support\Facades\Cache::remember('mcc_active_rooms_catalog', 86400, function () {
+            return Room::with(['facilities', 'images'])
+                ->where('is_active', true)
+                ->orderBy('floor_level')
+                ->orderBy('name')
+                ->get();
+        });
 
         $floors = $rooms->pluck('floor_level')->unique()->sort()->values();
 

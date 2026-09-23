@@ -175,6 +175,7 @@ CREATE TABLE bookings (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE INDEX idx_bookings_clearance ON bookings(clearance_status);
 CREATE INDEX idx_bookings_code ON bookings(booking_code);
