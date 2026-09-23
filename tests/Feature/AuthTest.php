@@ -162,6 +162,7 @@ class AuthTest extends TestCase
 
     public function test_user_can_access_dashboard_with_clean_empty_state(): void
     {
+        /** @var User $user */
         $user = User::factory()->create([
             'email' => 'organisasi@mcc.id',
             'password_hash' => 'secret1234',
