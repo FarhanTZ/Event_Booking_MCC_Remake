@@ -31,7 +31,33 @@ return new class extends Migration
             $table->index('is_active');
         });
 
-        // 2. Bookings Table
+        // 2. Room Images Table
+        Schema::create('room_images', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete();
+            $table->string('image_url', 500);
+            $table->string('caption', 150)->nullable();
+            $table->boolean('is_primary')->default(false);
+            $table->integer('sort_order')->default(0);
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->index('room_id');
+        });
+
+        // 3. Room Facilities Table
+        Schema::create('room_facilities', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete();
+            $table->string('facility_name', 100);
+            $table->integer('quantity')->default(1);
+            $table->string('unit', 20)->default('unit');
+            $table->string('condition', 50)->default('good');
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->index('room_id');
+        });
+
+        // 4. Bookings Table
         Schema::create('bookings', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('booking_code', 30)->unique();
