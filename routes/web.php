@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\CatalogController;
 use App\Http\Controllers\Public\CalendarController;
 use App\Http\Controllers\Auth\AuthController;
@@ -12,7 +13,8 @@ use App\Http\Controllers\User\BookingWizardController;
 | Public / Guest Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/', [CatalogController::class, 'index'])->name('catalog.index');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/ruangan/{id}', [CatalogController::class, 'show'])->name('catalog.show');
 Route::get('/jadwal', [CalendarController::class, 'index'])->name('calendar.index');
 

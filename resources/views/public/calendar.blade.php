@@ -28,7 +28,6 @@
           ],
           selectSlot(slot) {
               if (slot.status !== 'available') return;
-              // Redirect to booking wizard with slot query or progressive login if guest
               window.location.href = '/booking/wizard?room_id=' + this.selectedRoomId + '&date=' + this.selectedDate + '&slot=' + encodeURIComponent(slot.time);
           }
       }">
@@ -41,42 +40,41 @@
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
-                    <a href="/" class="hover:text-indigo-600">Katalog</a>
+                    <a href="/" class="hover:text-[#001A72]">Katalog</a>
                     <span>/</span>
-                    <span class="text-indigo-600">Kalender Real-Time</span>
+                    <span class="text-[#001A72] font-bold">Kalender Real-Time</span>
                 </div>
                 <h1 class="text-2xl font-bold text-slate-900">Kalender Ketersediaan Slot Ruangan</h1>
                 <p class="text-xs text-slate-500 mt-0.5">Pantau jadwal real-time operasional 08:00 – 22:00 WIB (Zero Double-Booking Engine).</p>
             </div>
 
-            <!-- Legenda Warna Slot Sesuai FR-USR-03 -->
-            <div class="flex flex-wrap items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200 text-xs">
-                <div class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
-                    <span class="text-slate-700">Tersedia (Available)</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-full bg-amber-400 animate-pulse inline-block"></span>
-                    <span class="text-slate-700">Terkunci 15m (Locked)</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
-                    <span class="text-slate-700">Terisi (Booked)</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-full bg-slate-300 inline-block"></span>
-                    <span class="text-slate-500">Buffer / Jeda (30m)</span>
-                </div>
+            <!-- Status Badges Sesuai Design.md Bagian 1.2 -->
+            <div class="flex flex-wrap items-center gap-2.5 bg-white px-4 py-2.5 rounded-brand border border-slate-200 text-xs shadow-card">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Available (Kosong)
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    Locked 15m
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                    <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                    Booked (Terisi)
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                    <i data-lucide="timer" class="w-3.5 h-3.5 text-slate-400"></i>
+                    Buffer 30m
+                </span>
             </div>
         </div>
 
         <!-- Filter Ruangan & Tanggal Selector -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs mb-8">
+        <div class="bg-white p-5 rounded-brand border border-slate-200 shadow-card mb-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                <!-- Ruangan Dropdown -->
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1.5">Pilih Ruangan</label>
-                    <select x-model="selectedRoomId" class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-600">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Pilih Ruangan</label>
+                    <select x-model="selectedRoomId" class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
                         <option value="1">Auditorium Utama MCC (Lt. 2)</option>
                         <option value="2">Studio Animasi & Mocap (Lt. 4)</option>
                         <option value="3">Co-Working Space & Creative Hub (Lt. 3)</option>
@@ -86,63 +84,58 @@
                     </select>
                 </div>
 
-                <!-- Date Picker Input -->
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1.5">Pilih Tanggal Kegiatan</label>
-                    <div class="relative">
-                        <input type="date" x-model="selectedDate" class="w-full text-sm border-slate-200 rounded-xl focus:ring-indigo-600">
-                    </div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Pilih Tanggal Kegiatan</label>
+                    <input type="date" x-model="selectedDate" class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
                 </div>
 
-                <!-- Info Box -->
-                <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-900 flex items-start gap-2.5">
-                    <i data-lucide="shield-check" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
+                <div class="bg-[#EEF2FF] border border-[#C7D2FE] rounded-brand p-3.5 text-xs text-[#001A72] flex items-start gap-2.5">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-[#001A72] shrink-0 mt-0.5"></i>
                     <div>
                         <span class="font-bold block">Proteksi Double-Booking</span>
-                        <span>Klik slot hijau untuk mengunci hak pengisian form selama 15 menit secara instan.</span>
+                        <span>Pilih slot kosong untuk mengamankan hak pengisian form selama 15 menit via Redis Lock.</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Timeline Grid Jadwal -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="bg-white rounded-brand border border-slate-200 shadow-card overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                 <span class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                    <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
-                    <span>Jadwal Slot Waktu: <span x-text="selectedDate" class="text-indigo-600"></span></span>
+                    <i data-lucide="clock" class="w-4 h-4 text-[#001A72]"></i>
+                    <span>Jadwal Slot Waktu: <span x-text="selectedDate" class="text-[#001A72]"></span></span>
                 </span>
-                <span class="text-xs text-slate-500">Operasional: 08:00 - 22:00 WIB</span>
+                <span class="text-xs text-slate-500 font-medium">Operasional: 08:00 - 22:00 WIB</span>
             </div>
 
             <div class="divide-y divide-slate-100">
                 <template x-for="slot in slots" :key="slot.time">
-                    <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition">
+                    <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#EEF2FF]/40 transition">
                         <div class="flex items-center gap-4">
-                            <span class="font-mono font-semibold text-sm text-slate-800 min-w-32" x-text="slot.time"></span>
+                            <span class="font-mono font-bold text-sm text-slate-800 min-w-32" x-text="slot.time"></span>
                             
-                            <!-- Status Badges -->
                             <div>
                                 <template x-if="slot.status === 'available'">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                                         Slot Kosong & Siap Dipesan
                                     </span>
                                 </template>
                                 <template x-if="slot.status === 'locked'">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                                         <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                                         <span x-text="slot.holder"></span>
                                     </span>
                                 </template>
                                 <template x-if="slot.status === 'booked'">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                        <span class="w-2 h-2 rounded-full bg-rose-600"></span>
                                         <span x-text="'Terisi: ' + slot.event"></span>
                                     </span>
                                 </template>
                                 <template x-if="slot.status === 'buffer'">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
                                         <i data-lucide="timer" class="w-3.5 h-3.5 text-slate-400"></i>
                                         <span x-text="slot.note"></span>
                                     </span>
@@ -150,12 +143,11 @@
                             </div>
                         </div>
 
-                        <!-- Action Button -->
                         <div>
                             <button @click="selectSlot(slot)" 
                                     :disabled="slot.status !== 'available'"
-                                    :class="slot.status === 'available' ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'"
-                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition shadow-xs">
+                                    :class="slot.status === 'available' ? 'bg-[#001A72] hover:bg-[#001250] text-white cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'"
+                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-brand text-xs font-semibold transition-colors shadow-xs">
                                 <i :data-lucide="slot.status === 'available' ? 'lock' : 'slash'" class="w-3.5 h-3.5"></i>
                                 <span x-text="slot.status === 'available' ? 'Kunci & Booking Slot' : 'Slot Tidak Tersedia'"></span>
                             </button>
