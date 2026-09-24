@@ -6,6 +6,28 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $id
+ * @property string $booking_code
+ * @property string $user_id
+ * @property string $status
+ * @property string $clearance_status
+ * @property string $pricing_scheme
+ * @property float $nominal_amount
+ * @property string|null $payment_notes
+ * @property \Carbon\Carbon|null $paid_at
+ * @property string|null $confirmed_by
+ * @property string|null $checkin_token
+ * @property \Carbon\Carbon|null $checked_in_at
+ * @property string|null $checked_in_by
+ * @property \Carbon\Carbon|null $completed_at
+ * @property string|null $completed_by
+ * @property \Carbon\Carbon|null $revision_deadline
+ * @property int $version
+ * 
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking query()
+ * @method static \App\Models\Booking create(array $attributes = [])
+ */
 class Booking extends Model
 {
     use HasFactory, HasUuids;
@@ -45,5 +67,15 @@ class Booking extends Model
     public function confirmedBy()
     {
         return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    public function slots()
+    {
+        return $this->hasMany(BookingSlot::class, 'booking_id');
+    }
+
+    public function eventDetail()
+    {
+        return $this->hasOne(EventDetail::class, 'booking_id');
     }
 }

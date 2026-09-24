@@ -17,6 +17,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/ruangan/{id}', [CatalogController::class, 'show'])->name('catalog.show');
 Route::get('/jadwal', [CalendarController::class, 'index'])->name('calendar.index');
+Route::get('/api/rooms/{id}/availability', [CalendarController::class, 'availability'])->name('calendar.availability');
+Route::post('/api/booking/lock-slot', [CalendarController::class, 'lockSlot'])->name('calendar.lock');
+Route::post('/api/booking/unlock-slot', [CalendarController::class, 'unlockSlot'])->name('calendar.unlock');
 
 /*
 |--------------------------------------------------------------------------

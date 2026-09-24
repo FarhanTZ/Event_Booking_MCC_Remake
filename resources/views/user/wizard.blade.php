@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Formulir Reservasi Ruangan - MCC Event Booking</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased"
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-[#001A72] selection:text-white"
       x-data="{
           currentStep: 1,
           timeRemaining: 900,
           timerInterval: null,
           timeExpiredModal: false,
+          roomId: '{{ $room?->id ?? 1 }}',
+          selectedDate: '{{ $date ?? now()->toDateString() }}',
+          selectedSlot: '{{ $slotTime ?? "08:00 - 09:00" }}',
+          roomName: '{{ $room?->name ?? "Auditorium Utama MCC" }} (Lt. {{ $room?->floor_level ?? 2 }})',
           
           form: {
               pic_name: 'Ahmad Fauzi',
@@ -59,10 +64,36 @@
           prevStep() {
               if (this.currentStep > 1) this.currentStep--;
               window.scrollTo({ top: 0, behavior: 'smooth' });
+          },
+
+          async cancelBooking() {
+              if (confirm('Apakah Anda yakin ingin membatalkan pemesanan ini? Kunci slot ruangan akan langsung dilepas seketika agar dapat dipesan orang lain.')) {
+                  try {
+                      const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+                      await fetch('/api/booking/unlock-slot', {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Accept': 'application/json',
+                              'X-CSRF-TOKEN': csrfToken,
+                              'X-Requested-With': 'XMLHttpRequest'
+                          },
+                          body: JSON.stringify({
+                              room_id: parseInt(this.roomId),
+                              date: this.selectedDate,
+                              slot_time: this.selectedSlot
+                          })
+                      });
+                  } catch (e) {
+                      console.error('Gagal melepas kunci slot:', e);
+                  } finally {
+                      window.location.href = `/jadwal?room_id=${this.roomId}&date=${this.selectedDate}`;
+                  }
+              }
           }
       }">
 
-    <!-- Floating Redis Lock Countdown Bar Sesuai Design.md Bagian 3.4 -->
+    <!-- Floating Redis Lock Countdown Bar -->
     <div class="sticky top-0 z-40 bg-[#001A72] text-white px-4 py-2.5 shadow-md flex items-center justify-between">
         <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -77,12 +108,15 @@
     <!-- Header Navigation -->
     <header class="bg-white border-b border-slate-200 py-4 px-4 sm:px-8">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <a href="/jadwal" class="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-[#001A72]">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <!-- Tombol Batal & Release Lock Instan -->
+            <button type="button" 
+                    @click="cancelBooking()" 
+                    class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-rose-600 transition-colors cursor-pointer group">
+                <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"></i>
                 <span>Batal & Kembali ke Kalender</span>
-            </a>
-            <span class="text-xs font-bold text-[#001A72] bg-[#EEF2FF] px-3 py-1 rounded-full border border-[#C7D2FE]">
-                Auditorium Utama MCC (Lt. 2)
+            </button>
+            
+            <span class="text-xs font-bold text-[#001A72] bg-[#EEF2FF] px-3 py-1 rounded-full border border-[#C7D2FE]" x-text="roomName">
             </span>
         </div>
     </header>
@@ -110,7 +144,7 @@
             </div>
         </div>
 
-        <!-- Form Card Container Sesuai Design.md -->
+        <!-- Form Card Container -->
         <div class="bg-white rounded-brand border border-slate-200 shadow-card p-6 sm:p-8">
             <!-- Step 1 -->
             <div x-show="currentStep === 1" class="space-y-6">
@@ -121,25 +155,25 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama Lengkap PIC</label>
-                        <input type="text" x-model="form.pic_name" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 font-medium" readonly>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama PIC Pemohon</label>
+                        <input type="text" x-model="form.pic_name" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nomor WhatsApp PIC</label>
-                        <input type="text" x-model="form.pic_phone" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 font-medium" readonly>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">No. WhatsApp PIC</label>
+                        <input type="text" x-model="form.pic_phone" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Email PIC</label>
+                        <input type="email" x-model="form.pic_email" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama Lembaga / Komunitas</label>
-                        <input type="text" x-model="form.institution_name" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 font-medium" readonly>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Kontak Darurat Lapangan (PIC 2) <span class="text-rose-500">*</span></label>
-                        <input type="text" x-model="form.pic_emergency" placeholder="Nomor HP PIC Cadangan" class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
+                        <input type="text" x-model="form.institution_name" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
                     </div>
                 </div>
 
                 <div class="pt-4 flex justify-end">
-                    <button type="button" @click="nextStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-[#001A72] text-white text-sm font-semibold shadow-sm hover:bg-[#001250] transition-colors">
+                    <button type="button" @click="nextStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-sm font-semibold shadow-xs transition-colors">
                         Lanjut ke Detail Acara &rarr;
                     </button>
                 </div>
@@ -148,95 +182,99 @@
             <!-- Step 2 -->
             <div x-show="currentStep === 2" class="space-y-6">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Langkah 2: Detail Kegiatan & Fasilitas</h2>
-                    <p class="text-xs text-slate-500">Jelaskan kegiatan yang akan diadakan di Malang Creative Center.</p>
+                    <h2 class="text-lg font-bold text-slate-900">Langkah 2: Deskripsi & Kebutuhan Kegiatan</h2>
+                    <p class="text-xs text-slate-500">Jelaskan kegiatan kreatif yang akan diselenggarakan di MCC.</p>
                 </div>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama Kegiatan / Event <span class="text-rose-500">*</span></label>
-                        <input type="text" x-model="form.event_name" placeholder="Contoh: Malang Design Week 2026" class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama Kegiatan / Event *</label>
+                        <input type="text" x-model="form.event_name" placeholder="Contoh: Workshop Blender 3D Animation Basic" class="w-full text-sm border-slate-300 rounded-brand">
                     </div>
-
+                    
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Kategori Kegiatan <span class="text-rose-500">*</span></label>
-                            <select x-model="form.event_category" class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
-                                <option value="">-- Pilih Kategori --</option>
-                                <option value="workshop">Workshop & Pelatihan</option>
-                                <option value="seminar">Seminar / Talkshow</option>
-                                <option value="pameran">Pameran & Ekshibisi Seni</option>
-                                <option value="pertunjukan">Pertunjukan Seni & Musik</option>
-                                <option value="rapat">Rapat / Musyawarah</option>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Kategori Kegiatan *</label>
+                            <select x-model="form.event_category" class="w-full text-sm border-slate-300 rounded-brand">
+                                <option value="">Pilih Kategori</option>
+                                <option value="Workshop / Pelatihan">Workshop / Pelatihan</option>
+                                <option value="Pameran / Eksibisi">Pameran / Eksibisi</option>
+                                <option value="Diskusi / Seminar">Diskusi / Seminar</option>
+                                <option value="Pertunjukan Seni / Musik">Pertunjukan Seni / Musik</option>
+                                <option value="Meetup Komunitas">Meetup Komunitas</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Estimasi Jumlah Peserta <span class="text-rose-500">*</span></label>
-                            <input type="number" x-model="form.estimated_participants" max="450" class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Estimasi Jumlah Peserta *</label>
+                            <input type="number" x-model="form.estimated_participants" min="1" max="1000" class="w-full text-sm border-slate-300 rounded-brand">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Deskripsi Singkat Acara <span class="text-rose-500">*</span></label>
-                        <textarea x-model="form.event_description" rows="3" placeholder="Tuliskan tujuan kegiatan dan susunan ringkas acara..." class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]"></textarea>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Deskripsi Ringkas Kegiatan *</label>
+                        <textarea x-model="form.event_description" rows="3" placeholder="Tuliskan tujuan, susunan acara garis besar, dan target peserta..." class="w-full text-sm border-slate-300 rounded-brand"></textarea>
                     </div>
                 </div>
 
                 <div class="pt-4 flex justify-between">
                     <button type="button" @click="prevStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">Kembali</button>
-                    <button type="button" @click="nextStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-[#001A72] text-white text-sm font-semibold hover:bg-[#001250] transition-colors">Lanjut ke Dokumen &rarr;</button>
+                    <button type="button" @click="nextStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-sm font-semibold shadow-xs transition-colors">Lanjut ke Dokumen Proposal &rarr;</button>
                 </div>
             </div>
 
             <!-- Step 3 -->
             <div x-show="currentStep === 3" class="space-y-6">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Langkah 3: Dokumen Legalitas & Komitmen Jaminan KTP</h2>
-                    <p class="text-xs text-slate-500">Unggah proposal resmi bertandatangan dan setujui SOP operasional gedung MCC.</p>
+                    <h2 class="text-lg font-bold text-slate-900">Langkah 3: Unggah Proposal & Persetujuan Jaminan KTP</h2>
+                    <p class="text-xs text-slate-500">Unggah proposal resmi bertandatangan/stempel lembaga.</p>
                 </div>
 
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Unggah Berkas Proposal Acara (.PDF, Maks. 5 MB) <span class="text-rose-500">*</span></label>
-                        <div class="border-2 border-dashed border-slate-300 rounded-brand p-6 text-center hover:border-[#001A72] transition bg-slate-50">
-                            <i data-lucide="file-up" class="w-8 h-8 text-[#001A72] mx-auto mb-2"></i>
-                            <span class="block text-xs font-semibold text-slate-700">Klik untuk memilih file PDF proposal</span>
-                            <input type="file" accept=".pdf" class="mt-3 text-xs text-slate-500 mx-auto">
-                        </div>
-                    </div>
+                <div class="border-2 border-dashed border-slate-300 rounded-brand p-8 text-center hover:border-[#001A72] transition-colors">
+                    <i data-lucide="file-up" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
+                    <p class="text-xs font-bold text-slate-700">Klik untuk upload atau drag and drop file proposal</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Format PDF (Maksimal 10 MB)</p>
+                </div>
 
-                    <div class="bg-amber-50 border border-amber-200 rounded-brand p-4 flex items-start gap-3">
-                        <input id="tos_ktp" type="checkbox" x-model="form.tos_agreed" class="mt-1 h-4 w-4 rounded-xs border-amber-400 text-[#001A72] focus:ring-[#001A72]">
-                        <label for="tos_ktp" class="text-xs text-amber-900 font-medium leading-relaxed">
-                            <strong>Pernyataan Jaminan KTP Asli:</strong><br>
-                            "Saya menyetujui bahwa penanggung jawab acara (PIC) <strong>wajib menyerahkan FISIK KTP ASLI</strong> di meja Front Office lantai dasar saat check-in hari-H sebagai jaminan kepatuhan fasilitas dan pengembalian ruangan dalam kondisi semula."
-                        </label>
-                    </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-brand p-4 text-xs text-amber-900 space-y-2">
+                    <span class="font-bold block flex items-center gap-1.5 text-amber-950">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-700"></i> Ketentuan Kustodian Fisik Jaminan KTP (SOP MCC)
+                    </span>
+                    <p class="leading-relaxed">
+                        PIC Pemohon diwajibkan menitipkan <strong>1 lembar KTP asli</strong> kepada petugas Front Office saat Check-in operasional dan akan disimpan dalam KTP Vault Box resmi. KTP akan dikembalikan penuh saat Check-out setelah Berita Acara Clearance dinyatakan bersih.
+                    </p>
+                    <label class="flex items-center gap-2 pt-2 cursor-pointer">
+                        <input type="checkbox" x-model="form.tos_agreed" class="rounded-sm text-[#001A72] focus:ring-[#001A72]">
+                        <span class="font-bold text-slate-900">Saya memahami dan menyetujui SOP Penitipan Jaminan KTP Fisik MCC.</span>
+                    </label>
                 </div>
 
                 <div class="pt-4 flex justify-between">
                     <button type="button" @click="prevStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">Kembali</button>
-                    <button type="button" :disabled="!form.tos_agreed" @click="nextStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-[#001A72] text-white text-sm font-semibold hover:bg-[#001250] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Review & Konfirmasi &rarr;</button>
+                    <button type="button" @click="nextStep()" :disabled="!form.tos_agreed" :class="form.tos_agreed ? 'bg-[#001A72] hover:bg-[#001250] text-white cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand text-sm font-semibold shadow-xs transition-colors">Lanjut ke Ringkasan &rarr;</button>
                 </div>
             </div>
 
             <!-- Step 4 -->
             <div x-show="currentStep === 4" class="space-y-6">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Langkah 4: Rekapitulasi & Konfirmasi Pengajuan</h2>
-                    <p class="text-xs text-slate-500">Periksa kembali data sebelum mengirimkan permohonan ke tim kurasi MCC.</p>
+                    <h2 class="text-lg font-bold text-slate-900">Langkah 4: Konfirmasi Permohonan</h2>
+                    <p class="text-xs text-slate-500">Periksa kembali data reservasi Anda sebelum dikirimkan ke tim kurasi Marketing MCC.</p>
                 </div>
 
-                <div class="bg-slate-50 rounded-brand p-4 space-y-3 text-xs border border-slate-200">
-                    <div class="grid grid-cols-3 gap-2">
-                        <span class="text-slate-500 font-semibold">Ruangan & Jadwal:</span>
-                        <span class="col-span-2 font-bold text-slate-900">Auditorium Utama MCC (Lt. 2)</span>
+                <div class="bg-slate-50 rounded-brand p-5 border border-slate-200 space-y-3 text-xs">
+                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
+                        <span class="text-slate-500 font-semibold">Ruangan & Slot:</span>
+                        <span class="col-span-2 font-bold text-slate-900" x-text="roomName + ' &bull; ' + selectedDate + ' (' + selectedSlot + ')'"></span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
                         <span class="text-slate-500 font-semibold">Nama Acara:</span>
-                        <span class="col-span-2 font-bold text-slate-900" x-text="form.event_name || 'Acara Kreatif'"></span>
+                        <span class="col-span-2 font-bold text-[#001A72]" x-text="form.event_name || '-'"></span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
+                        <span class="text-slate-500 font-semibold">Estimasi Peserta:</span>
+                        <span class="col-span-2 font-bold text-slate-900" x-text="form.estimated_participants + ' Orang'"></span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
                         <span class="text-slate-500 font-semibold">Pemohon / PIC:</span>
                         <span class="col-span-2 font-bold text-slate-900" x-text="form.pic_name + ' (' + form.institution_name + ')'"></span>
                     </div>
@@ -250,7 +288,7 @@
 
                 <div class="pt-4 flex justify-between">
                     <button type="button" @click="prevStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">Kembali</button>
-                    <button type="button" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition-colors flex items-center gap-2">
+                    <button type="button" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition-colors flex items-center gap-2 cursor-pointer">
                         <i data-lucide="send" class="w-4 h-4"></i>
                         <span>Kirim Pengajuan Permohonan</span>
                     </button>
@@ -278,5 +316,13 @@
     <div class="py-6 text-center text-xs text-slate-400">
         &copy; {{ date('Y') }} Malang Creative Center. Zero Double-Booking Protection.
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
 </body>
 </html>

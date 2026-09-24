@@ -70,6 +70,11 @@ class Room extends Model
         return $this->hasMany(Booking::class, 'room_id');
     }
 
+    public function bookingSlots()
+    {
+        return $this->hasMany(BookingSlot::class, 'room_id');
+    }
+
     /**
      * Get primary image URL or fallback to real local MCC asset based on room name/floor.
      */

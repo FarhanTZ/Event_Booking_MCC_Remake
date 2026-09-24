@@ -14,7 +14,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \App\Contracts\RoomAvailabilityCalculatorInterface::class,
+            \App\Services\RoomAvailabilityService::class
+        );
+
+        $this->app->bind(
+            \App\Contracts\SlotLockServiceInterface::class,
+            \App\Services\SlotLockService::class
+        );
     }
 
     /**
