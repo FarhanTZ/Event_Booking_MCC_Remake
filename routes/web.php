@@ -20,6 +20,8 @@ Route::get('/jadwal', [CalendarController::class, 'index'])->name('calendar.inde
 Route::get('/api/rooms/{id}/availability', [CalendarController::class, 'availability'])->name('calendar.availability');
 Route::post('/api/booking/lock-slot', [CalendarController::class, 'lockSlot'])->name('calendar.lock');
 Route::post('/api/booking/unlock-slot', [CalendarController::class, 'unlockSlot'])->name('calendar.unlock');
+Route::post('/api/booking/batch-lock', [CalendarController::class, 'batchLock'])->name('calendar.batch-lock');
+Route::post('/api/booking/batch-unlock', [CalendarController::class, 'batchUnlock'])->name('calendar.batch-unlock');
 
 /*
 |--------------------------------------------------------------------------

@@ -210,4 +210,74 @@ class CalendarAvailabilityTest extends TestCase
         $this->assertCount(14, $slots);
         $this->assertEquals('maintenance', $slots[0]['status']);
     }
+
+    public function test_user_can_acquire_atomic_batch_lock_for_multiple_rooms_and_dates(): void
+    {
+        $room2 = Room::query()->create([
+            'id' => 2,
+            'name' => 'Studio Podcast MCC',
+            'slug' => 'studio-podcast-mcc-2',
+            'floor_level' => 2,
+            'capacity' => 10,
+            'description' => 'Studio rekaman podcast.',
+            'is_active' => true,
+        ]);
+
+        $date1 = now()->addDays(4)->toDateString();
+        $date2 = now()->addDays(5)->toDateString();
+
+        $response = $this->postJson('/api/booking/batch-lock', [
+            'slots' => [
+                ['room_id' => $this->room->id, 'date' => $date1, 'slot_time' => '08:00 - 09:00'],
+                ['room_id' => $this->room->id, 'date' => $date1, 'slot_time' => '09:00 - 10:00'],
+                ['room_id' => $room2->id, 'date' => $date2, 'slot_time' => '13:00 - 14:00'],
+            ],
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+        ]);
+    }
+
+    public function test_atomic_batch_lock_rolls_back_all_slots_if_one_conflicts(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+
+        $date = now()->addDays(10)->toDateString();
+
+        // 1. User A locks slot 09:00 - 10:00
+        $this->actingAs($userA)->postJson('/api/booking/lock-slot', [
+            'room_id' => $this->room->id,
+            'date' => $date,
+            'slot_time' => '09:00 - 10:00',
+        ])->assertStatus(200);
+
+        // 2. User B tries to batch lock 3 slots including the one held by User A
+        $response = $this->actingAs($userB)->postJson('/api/booking/batch-lock', [
+            'slots' => [
+                ['room_id' => $this->room->id, 'date' => $date, 'slot_time' => '08:00 - 09:00'],
+                ['room_id' => $this->room->id, 'date' => $date, 'slot_time' => '09:00 - 10:00'], // Conflicting!
+                ['room_id' => $this->room->id, 'date' => $date, 'slot_time' => '10:00 - 11:00'],
+            ],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
+        ]);
+        $this->assertArrayHasKey('conflict_slot', $response->json());
+        $this->assertEquals('09:00 - 10:00', $response->json('conflict_slot.slot_time'));
+
+        // 3. Verify that 08:00 - 09:00 was rolled back and NOT locked by User B
+        $userC = User::factory()->create();
+        $resC = $this->actingAs($userC)->postJson('/api/booking/lock-slot', [
+            'room_id' => $this->room->id,
+            'date' => $date,
+            'slot_time' => '08:00 - 09:00',
+        ]);
+        $resC->assertStatus(200);
+        $resC->assertJson(['success' => true]);
+    }
 }

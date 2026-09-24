@@ -163,4 +163,73 @@ class BookingWizardTest extends TestCase
 
         $response->assertSessionHasErrors('estimated_participants');
     }
+
+    public function test_user_can_submit_multi_room_and_multi_date_booking_proposal(): void
+    {
+        $room2 = Room::query()->create([
+            'id' => 2,
+            'name' => 'Lab Komputer Kreatif',
+            'slug' => 'lab-komputer-kreatif-2',
+            'floor_level' => 4,
+            'capacity' => 50,
+            'description' => 'Lab workstation untuk coding dan game dev.',
+            'is_active' => true,
+            'buffer_minutes' => 30,
+            'base_hourly_rate' => 0.00,
+        ]);
+
+        $proposalFile = UploadedFile::fake()->create('proposal_hackathon.pdf', 800, 'application/pdf');
+
+        $date1 = now()->addDays(2)->toDateString();
+        $date2 = now()->addDays(3)->toDateString();
+
+        $response = $this->actingAs($this->user)->post('/booking/wizard', [
+            'sessions' => [
+                [
+                    'room_id' => $this->room->id,
+                    'date' => $date1,
+                    'slots' => ['08:00 - 09:00', '09:00 - 10:00'],
+                ],
+                [
+                    'room_id' => $room2->id,
+                    'date' => $date2,
+                    'slots' => ['13:00 - 14:00', '14:00 - 15:00'],
+                ],
+            ],
+            'pic_name' => 'Farhan Multi PIC',
+            'pic_phone' => '+628123456789',
+            'event_name' => 'Malang Game Jam & Hackathon 2026',
+            'event_category' => 'Komunitas',
+            'ekraf_subsector' => 'Game',
+            'event_type' => 'Terbuka Untuk Umum',
+            'estimated_participants' => 40,
+            'event_description' => 'Kompetisi pengembangan game 48 jam.',
+            'proposal_file' => $proposalFile,
+            'tos_agreed' => '1',
+        ]);
+
+        $response->assertRedirect('/dashboard');
+        $response->assertSessionHas('success');
+
+        // Verify 1 single booking record created
+        $booking = Booking::query()->where('user_id', $this->user->id)->latest('created_at')->first();
+        $this->assertNotNull($booking);
+
+        // Verify 2 BookingSlot records for the 2 sessions
+        $slots = BookingSlot::query()->where('booking_id', $booking->id)->get();
+        $this->assertCount(2, $slots);
+
+        $roomIds = $slots->pluck('room_id')->toArray();
+        $this->assertContains(1, $roomIds);
+        $this->assertContains(2, $roomIds);
+
+        // Verify Event Details
+        $this->assertDatabaseHas('event_details', [
+            'booking_id' => $booking->id,
+            'event_name' => 'Malang Game Jam & Hackathon 2026',
+            'ekraf_subsector' => 'Game',
+            'estimated_participants' => 40,
+        ]);
+    }
 }
+

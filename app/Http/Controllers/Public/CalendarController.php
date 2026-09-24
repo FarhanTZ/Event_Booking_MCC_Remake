@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Actions\Availability\BatchLockSlotsAction;
+use App\Actions\Availability\BatchUnlockSlotsAction;
 use App\Actions\Availability\GetRoomAvailabilityAction;
 use App\Actions\Availability\LockRoomSlotAction;
 use App\Actions\Availability\UnlockRoomSlotAction;
 use App\DataTransferObjects\Availability\RoomAvailabilityQueryData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Availability\BatchLockSlotRequest;
+use App\Http\Requests\Availability\BatchUnlockSlotRequest;
 use App\Http\Requests\Availability\GetRoomAvailabilityRequest;
 use App\Http\Requests\Availability\LockSlotRequest;
 use App\Http\Requests\Availability\UnlockSlotRequest;
@@ -73,7 +77,7 @@ class CalendarController extends Controller
     }
 
     /**
-     * API endpoint to acquire a temporary 15-minute slot lock.
+     * API endpoint to acquire a single temporary 15-minute slot lock.
      */
     public function lockSlot(
         LockSlotRequest $request,
@@ -85,7 +89,7 @@ class CalendarController extends Controller
     }
 
     /**
-     * API endpoint to release a temporary slot lock upon cancellation.
+     * API endpoint to release a single temporary slot lock upon cancellation.
      */
     public function unlockSlot(
         UnlockSlotRequest $request,
@@ -96,6 +100,37 @@ class CalendarController extends Controller
         return response()->json([
             'success' => $success,
             'message' => $success ? 'Kunci slot berhasil dilepas.' : 'Gagal melepas kunci slot.',
+        ]);
+    }
+
+    /**
+     * API endpoint for atomic multi-slot batch locking (REQ-USR-07.B).
+     */
+    public function batchLock(
+        BatchLockSlotRequest $request,
+        BatchLockSlotsAction $action
+    ): JsonResponse {
+        $userId = auth()->id() ? (string) auth()->id() : 'guest_' . session()->getId();
+        $slotDtos = $request->toSlotDtos($userId);
+        $result = $action->execute($slotDtos, $userId);
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * API endpoint for releasing atomic multi-slot batch locks.
+     */
+    public function batchUnlock(
+        BatchUnlockSlotRequest $request,
+        BatchUnlockSlotsAction $action
+    ): JsonResponse {
+        $userId = auth()->id() ? (string) auth()->id() : 'guest_' . session()->getId();
+        $slotDtos = $request->toSlotDtos($userId);
+        $success = $action->execute($slotDtos, $userId);
+
+        return response()->json([
+            'success' => $success,
+            'message' => $success ? 'Seluruh kunci slot berhasil dilepas.' : 'Gagal melepas kunci slot.',
         ]);
     }
 }

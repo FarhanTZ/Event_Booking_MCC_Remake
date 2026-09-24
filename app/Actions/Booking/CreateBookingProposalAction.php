@@ -20,12 +20,12 @@ class CreateBookingProposalAction
     ) {}
 
     /**
-     * Execute the use case to create a new booking proposal.
+     * Execute the use case to create a new booking proposal with multi-session support.
      */
     public function execute(CreateBookingProposalData $data): Booking
     {
         return DB::transaction(function () use ($data) {
-            $room = Room::findOrFail($data->roomId);
+            $sessions = $data->getSessions();
 
             // 1. Upload files securely
             $proposalPath = $data->proposalFile->store('proposals', 'public');
@@ -37,18 +37,27 @@ class CreateBookingProposalAction
                 $posterUrl = '/storage/' . $posterPath;
             }
 
-            // 2. Determine pricing scheme
+            // 2. Determine pricing scheme and total nominal amount across all sessions
             $isCommercial = str_contains(strtolower($data->eventType), 'berbayar') 
                 || str_contains(strtolower($data->eventType), 'komersial');
             $pricingScheme = $isCommercial ? 'commercial' : 'subsidy';
-            $nominalAmount = $isCommercial ? (float) ($room->base_hourly_rate * count($data->slots)) : 0.00;
+
+            $totalNominalAmount = 0.00;
+            if ($isCommercial) {
+                foreach ($sessions as $session) {
+                    $room = Room::find($session['room_id']);
+                    $hourlyRate = $room ? (float) $room->base_hourly_rate : 0.00;
+                    $totalNominalAmount += ($hourlyRate * count($session['slots']));
+                }
+            }
 
             // 3. Generate Unique Booking Code
-            $datePrefix = Carbon::parse($data->date)->format('Ymd');
+            $firstDate = $sessions[0]['date'] ?? $data->date;
+            $datePrefix = Carbon::parse($firstDate)->format('Ymd');
             $randomCode = strtoupper(Str::random(5));
             $bookingCode = "MCC-{$datePrefix}-{$randomCode}";
 
-            // 4. Create Main Booking Record
+            // 4. Create Main Booking Record (Single booking transaction)
             /** @var Booking $booking */
             $booking = Booking::query()->create([
                 'id' => (string) Str::uuid(),
@@ -57,28 +66,47 @@ class CreateBookingProposalAction
                 'status' => 'awaiting_marketing',
                 'clearance_status' => 'pending',
                 'pricing_scheme' => $pricingScheme,
-                'nominal_amount' => $nominalAmount,
+                'nominal_amount' => $totalNominalAmount,
                 'version' => 1,
             ]);
 
-            // 5. Calculate overall event start and end time from slots array
-            $sortedSlots = collect($data->slots)->sort()->values();
-            $firstSlotStart = substr(trim($sortedSlots->first()), 0, 5); // "08:00"
-            $lastSlotEnd = substr(trim($sortedSlots->last()), -5);      // "10:00"
+            // 5. Create BookingSlot Records for all sessions
+            $allLockSlotsToRelease = [];
 
-            $eventStartAt = Carbon::parse("{$data->date} {$firstSlotStart}:00", 'Asia/Jakarta');
-            $eventEndAt = Carbon::parse("{$data->date} {$lastSlotEnd}:00", 'Asia/Jakarta');
+            foreach ($sessions as $session) {
+                $roomId = (int) $session['room_id'];
+                $sessionDate = (string) $session['date'];
+                $sessionSlots = (array) $session['slots'];
 
-            // 6. Create BookingSlot Record (PostgreSQL Trigger will automatically calculate operational_range with 30m buffer)
-            BookingSlot::query()->create([
-                'booking_id' => (string) $booking->id,
-                'room_id' => $data->roomId,
-                'event_start_at' => $eventStartAt,
-                'event_end_at' => $eventEndAt,
-                'is_active' => true,
-            ]);
+                // Sort slots to find overall start and end time of this session
+                $sortedSlots = collect($sessionSlots)->sort()->values();
+                if ($sortedSlots->isNotEmpty()) {
+                    $firstSlotStart = substr(trim($sortedSlots->first()), 0, 5); // e.g. "08:00"
+                    $lastSlotEnd = substr(trim($sortedSlots->last()), -5);       // e.g. "10:00"
 
-            // 7. Create EventDetail Record
+                    $eventStartAt = Carbon::parse("{$sessionDate} {$firstSlotStart}:00", 'Asia/Jakarta');
+                    $eventEndAt = Carbon::parse("{$sessionDate} {$lastSlotEnd}:00", 'Asia/Jakarta');
+
+                    BookingSlot::query()->create([
+                        'booking_id' => (string) $booking->id,
+                        'room_id' => $roomId,
+                        'event_start_at' => $eventStartAt,
+                        'event_end_at' => $eventEndAt,
+                        'is_active' => true,
+                    ]);
+                }
+
+                foreach ($sessionSlots as $slot) {
+                    $allLockSlotsToRelease[] = new LockSlotData(
+                        roomId: $roomId,
+                        date: $sessionDate,
+                        slotTime: $slot,
+                        userId: $data->userId
+                    );
+                }
+            }
+
+            // 6. Create EventDetail Record
             EventDetail::query()->create([
                 'booking_id' => (string) $booking->id,
                 'event_name' => $data->eventName,
@@ -99,15 +127,8 @@ class CreateBookingProposalAction
                 'tos_agreed_at' => now(),
             ]);
 
-            // 8. Release temporary slot locks from cache
-            foreach ($data->slots as $slot) {
-                $this->lockService->releaseLock(new LockSlotData(
-                    roomId: $data->roomId,
-                    date: $data->date,
-                    slotTime: $slot,
-                    userId: $data->userId
-                ));
-            }
+            // 7. Release temporary slot locks from cache
+            $this->lockService->batchReleaseLocks($allLockSlotsToRelease, $data->userId);
 
             return $booking;
         });
