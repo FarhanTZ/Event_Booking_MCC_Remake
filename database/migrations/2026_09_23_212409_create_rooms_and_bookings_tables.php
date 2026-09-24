@@ -162,10 +162,14 @@ return new class extends Migration
             $table->foreignUuid('booking_id')->unique()->constrained('bookings')->cascadeOnDelete();
             $table->string('event_name', 200);
             $table->string('event_category', 100);
-            $table->integer('estimated_participants');
+            $table->string('ekraf_subsector', 100)->nullable();
+            $table->string('event_type', 50)->nullable();
+            $table->integer('estimated_participants')->default(0);
             $table->text('event_description');
+            $table->text('equipment_needed')->nullable();
             $table->jsonb('requested_facilities')->default('[]');
             $table->string('proposal_file_url', 500);
+            $table->string('poster_image_url', 500)->nullable();
             $table->string('pic_name_snapshot', 150);
             $table->string('pic_phone_snapshot', 25);
             $table->string('institution_name_snapshot', 150);
