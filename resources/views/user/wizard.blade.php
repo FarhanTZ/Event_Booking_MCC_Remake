@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Formulir Reservasi Ruangan - MCC Event Booking</title>
+    <title>Formulir Reservasi Ruangan - Malang Creative Center (MCC)</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -12,30 +12,30 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-[#001A72] selection:text-white"
       x-data="{
-          currentStep: 1,
           timeRemaining: 900,
           timerInterval: null,
           timeExpiredModal: false,
-          roomId: '{{ $room?->id ?? 1 }}',
-          selectedDate: '{{ $date ?? now()->toDateString() }}',
-          selectedSlot: '{{ $slotTime ?? "08:00 - 09:00" }}',
-          roomName: '{{ $room?->name ?? "Auditorium Utama MCC" }} (Lt. {{ $room?->floor_level ?? 2 }})',
           
+          roomId: '{{ $room->id }}',
+          selectedDate: '{{ $date }}',
+          selectedSlot: '{{ $slotTime }}',
+          roomCapacity: {{ $room->capacity }},
+          
+          proposalFileName: '',
+          proposalFileSize: '',
+          posterFileName: '',
+          posterPreviewUrl: '',
+
           form: {
-              pic_name: 'Ahmad Fauzi',
-              pic_phone: '081234567890',
-              pic_email: 'fauzi@komunitasdesain.id',
-              pic_emergency: '',
-              institution_name: 'Komunitas Desain Malang',
-              institution_type: 'Komunitas Kreatif / Seni',
-              
+              pic_name: '{{ auth()->user()->full_name ?? auth()->user()->name ?? "" }}',
+              pic_phone: '{{ auth()->user()->phone_number ?? "" }}',
               event_name: '',
               event_category: '',
-              estimated_participants: 50,
+              ekraf_subsector: '',
+              event_type: 'Terbuka Untuk Umum',
+              estimated_participants: 0,
               event_description: '',
-              requested_facilities: [],
-              
-              proposal_file: null,
+              equipment_needed: '',
               tos_agreed: false
           },
 
@@ -56,14 +56,52 @@
               return m + ':' + s;
           },
 
-          nextStep() {
-              if (this.currentStep < 4) this.currentStep++;
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+          formatDateIndo(dateStr) {
+              if (!dateStr) return '';
+              const date = new Date(dateStr);
+              return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
           },
 
-          prevStep() {
-              if (this.currentStep > 1) this.currentStep--;
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+          handleProposalChange(e) {
+              const file = e.target.files[0];
+              if (file) {
+                  if (file.size > 2 * 1024 * 1024) {
+                      alert('Ukuran file proposal melebihi batas maksimal 2 MB.');
+                      e.target.value = '';
+                      this.proposalFileName = '';
+                      return;
+                  }
+                  if (file.type !== 'application/pdf') {
+                      alert('Format berkas proposal wajib berupa dokumen PDF (*.pdf).');
+                      e.target.value = '';
+                      this.proposalFileName = '';
+                      return;
+                  }
+                  this.proposalFileName = file.name;
+                  this.proposalFileSize = (file.size / 1024).toFixed(0) + ' KB';
+              }
+          },
+
+          handlePosterChange(e) {
+              const file = e.target.files[0];
+              if (file) {
+                  if (file.size > 2 * 1024 * 1024) {
+                      alert('Ukuran file banner/poster melebihi batas maksimal 2 MB.');
+                      e.target.value = '';
+                      this.posterFileName = '';
+                      this.posterPreviewUrl = '';
+                      return;
+                  }
+                  if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+                      alert('Format banner/poster harus berupa gambar (*.jpg, *.jpeg, *.png).');
+                      e.target.value = '';
+                      this.posterFileName = '';
+                      this.posterPreviewUrl = '';
+                      return;
+                  }
+                  this.posterFileName = file.name;
+                  this.posterPreviewUrl = URL.createObjectURL(file);
+              }
           },
 
           async cancelBooking() {
@@ -93,22 +131,21 @@
           }
       }">
 
-    <!-- Floating Redis Lock Countdown Bar -->
+    <!-- Floating Slot Lock Countdown Bar (FR-PUB-03 & REQ-USR-05) -->
     <div class="sticky top-0 z-40 bg-[#001A72] text-white px-4 py-2.5 shadow-md flex items-center justify-between">
-        <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+        <div class="max-w-5xl mx-auto w-full flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-                <span class="text-xs font-medium text-slate-100">Slot Ruangan Terkunci Sementara:</span>
+                <span class="text-xs font-medium text-slate-100">Slot Ruangan Terkunci Sementara (15m):</span>
                 <span class="font-mono font-bold text-sm tracking-wider text-amber-300" x-text="formatTime(timeRemaining)">15:00</span>
             </div>
-            <span class="text-xs text-indigo-200 hidden md:inline">Selesaikan permohonan sebelum batas waktu berakhir.</span>
+            <span class="text-xs text-indigo-200 hidden md:inline">Selesaikan pengisian formulir sebelum waktu berakhir.</span>
         </div>
     </div>
 
     <!-- Header Navigation -->
     <header class="bg-white border-b border-slate-200 py-4 px-4 sm:px-8">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <!-- Tombol Batal & Release Lock Instan -->
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
             <button type="button" 
                     @click="cancelBooking()" 
                     class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-rose-600 transition-colors cursor-pointer group">
@@ -116,188 +153,387 @@
                 <span>Batal & Kembali ke Kalender</span>
             </button>
             
-            <span class="text-xs font-bold text-[#001A72] bg-[#EEF2FF] px-3 py-1 rounded-full border border-[#C7D2FE]" x-text="roomName">
+            <span class="text-xs font-bold text-[#001A72] bg-[#EEF2FF] px-3.5 py-1.5 rounded-full border border-[#C7D2FE]">
+                {{ $room->name }} (Lantai {{ $room->floor_level }})
             </span>
         </div>
     </header>
 
-    <div class="max-w-4xl w-full mx-auto px-4 py-8 flex-1">
-        <!-- Stepper Indicator -->
-        <div class="mb-8">
-            <div class="grid grid-cols-4 gap-2 text-center text-xs font-semibold">
-                <div :class="currentStep >= 1 ? 'text-[#001A72] border-[#001A72]' : 'text-slate-400 border-slate-200'" class="border-b-4 pb-2">
-                    <span class="block text-base font-bold">1</span>
-                    <span class="hidden sm:inline">Identitas PIC</span>
-                </div>
-                <div :class="currentStep >= 2 ? 'text-[#001A72] border-[#001A72]' : 'text-slate-400 border-slate-200'" class="border-b-4 pb-2">
-                    <span class="block text-base font-bold">2</span>
-                    <span class="hidden sm:inline">Detail Acara</span>
-                </div>
-                <div :class="currentStep >= 3 ? 'text-[#001A72] border-[#001A72]' : 'text-slate-400 border-slate-200'" class="border-b-4 pb-2">
-                    <span class="block text-base font-bold">3</span>
-                    <span class="hidden sm:inline">Proposal & KTP</span>
-                </div>
-                <div :class="currentStep >= 4 ? 'text-[#001A72] border-[#001A72]' : 'text-slate-400 border-slate-200'" class="border-b-4 pb-2">
-                    <span class="block text-base font-bold">4</span>
-                    <span class="hidden sm:inline">Konfirmasi</span>
-                </div>
+    <main class="max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 flex-1">
+        <!-- Error Alert Banner -->
+        @if ($errors->any())
+            <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-brand text-rose-800 text-xs">
+                <span class="font-bold block mb-1">Terdapat kesalahan pengisian formulir:</span>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
+        @endif
 
-        <!-- Form Card Container -->
-        <div class="bg-white rounded-brand border border-slate-200 shadow-card p-6 sm:p-8">
-            <!-- Step 1 -->
-            <div x-show="currentStep === 1" class="space-y-6">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">Langkah 1: Identitas Pemohon & Legalitas Lembaga</h2>
-                    <p class="text-xs text-slate-500">Data otomatis ditarik dari profil akun terdaftar Anda.</p>
+        <form action="{{ route('booking.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            @csrf
+            <input type="hidden" name="room_id" value="{{ $room->id }}">
+            <input type="hidden" name="date" value="{{ $date }}">
+            <input type="hidden" name="slots[]" value="{{ $slotTime }}">
+
+            <!-- ======================================================================== -->
+            <!-- SEKSI 1: RINGKASAN RUANGAN & JADWAL (READ-ONLY CONTEXT) -->
+            <!-- ======================================================================== -->
+            <section class="bg-white rounded-brand border border-slate-200 shadow-card p-6">
+                <div class="flex items-center gap-2.5 pb-4 border-b border-slate-100 mb-5">
+                    <div class="w-8 h-8 rounded-brand bg-[#EEF2FF] text-[#001A72] flex items-center justify-center font-bold text-sm">
+                        <i data-lucide="building-2" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Seksi 1: Ringkasan Ruangan & Jadwal</h2>
+                        <p class="text-xs text-slate-500">Data otomatis ditarik dari slot kalender yang dipilih dan terkunci sementara.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    <!-- Nama Ruangan & Tipe Stage -->
+                    <div class="p-4 bg-slate-50 rounded-brand border border-slate-200">
+                        <span class="text-slate-500 font-medium block mb-1">Nama Ruangan & Tipe Stage</span>
+                        <span class="font-bold text-sm text-slate-900 block">{{ $room->name }}</span>
+                        <span class="inline-block mt-1 px-2 py-0.5 bg-[#001A72] text-white text-[11px] font-bold rounded-md">
+                            Lantai {{ $room->floor_level }}
+                        </span>
+                    </div>
+
+                    <!-- Kapasitas Maksimal Ruangan & Biaya Sewa -->
+                    <div class="p-4 bg-slate-50 rounded-brand border border-slate-200">
+                        <span class="text-slate-500 font-medium block mb-1">Kapasitas Maksimal & Biaya Sewa</span>
+                        <span class="font-bold text-sm text-slate-900 block">{{ $room->capacity }} Orang</span>
+                        <span class="inline-block mt-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-md border border-emerald-200">
+                            {{ $room->base_hourly_rate > 0 ? 'Komersial (Rp ' . number_format($room->base_hourly_rate, 0, ',', '.') . ' / jam)' : 'Gratis / Subsidi Pemkot Malang' }}
+                        </span>
+                    </div>
+
+                    <!-- Fasilitas Bawaan Ruangan -->
+                    <div class="p-4 bg-slate-50 rounded-brand border border-slate-200">
+                        <span class="text-slate-500 font-medium block mb-1">Fasilitas Bawaan Ruangan</span>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            @forelse($room->facilities as $fac)
+                                <span class="px-2 py-0.5 bg-white text-slate-700 text-[11px] font-semibold rounded border border-slate-200">
+                                    {{ $fac->facility_name }}
+                                </span>
+                            @empty
+                                <span class="text-slate-600 italic text-[11px]">Hanya Area</span>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- Tanggal & Slot Jam Booking (Full Width / Span across) -->
+                    <div class="sm:col-span-2 lg:col-span-3 p-4 bg-[#EEF2FF]/60 rounded-brand border border-[#C7D2FE] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-[#001A72] font-semibold block text-xs">Tanggal & Slot Jam Booking</span>
+                            <span class="font-bold text-sm text-slate-900 block mt-0.5" x-text="formatDateIndo('{{ $date }}')"></span>
+                        </div>
+                        <div class="bg-[#001A72] text-white px-3.5 py-1.5 rounded-brand font-mono font-bold text-xs inline-flex items-center gap-1.5 shadow-xs">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>{{ $slotTime }} WIB</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================================== -->
+            <!-- SEKSI 2: DATA PENYELENGGARA & PIC (PRE-FILLED + EDITABLE) -->
+            <!-- ======================================================================== -->
+            <section class="bg-white rounded-brand border border-slate-200 shadow-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                    <div class="w-8 h-8 rounded-brand bg-[#EEF2FF] text-[#001A72] flex items-center justify-center font-bold text-sm">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Seksi 2: Data Penyelenggara & PIC</h2>
+                        <p class="text-xs text-slate-500">Auto-fill dari akun Anda dan dapat disesuaikan untuk PIC lapangan hari-H.</p>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Nama PIC Penyelenggara -->
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama PIC Pemohon</label>
-                        <input type="text" x-model="form.pic_name" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Nama PIC Penyelenggara <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative rounded-brand">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                            </div>
+                            <input type="text" 
+                                   name="pic_name" 
+                                   x-model="form.pic_name" 
+                                   required 
+                                   placeholder="Nama lengkap penanggung jawab" 
+                                   class="block w-full pl-10 pr-3 py-2.5 sm:text-sm rounded-brand border border-slate-300 text-slate-900 focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72] placeholder:text-slate-400 transition-colors">
+                        </div>
                     </div>
+
+                    <!-- Nomor Telepon PIC Penyelenggara -->
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">No. WhatsApp PIC</label>
-                        <input type="text" x-model="form.pic_phone" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Email PIC</label>
-                        <input type="email" x-model="form.pic_email" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama Lembaga / Komunitas</label>
-                        <input type="text" x-model="form.institution_name" class="w-full text-sm border-slate-300 rounded-brand bg-slate-50 text-slate-700">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Nomor Telepon PIC Penyelenggara <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative rounded-brand">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="phone" class="w-4 h-4"></i>
+                            </div>
+                            <input type="tel" 
+                                   name="pic_phone" 
+                                   x-model="form.pic_phone" 
+                                   required 
+                                   placeholder="cth: 08123456789 atau +628123456789" 
+                                   class="block w-full pl-10 pr-3 py-2.5 sm:text-sm rounded-brand border border-slate-300 text-slate-900 focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72] placeholder:text-slate-400 transition-colors">
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="pt-4 flex justify-end">
-                    <button type="button" @click="nextStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-sm font-semibold shadow-xs transition-colors">
-                        Lanjut ke Detail Acara &rarr;
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 2 -->
-            <div x-show="currentStep === 2" class="space-y-6">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">Langkah 2: Deskripsi & Kebutuhan Kegiatan</h2>
-                    <p class="text-xs text-slate-500">Jelaskan kegiatan kreatif yang akan diselenggarakan di MCC.</p>
+            <!-- ======================================================================== -->
+            <!-- SEKSI 3: RINCIAN KEGIATAN (DATA EVENT) -->
+            <!-- ======================================================================== -->
+            <section class="bg-white rounded-brand border border-slate-200 shadow-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                    <div class="w-8 h-8 rounded-brand bg-[#EEF2FF] text-[#001A72] flex items-center justify-center font-bold text-sm">
+                        <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Seksi 3: Rincian Kegiatan (Data Event)</h2>
+                        <p class="text-xs text-slate-500">Lengkapi parameter teknis dan kurasi kegiatan kreatif.</p>
+                    </div>
                 </div>
 
                 <div class="space-y-4">
+                    <!-- Nama Event -->
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nama Kegiatan / Event *</label>
-                        <input type="text" x-model="form.event_name" placeholder="Contoh: Workshop Blender 3D Animation Basic" class="w-full text-sm border-slate-300 rounded-brand">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Nama Event <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="event_name" 
+                               x-model="form.event_name" 
+                               maxlength="200" 
+                               required 
+                               placeholder="Nama resmi kegiatan yang akan diselenggarakan (Maksimal 200 karakter)" 
+                               class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
                     </div>
-                    
+
+                    <!-- Kategori Event & Kategori Ekraf -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Kategori Event -->
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Kategori Kegiatan *</label>
-                            <select x-model="form.event_category" class="w-full text-sm border-slate-300 rounded-brand">
-                                <option value="">Pilih Kategori</option>
-                                <option value="Workshop / Pelatihan">Workshop / Pelatihan</option>
-                                <option value="Pameran / Eksibisi">Pameran / Eksibisi</option>
-                                <option value="Diskusi / Seminar">Diskusi / Seminar</option>
-                                <option value="Pertunjukan Seni / Musik">Pertunjukan Seni / Musik</option>
-                                <option value="Meetup Komunitas">Meetup Komunitas</option>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Kategori Event <span class="text-rose-500">*</span>
+                            </label>
+                            <select name="event_category" 
+                                    x-model="form.event_category" 
+                                    required 
+                                    class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
+                                <option value="">Pilih Kategori Event</option>
+                                <option value="Dinas">Dinas</option>
+                                <option value="Kampus">Kampus</option>
+                                <option value="Komersial">Komersial</option>
+                                <option value="Komunitas">Komunitas</option>
+                                <option value="Lainnya">Lainnya</option>
                             </select>
                         </div>
+
+                        <!-- Kategori Ekraf (17 Sub-Sektor) -->
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Estimasi Jumlah Peserta *</label>
-                            <input type="number" x-model="form.estimated_participants" min="1" max="1000" class="w-full text-sm border-slate-300 rounded-brand">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Kategori Ekraf (17 Sub-Sektor) <span class="text-rose-500">*</span>
+                            </label>
+                            <select name="ekraf_subsector" 
+                                    x-model="form.ekraf_subsector" 
+                                    required 
+                                    class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
+                                <option value="">Pilih Kategori Ekraf</option>
+                                <option value="Aplikasi">Aplikasi</option>
+                                <option value="Arsitektur">Arsitektur</option>
+                                <option value="Desain Interior">Desain Interior</option>
+                                <option value="DKV">DKV</option>
+                                <option value="Fashion">Fashion</option>
+                                <option value="Film">Film</option>
+                                <option value="Fotografi">Fotografi</option>
+                                <option value="Game">Game</option>
+                                <option value="Konten Digital">Konten Digital</option>
+                                <option value="Kriya">Kriya</option>
+                                <option value="Kuliner">Kuliner</option>
+                                <option value="Modifikasi Otomotif">Modifikasi Otomotif</option>
+                                <option value="Musik">Musik</option>
+                                <option value="Penerbitan">Penerbitan</option>
+                                <option value="Periklanan">Periklanan</option>
+                                <option value="Pertunjukan">Pertunjukan</option>
+                                <option value="Produk">Produk</option>
+                                <option value="Seni Rupa">Seni Rupa</option>
+                                <option value="Sulih Suara">Sulih Suara</option>
+                                <option value="Teknologi Baru">Teknologi Baru</option>
+                                <option value="Televisi & Radio">Televisi & Radio</option>
+                            </select>
                         </div>
                     </div>
 
+                    <!-- Jenis Event & Jumlah Peserta -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Jenis Event -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Jenis Event <span class="text-rose-500">*</span>
+                            </label>
+                            <select name="event_type" 
+                                    x-model="form.event_type" 
+                                    required 
+                                    class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]">
+                                <option value="Terbuka Untuk Umum">Terbuka Untuk Umum</option>
+                                <option value="Terbatas">Terbatas</option>
+                                <option value="Internal">Internal</option>
+                            </select>
+                        </div>
+
+                        <!-- Jumlah Peserta -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Jumlah Peserta <span class="text-rose-500">*</span> (Maks: {{ $room->capacity }} org)
+                            </label>
+                            <input type="number" 
+                                   name="estimated_participants" 
+                                   x-model="form.estimated_participants" 
+                                   min="1" 
+                                   max="{{ $room->capacity }}" 
+                                   required 
+                                   class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]"
+                                   :class="form.estimated_participants > {{ $room->capacity }} ? 'border-rose-500 focus:ring-rose-500' : ''">
+                            <span class="text-[11px] text-slate-500 mt-1 block">Validasi sistem: Nilai wajib &le; kapasitas maksimal ruangan (<strong>{{ $room->capacity }} Orang</strong>).</span>
+                        </div>
+                    </div>
+
+                    <!-- Deskripsi Event -->
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Deskripsi Ringkas Kegiatan *</label>
-                        <textarea x-model="form.event_description" rows="3" placeholder="Tuliskan tujuan, susunan acara garis besar, dan target peserta..." class="w-full text-sm border-slate-300 rounded-brand"></textarea>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Deskripsi Event <span class="text-rose-500">*</span>
+                        </label>
+                        <textarea name="event_description" 
+                                  x-model="form.event_description" 
+                                  required 
+                                  rows="3" 
+                                  placeholder="Penjelasan konsep dan tujuan pelaksanaan kegiatan..." 
+                                  class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]"></textarea>
+                    </div>
+
+                    <!-- Peralatan yang Digunakan -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Peralatan yang Digunakan <span class="text-slate-400 font-normal">(Opsional)</span>
+                        </label>
+                        <textarea name="equipment_needed" 
+                                  x-model="form.equipment_needed" 
+                                  rows="2" 
+                                  placeholder="Rincian peralatan mandiri yang akan dibawa ke dalam gedung oleh pihak penyelenggara..." 
+                                  class="w-full text-sm border-slate-300 rounded-brand focus:ring-2 focus:ring-[#001A72] focus:border-[#001A72]"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================================== -->
+            <!-- SEKSI 4: BERKAS PENDUKUNG & PAKTA INTEGRITAS LEGALITAS -->
+            <!-- ======================================================================== -->
+            <section class="bg-white rounded-brand border border-slate-200 shadow-card p-6 sm:p-8 space-y-6">
+                <div class="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                    <div class="w-8 h-8 rounded-brand bg-[#EEF2FF] text-[#001A72] flex items-center justify-center font-bold text-sm">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Seksi 4: Berkas Pendukung & Pakta Integritas Legalitas</h2>
+                        <p class="text-xs text-slate-500">Unggah berkas kurasi dan tandatangani pakta integritas penyerahan jaminan KTP.</p>
                     </div>
                 </div>
 
-                <div class="pt-4 flex justify-between">
-                    <button type="button" @click="prevStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">Kembali</button>
-                    <button type="button" @click="nextStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-sm font-semibold shadow-xs transition-colors">Lanjut ke Dokumen Proposal &rarr;</button>
-                </div>
-            </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Proposal Event (Wajib / .pdf maks 2 MB) -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Proposal Event <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="border-2 border-dashed border-slate-300 hover:border-[#001A72] rounded-brand p-5 text-center transition-colors relative bg-slate-50/50">
+                            <input type="file" 
+                                   name="proposal_file" 
+                                   required 
+                                   accept=".pdf" 
+                                   @change="handleProposalChange($event)" 
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <i data-lucide="file-up" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+                            <span class="text-xs font-bold text-slate-800 block" x-text="proposalFileName || 'Pilih Berkas Proposal (.pdf)'"></span>
+                            <span class="text-[11px] text-indigo-600 font-semibold block mt-0.5" x-text="proposalFileSize"></span>
+                            <p class="text-[11px] text-slate-500 mt-1">Maksimal ukuran file dokumen 2Mb dengan ekstensi file (*.pdf)</p>
+                        </div>
+                    </div>
 
-            <!-- Step 3 -->
-            <div x-show="currentStep === 3" class="space-y-6">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">Langkah 3: Unggah Proposal & Persetujuan Jaminan KTP</h2>
-                    <p class="text-xs text-slate-500">Unggah proposal resmi bertandatangan/stempel lembaga.</p>
+                    <!-- Banner / Poster Event (Opsional / .jpg, .jpeg, .png maks 2 MB) -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Banner / Poster Event <span class="text-slate-400 font-normal">(Opsional)</span>
+                        </label>
+                        <div class="border-2 border-dashed border-slate-300 hover:border-[#001A72] rounded-brand p-5 text-center transition-colors relative bg-slate-50/50">
+                            <input type="file" 
+                                   name="poster_file" 
+                                   accept=".jpg,.jpeg,.png" 
+                                   @change="handlePosterChange($event)" 
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            
+                            <template x-if="posterPreviewUrl">
+                                <div class="mb-2">
+                                    <img :src="posterPreviewUrl" alt="Poster Preview" class="h-16 mx-auto object-cover rounded shadow-xs">
+                                </div>
+                            </template>
+                            <template x-if="!posterPreviewUrl">
+                                <i data-lucide="image" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+                            </template>
+
+                            <span class="text-xs font-bold text-slate-800 block" x-text="posterFileName || 'Pilih File Gambar Banner/Poster'"></span>
+                            <p class="text-[11px] text-slate-500 mt-1">Maksimal ukuran file gambar 2Mb dengan ekstensi file (*.jpg, *.jpeg, *.png)</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="border-2 border-dashed border-slate-300 rounded-brand p-8 text-center hover:border-[#001A72] transition-colors">
-                    <i data-lucide="file-up" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
-                    <p class="text-xs font-bold text-slate-700">Klik untuk upload atau drag and drop file proposal</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Format PDF (Maksimal 10 MB)</p>
-                </div>
-
-                <div class="bg-amber-50 border border-amber-200 rounded-brand p-4 text-xs text-amber-900 space-y-2">
-                    <span class="font-bold block flex items-center gap-1.5 text-amber-950">
-                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-700"></i> Ketentuan Kustodian Fisik Jaminan KTP (SOP MCC)
-                    </span>
-                    <p class="leading-relaxed">
-                        PIC Pemohon diwajibkan menitipkan <strong>1 lembar KTP asli</strong> kepada petugas Front Office saat Check-in operasional dan akan disimpan dalam KTP Vault Box resmi. KTP akan dikembalikan penuh saat Check-out setelah Berita Acara Clearance dinyatakan bersih.
-                    </p>
-                    <label class="flex items-center gap-2 pt-2 cursor-pointer">
-                        <input type="checkbox" x-model="form.tos_agreed" class="rounded-sm text-[#001A72] focus:ring-[#001A72]">
-                        <span class="font-bold text-slate-900">Saya memahami dan menyetujui SOP Penitipan Jaminan KTP Fisik MCC.</span>
+                <!-- Persetujuan Ketentuan & Jaminan KTP (Exact Text) -->
+                <div class="p-4 bg-amber-50/90 border border-amber-200 rounded-brand text-xs text-amber-950 space-y-2">
+                    <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" 
+                               name="tos_agreed" 
+                               value="1" 
+                               x-model="form.tos_agreed" 
+                               required 
+                               class="mt-0.5 rounded-sm text-[#001A72] focus:ring-[#001A72]">
+                        <span class="leading-relaxed font-semibold text-slate-900">
+                            Saya menyetujui syarat dan ketentuan pemakaian gedung MCC serta bersedia menyerahkan fisik KTP asli penanggung jawab acara di meja Front Office saat registrasi hari-H.
+                        </span>
                     </label>
                 </div>
 
-                <div class="pt-4 flex justify-between">
-                    <button type="button" @click="prevStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">Kembali</button>
-                    <button type="button" @click="nextStep()" :disabled="!form.tos_agreed" :class="form.tos_agreed ? 'bg-[#001A72] hover:bg-[#001250] text-white cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand text-sm font-semibold shadow-xs transition-colors">Lanjut ke Ringkasan &rarr;</button>
-                </div>
-            </div>
+                <!-- Submit Button Bar -->
+                <div class="pt-4 flex items-center justify-between border-t border-slate-100">
+                    <button type="button" 
+                            @click="cancelBooking()" 
+                            class="inline-flex items-center px-5 py-2.5 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-colors cursor-pointer">
+                        Batal
+                    </button>
 
-            <!-- Step 4 -->
-            <div x-show="currentStep === 4" class="space-y-6">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">Langkah 4: Konfirmasi Permohonan</h2>
-                    <p class="text-xs text-slate-500">Periksa kembali data reservasi Anda sebelum dikirimkan ke tim kurasi Marketing MCC.</p>
-                </div>
-
-                <div class="bg-slate-50 rounded-brand p-5 border border-slate-200 space-y-3 text-xs">
-                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
-                        <span class="text-slate-500 font-semibold">Ruangan & Slot:</span>
-                        <span class="col-span-2 font-bold text-slate-900" x-text="roomName + ' &bull; ' + selectedDate + ' (' + selectedSlot + ')'"></span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
-                        <span class="text-slate-500 font-semibold">Nama Acara:</span>
-                        <span class="col-span-2 font-bold text-[#001A72]" x-text="form.event_name || '-'"></span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
-                        <span class="text-slate-500 font-semibold">Estimasi Peserta:</span>
-                        <span class="col-span-2 font-bold text-slate-900" x-text="form.estimated_participants + ' Orang'"></span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
-                        <span class="text-slate-500 font-semibold">Pemohon / PIC:</span>
-                        <span class="col-span-2 font-bold text-slate-900" x-text="form.pic_name + ' (' + form.institution_name + ')'"></span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <span class="text-slate-500 font-semibold">Jaminan KTP:</span>
-                        <span class="col-span-2 font-bold text-emerald-700 flex items-center gap-1">
-                            <i data-lucide="check" class="w-3.5 h-3.5"></i> Bersedia Menyerahkan KTP Asli Saat Check-in
-                        </span>
-                    </div>
-                </div>
-
-                <div class="pt-4 flex justify-between">
-                    <button type="button" @click="prevStep()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">Kembali</button>
-                    <button type="button" class="inline-flex items-center justify-center px-5 py-2.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition-colors flex items-center gap-2 cursor-pointer">
+                    <button type="submit" 
+                            :disabled="!form.tos_agreed" 
+                            :class="form.tos_agreed ? 'bg-[#001A72] hover:bg-[#001250] text-white cursor-pointer shadow-md' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
+                            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-brand text-xs sm:text-sm font-bold transition-all">
                         <i data-lucide="send" class="w-4 h-4"></i>
                         <span>Kirim Pengajuan Permohonan</span>
                     </button>
                 </div>
-            </div>
-        </div>
-    </div>
+            </section>
+        </form>
+    </main>
 
-    <!-- Modal Expired -->
+    <!-- Modal Expired (REQ-USR-05) -->
     <div x-show="timeExpiredModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-white rounded-brand max-w-md w-full p-6 text-center space-y-4 shadow-elevated">
             <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 mx-auto flex items-center justify-center">
@@ -305,7 +541,7 @@
             </div>
             <h3 class="text-lg font-bold text-slate-900">Sesi Pengisian Formulir Berakhir</h3>
             <p class="text-xs text-slate-500 leading-relaxed">
-                Batas waktu penguncian slot 15 menit telah habis. Slot telah dilepaskan kembali ke kalender umum.
+                Batas waktu penguncian slot 15 menit telah habis. Kunci slot telah dilepaskan kembali secara aman ke kalender umum.
             </p>
             <a href="/jadwal" class="block w-full py-2.5 bg-[#001A72] text-white text-xs font-bold rounded-brand hover:bg-[#001250] transition-colors">
                 Kembali ke Kalender Jadwal
@@ -313,9 +549,10 @@
         </div>
     </div>
 
-    <div class="py-6 text-center text-xs text-slate-400">
-        &copy; {{ date('Y') }} Malang Creative Center. Zero Double-Booking Protection.
-    </div>
+    <!-- Footer -->
+    <footer class="py-6 text-center text-xs text-slate-400 border-t border-slate-200 mt-auto bg-white">
+        &copy; {{ date('Y') }} Malang Creative Center (MCC). Reservasi Ruangan Resmi Terpadu.
+    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
