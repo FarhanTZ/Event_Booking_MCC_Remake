@@ -32,21 +32,38 @@
              class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-3xl border border-slate-200 pointer-events-auto my-8">
             
             <!-- Modal Header -->
-            <div class="bg-[#001A72] text-white px-6 py-4 flex items-center justify-between">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-mono font-bold text-white text-sm bg-white/10 px-2 py-0.5 rounded border border-white/20" x-text="activeItem.code"></span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" 
-                              :class="activeItem.status_badge" 
-                              x-text="activeItem.status"></span>
-                        <template x-if="activeItem.urgency_label">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-600 text-white animate-pulse" 
-                                  x-text="activeItem.urgency_label"></span>
-                        </template>
-                    </div>
-                    <h3 class="text-base font-bold text-white mt-1" x-text="activeItem.event_name"></h3>
+            <div class="bg-[#001A72] text-white px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <h3 class="text-base font-bold text-white tracking-tight leading-snug truncate" x-text="activeItem.event_name"></h3>
+                    
+                    <template x-if="activeItem.urgency_label">
+                        <div class="relative inline-flex items-center shrink-0"
+                             x-data="{ showUrgentTooltip: false }"
+                             @mouseenter="showUrgentTooltip = true"
+                             @mouseleave="showUrgentTooltip = false">
+                            <span class="inline-flex items-center justify-center p-1 rounded-full bg-rose-500 hover:bg-rose-600 text-white animate-pulse cursor-pointer shadow-xs"
+                                  :title="activeItem.urgency_label">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>
+                            </span>
+                            <div x-show="showUrgentTooltip"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 translate-y-1"
+                                 style="display: none;"
+                                 class="absolute left-0 top-full mt-1.5 z-50 pointer-events-none drop-shadow-xl whitespace-nowrap">
+                                <div class="bg-slate-900 text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-lg border border-slate-700 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                                    <span x-text="activeItem.urgency_label"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
-                <button @click="closeModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer">
+
+                <button @click="closeModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Tutup Modal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -54,6 +71,30 @@
             <!-- Modal Body: Tabs & Detail Breakdown -->
             <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
                 
+                <!-- Strip Metadata Permohonan & Status -->
+                <div class="bg-slate-50 p-3.5 rounded-brand border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-3">
+                        <div>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Kode Permohonan</span>
+                            <span class="font-mono font-extrabold text-[#001A72] text-sm" x-text="activeItem.code"></span>
+                        </div>
+                        <div class="h-6 w-px bg-slate-200"></div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Diajukan Pada</span>
+                            <span class="font-medium text-slate-700" x-text="activeItem.created_at"></span>
+                        </div>
+                    </div>
+
+                    <div class="text-right space-y-1.5">
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Status Kurasi</span>
+                        <div>
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-block shadow-2xs" 
+                                  :class="activeItem.status_badge" 
+                                  x-text="activeItem.status"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Seksi 1: Ringkasan Ruangan & Jadwal -->
                 <div>
                     <h4 class="text-xs font-bold uppercase tracking-wider text-[#001A72] mb-2 flex items-center gap-1.5">
@@ -84,29 +125,106 @@
                     </div>
                 </div>
 
-                <!-- Seksi 2: Data Pemohon & PIC -->
+                <!-- Seksi 2: Data Pemohon & Integritas Rekam Jejak (REQ-MKT-04) -->
                 <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-[#001A72] mb-2 flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span>2. Data Pemohon &amp; Kontak PIC</span>
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-brand border border-slate-200 text-xs">
-                        <div>
-                            <span class="text-slate-400 block">Lembaga / Pemohon:</span>
-                            <span class="font-bold text-slate-900" x-text="activeItem.institution"></span>
-                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-800" x-text="'Tipe: ' + activeItem.account_type"></span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block">Email Akun:</span>
-                            <span class="font-bold text-slate-900" x-text="activeItem.user_email"></span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block">Nama PIC Hari-H:</span>
-                            <span class="font-bold text-slate-900" x-text="activeItem.pic_name"></span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block">Nomor WhatsApp PIC:</span>
-                            <span class="font-mono font-bold text-emerald-700" x-text="activeItem.pic_phone"></span>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-[#001A72] flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            <span>2. Integritas Rekam Jejak &amp; Profil Pemohon</span>
+                        </h4>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Badge Integritas / Rekam Jejak Pemohon -->
+                        <template x-if="activeItem.is_suspended">
+                            <div class="p-3.5 rounded-brand bg-rose-50 border border-rose-200 flex items-start gap-3 text-xs text-rose-900">
+                                <div class="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center shrink-0 font-bold">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-extrabold text-rose-700 uppercase tracking-wide text-[11px]">Peringatan Kritis: Akun Ditangguhkan (Suspended)</span>
+                                        <template x-if="activeItem.suspended_at">
+                                            <span class="text-[10px] text-rose-600 font-medium" x-text="'Sejak ' + activeItem.suspended_at"></span>
+                                        </template>
+                                    </div>
+                                    <p class="text-rose-800 text-[11px]" x-text="'Alasan: ' + (activeItem.suspension_reason || 'Pelanggaran ketentuan gedung terdahulu')"></p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="!activeItem.is_suspended && activeItem.incident_count > 0">
+                            <div class="p-3 rounded-brand bg-amber-50 border border-amber-200 flex items-center gap-2.5 text-xs text-amber-900">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <div>
+                                    <span class="font-bold text-amber-800" x-text="'Catatan Insiden Gedung: Terdeteksi ' + activeItem.incident_count + ' insiden pada event terdahulu.'"></span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="!activeItem.is_suspended && (!activeItem.incident_count || activeItem.incident_count === 0)">
+                            <div class="p-2.5 rounded-brand bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2 text-xs text-emerald-900">
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    <span class="font-bold text-emerald-800">Rekam Jejak Bersih (Clean Track Record)</span>
+                                </div>
+                                <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                                    Status Akun Aktif &amp; Terverifikasi
+                                </span>
+                            </div>
+                        </template>
+
+                        <!-- Profil Legalitas & Kontak Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-brand border border-slate-200 text-xs">
+                            <div>
+                                <span class="text-slate-400 block text-[11px]">Nama Lembaga / Pemohon:</span>
+                                <span class="font-bold text-slate-900 text-sm block" x-text="activeItem.institution"></span>
+                                <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-800" x-text="'Tipe Akun: ' + activeItem.account_type"></span>
+                            </div>
+
+                            <div>
+                                <span class="text-slate-400 block text-[11px]">Alamat Lengkap / Domisili:</span>
+                                <span class="font-medium text-slate-800 block leading-relaxed" x-text="activeItem.user_address"></span>
+                            </div>
+
+                            <div class="border-t border-slate-200/80 pt-2.5">
+                                <span class="text-slate-400 block text-[11px]">Nama PIC Hari-H:</span>
+                                <span class="font-bold text-slate-900" x-text="activeItem.pic_name"></span>
+                                <span class="text-slate-500 text-[11px] block" x-text="'Akun: ' + activeItem.user_name"></span>
+                            </div>
+
+                            <div class="border-t border-slate-200/80 pt-2.5">
+                                <span class="text-slate-400 block text-[11px]">Nomor WhatsApp PIC:</span>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span class="font-mono font-bold text-emerald-700" x-text="activeItem.pic_phone"></span>
+                                    <template x-if="activeItem.pic_phone && activeItem.pic_phone !== '-'">
+                                        <a :href="'https://wa.me/' + activeItem.pic_phone.replace(/[^0-9]/g, '')" 
+                                           target="_blank" 
+                                           class="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 underline inline-flex items-center gap-0.5 ml-1">
+                                            Chat PIC &rarr;
+                                        </a>
+                                    </template>
+                                </div>
+                                <span class="text-slate-500 text-[11px] block mt-0.5" x-text="'Email: ' + activeItem.user_email"></span>
+                            </div>
+
+                            <div class="border-t border-slate-200/80 pt-2.5">
+                                <span class="text-slate-400 block text-[11px]">Media Sosial:</span>
+                                <span class="font-medium text-slate-800" x-text="activeItem.social_media"></span>
+                            </div>
+
+                            <div class="border-t border-slate-200/80 pt-2.5">
+                                <span class="text-slate-400 block text-[11px]">Website Resmi:</span>
+                                <template x-if="activeItem.website && activeItem.website !== '-'">
+                                    <a :href="activeItem.website.startsWith('http') ? activeItem.website : 'https://' + activeItem.website" 
+                                       target="_blank" 
+                                       class="font-medium text-[#001A72] hover:underline truncate block" 
+                                       x-text="activeItem.website"></a>
+                                </template>
+                                <template x-if="!activeItem.website || activeItem.website === '-'">
+                                    <span class="text-slate-500">-</span>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -168,19 +286,12 @@
             </div>
 
             <!-- Modal Footer: Action Button Row -->
-            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-2 text-xs text-slate-500 w-full sm:w-auto">
-                    <span class="inline-block w-2 h-2 rounded-full bg-indigo-500"></span>
-                    <span>Kode: <strong class="font-mono text-slate-800" x-text="activeItem.code"></strong></span>
-                </div>
-
-                <!-- Action Buttons: Destructive, Secondary, Primary CTA -->
-                <div class="flex flex-wrap items-center justify-end gap-2.5 w-full sm:w-auto">
-                    <button type="button" 
-                            @click="closeModal()" 
-                            class="min-h-[44px] px-4 py-2 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs">
-                        Tutup
-                    </button>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2.5">
+                <button type="button" 
+                        @click="closeModal()" 
+                        class="min-h-[44px] px-4 py-2 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                    Tutup
+                </button>
 
                     <button type="button"
                             @click="alert('Fitur kurasi: Tolak Proposal ' + activeItem.code)"

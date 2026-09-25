@@ -45,6 +45,29 @@
                         $userAccountType = $booking->user->account_type ?? \App\Enums\AccountType::KOMUNITAS;
                         $accountTypeLabel = is_object($userAccountType) && method_exists($userAccountType, 'label') ? $userAccountType->label() : ucfirst((string)$userAccountType);
 
+                        $user = $booking->user;
+                        $isSuspended = (bool) ($user->is_suspended ?? false);
+                        $suspensionReason = $user->suspension_reason ?? null;
+                        $suspendedAt = $user->suspended_at ? \Carbon\Carbon::parse($user->suspended_at)->translatedFormat('d F Y') : null;
+                        
+                        $addressParts = array_filter([
+                            $user->address ?? null,
+                            $user->district ? 'Kec. ' . $user->district : null,
+                            $user->city ?? null,
+                        ]);
+                        $addressFull = !empty($addressParts) ? implode(', ', $addressParts) : 'Belum mencantumkan alamat detail';
+
+                        $socialMediaList = [];
+                        if (!empty($user->social_media)) {
+                            if (is_array($user->social_media)) {
+                                foreach ($user->social_media as $platform => $handle) {
+                                    $socialMediaList[] = is_numeric($platform) ? $handle : ucfirst($platform) . ': ' . $handle;
+                                }
+                            } else {
+                                $socialMediaList[] = (string) $user->social_media;
+                            }
+                        }
+
                         $modalData = [
                             'code' => $booking->booking_code,
                             'status' => $statusEnum->label(),
@@ -52,11 +75,22 @@
                             'status_raw' => $booking->status instanceof \App\Enums\BookingStatus ? $booking->status->value : (string) $booking->status,
                             'urgency_label' => $urgencyInfo['label'] ?? null,
                             'created_at' => $booking->created_at->translatedFormat('l, d F Y - H:i') . ' WIB',
-                            'institution' => $booking->eventDetail->institution_name_snapshot ?? ($booking->user->institution_name ?? $booking->user->full_name),
+                            'institution' => $booking->eventDetail->institution_name_snapshot ?? ($user->institution_name ?? $user->full_name),
                             'account_type' => $accountTypeLabel,
-                            'user_email' => $booking->user->email ?? '-',
-                            'pic_name' => $booking->eventDetail->pic_name_snapshot ?? $booking->user->full_name,
-                            'pic_phone' => $booking->eventDetail->pic_phone_snapshot ?? $booking->user->phone_number,
+                            'user_name' => $user->full_name ?? '-',
+                            'user_email' => $user->email ?? '-',
+                            'user_phone' => $user->phone_number ?? '-',
+                            'user_address' => $addressFull,
+                            'user_city' => $user->city ?? '-',
+                            'user_district' => $user->district ?? '-',
+                            'social_media' => !empty($socialMediaList) ? implode(' • ', $socialMediaList) : '-',
+                            'website' => $user->website ?? '-',
+                            'is_suspended' => $isSuspended,
+                            'suspension_reason' => $suspensionReason,
+                            'suspended_at' => $suspendedAt,
+                            'incident_count' => 0,
+                            'pic_name' => $booking->eventDetail->pic_name_snapshot ?? $user->full_name,
+                            'pic_phone' => $booking->eventDetail->pic_phone_snapshot ?? $user->phone_number,
                             'event_name' => $booking->eventDetail->event_name ?? '-',
                             'event_category' => $booking->eventDetail->event_category ?? '-',
                             'ekraf_subsector' => $booking->eventDetail->ekraf_subsector ?? '-',
