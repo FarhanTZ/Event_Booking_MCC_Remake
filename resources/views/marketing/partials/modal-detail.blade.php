@@ -443,13 +443,12 @@
                         <span>Minta Revisi</span>
                     </button>
 
-                    <button type="button"
-                            @click="alert('Fitur kurasi: Setujui Proposal ' + activeItem.code)"
-                            class="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-xs cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                        <span>Setujui Proposal</span>
-                    </button>
-                </div>
+                <button type="button"
+                        @click="alert('Fitur kurasi: Setujui Proposal ' + activeItem.code)"
+                        class="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Setujui Proposal</span>
+                </button>
             </div>
 
         </div>
