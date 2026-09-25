@@ -155,5 +155,32 @@
                 @endif
             </div>
         </div>
+
+        <!-- Row 3: Export Rekapitulasi Operasional Gedung Bar (REQ-MKT-12) -->
+        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2 text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                <span class="font-bold text-slate-700">Ekspor Rekap Agenda Gedung (Confirmed):</span>
+                <span class="text-[11px] text-slate-400 hidden sm:inline">Rujukan Front Office, Security, &amp; Teknisi Gedung</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Export PDF Button -->
+                <a href="{{ route('marketing.schedule.export.pdf', request()->only(['date_from', 'date_to', 'floor_level'])) }}" 
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-white border border-slate-300 hover:bg-rose-50 hover:border-rose-300 text-slate-700 hover:text-rose-700 font-bold transition shadow-2xs cursor-pointer text-xs"
+                   title="Unduh format PDF untuk cetak / serah terima operasional">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="10" x2="8" y1="12" y2="12"/><line x1="16" x2="8" y1="16" y2="16"/></svg>
+                    <span>Unduh PDF</span>
+                </a>
+
+                <!-- Export Excel/CSV Button -->
+                <a href="{{ route('marketing.schedule.export.csv', request()->only(['date_from', 'date_to', 'floor_level'])) }}" 
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-white border border-slate-300 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 font-bold transition shadow-2xs cursor-pointer text-xs"
+                   title="Unduh format Excel / CSV untuk olah data spreadsheet">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
+                    <span>Unduh Excel (CSV)</span>
+                </a>
+            </div>
+        </div>
     </form>
 </div>

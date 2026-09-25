@@ -208,7 +208,8 @@
                     slots_count: 0,
                     total_duration: '',
                     total_duration_with_buffer: '',
-                    has_overcapacity: false
+                    has_overcapacity: false,
+                    approvals: []
                 },
                 approvalForm: {
                     pricing_scheme: 'subsidy',

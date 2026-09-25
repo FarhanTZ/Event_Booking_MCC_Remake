@@ -208,6 +208,15 @@
                             'total_duration' => $totalDurationFormatted,
                             'total_duration_with_buffer' => $totalWithBufferFormatted,
                             'has_overcapacity' => $hasOvercapacity,
+                            'approvals' => $booking->approvals->map(function ($approval) {
+                                return [
+                                    'id' => $approval->id,
+                                    'decision' => $approval->decision,
+                                    'notes' => $approval->notes,
+                                    'action_by_name' => $approval->actionBy?->full_name ?? $approval->actionBy?->name ?? 'Kurator Marketing MCC',
+                                    'created_at' => $approval->created_at ? $approval->created_at->translatedFormat('d M Y, H:i') . ' WIB' : '-',
+                                ];
+                            })->values()->all(),
                         ];
                     @endphp
                     <tr class="hover:bg-slate-50/90 transition-colors {{ $urgencyInfo ? 'bg-rose-50/20' : '' }}">

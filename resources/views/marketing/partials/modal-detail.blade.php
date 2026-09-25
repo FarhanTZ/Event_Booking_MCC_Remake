@@ -419,6 +419,71 @@
                     </div>
                 </div>
 
+                <!-- Seksi 5: Log Riwayat Keputusan Kurasi / Curatorial Audit Trail (REQ-MKT-11) -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-[#001A72] flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                            <span>5. Log Riwayat Keputusan Kurasi (Curatorial Audit Trail)</span>
+                        </h4>
+                        <span class="text-[10px] font-bold text-slate-500 font-mono" x-text="(activeItem.approvals ? activeItem.approvals.length : 0) + ' Log Tercatat'"></span>
+                    </div>
+
+                    <div class="space-y-2 bg-slate-50 p-4 rounded-brand border border-slate-200">
+                        <!-- Empty state if no log yet -->
+                        <template x-if="!activeItem.approvals || activeItem.approvals.length === 0">
+                            <div class="text-center py-4 text-xs text-slate-400 italic">
+                                Belum ada riwayat keputusan kurasi tercatat untuk permohonan ini.
+                            </div>
+                        </template>
+
+                        <!-- Timeline list -->
+                        <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                            <template x-for="(log, index) in activeItem.approvals" :key="log.id || index">
+                                <div class="relative group">
+                                    <!-- Bullet Marker -->
+                                    <div class="absolute -left-6 top-1 w-4 h-4 rounded-full border-2 bg-white flex items-center justify-center"
+                                         :class="{
+                                             'border-emerald-600 bg-emerald-50': log.decision === 'approved',
+                                             'border-indigo-600 bg-indigo-50': log.decision === 'revised',
+                                             'border-rose-600 bg-rose-50': log.decision === 'rejected',
+                                             'border-purple-600 bg-purple-50': log.decision === 'payment_verified'
+                                         }">
+                                        <div class="w-1.5 h-1.5 rounded-full"
+                                             :class="{
+                                                 'bg-emerald-600': log.decision === 'approved',
+                                                 'bg-indigo-600': log.decision === 'revised',
+                                                 'bg-rose-600': log.decision === 'rejected',
+                                                 'bg-purple-600': log.decision === 'payment_verified'
+                                             }"></div>
+                                    </div>
+
+                                    <!-- Content Box -->
+                                    <div class="p-3 bg-white rounded-brand border border-slate-200 shadow-2xs space-y-1.5">
+                                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider"
+                                                      :class="{
+                                                          'bg-emerald-50 text-emerald-700 border border-emerald-200': log.decision === 'approved',
+                                                          'bg-indigo-50 text-indigo-700 border border-indigo-200': log.decision === 'revised',
+                                                          'bg-rose-50 text-rose-700 border border-rose-200': log.decision === 'rejected',
+                                                          'bg-purple-50 text-purple-700 border border-purple-200': log.decision === 'payment_verified'
+                                                      }"
+                                                      x-text="log.decision === 'approved' ? 'Disetujui' : (log.decision === 'revised' ? 'Permintaan Revisi' : (log.decision === 'rejected' ? 'Ditolak' : 'Verifikasi Pembayaran'))">
+                                                </span>
+                                                <span class="text-xs font-bold text-slate-800" x-text="log.action_by_name"></span>
+                                            </div>
+                                            <span class="text-[10px] text-slate-500 font-medium" x-text="log.created_at"></span>
+                                        </div>
+
+                                        <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed" x-text="log.notes"></p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Modal Footer: Action Button Row -->

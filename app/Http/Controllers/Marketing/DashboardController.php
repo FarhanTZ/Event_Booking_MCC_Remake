@@ -185,4 +185,28 @@ class DashboardController extends Controller
 
         return redirect()->route('marketing.dashboard')->with('success', $message);
     }
+
+    /**
+     * Export operational building confirmed schedule to PDF format (REQ-MKT-12).
+     */
+    public function exportSchedulePdf(Request $request, \App\Services\Marketing\ScheduleExportService $exportService): Response
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        $floor = $request->query('floor_level') && $request->query('floor_level') !== 'all' ? (int) $request->query('floor_level') : null;
+
+        return $exportService->exportPdf($dateFrom, $dateTo, $floor);
+    }
+
+    /**
+     * Export operational building confirmed schedule to Excel/CSV format (REQ-MKT-12).
+     */
+    public function exportScheduleCsv(Request $request, \App\Services\Marketing\ScheduleExportService $exportService): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        $floor = $request->query('floor_level') && $request->query('floor_level') !== 'all' ? (int) $request->query('floor_level') : null;
+
+        return $exportService->exportCsv($dateFrom, $dateTo, $floor);
+    }
 }

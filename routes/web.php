@@ -78,4 +78,8 @@ Route::middleware(['auth', 'role:marketing,super_admin'])
             ->name('bookings.reject');
         Route::post('/bookings/{booking}/confirm-payment', [MarketingDashboardController::class, 'confirmPayment'])
             ->name('bookings.confirm-payment');
+        Route::get('/schedule/export-pdf', [MarketingDashboardController::class, 'exportSchedulePdf'])
+            ->name('schedule.export.pdf');
+        Route::get('/schedule/export-csv', [MarketingDashboardController::class, 'exportScheduleCsv'])
+            ->name('schedule.export.csv');
     });

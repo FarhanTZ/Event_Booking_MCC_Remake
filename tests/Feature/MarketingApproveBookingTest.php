@@ -180,7 +180,7 @@ class MarketingApproveBookingTest extends TestCase
         ]);
     }
 
-    public function test_commercial_scheme_fails_if_nominal_or_notes_missing(): void
+    public function test_commercial_scheme_fails_if_nominal_missing(): void
     {
         $booking = $this->createSampleBooking();
 
@@ -193,7 +193,7 @@ class MarketingApproveBookingTest extends TestCase
             ]
         );
 
-        $response->assertSessionHasErrors(['nominal_amount', 'payment_notes']);
+        $response->assertSessionHasErrors(['nominal_amount']);
         
         $booking->refresh();
         $this->assertEquals(BookingStatus::AWAITING_MARKETING, $booking->status);

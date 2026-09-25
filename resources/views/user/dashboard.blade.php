@@ -336,6 +336,48 @@
                                     </div>
                                 </div>
                             @endif
+
+                            <!-- Log Riwayat Keputusan Kurasi (REQ-MKT-11: Tetap utuh meskipun versi bertambah) -->
+                            @if($booking->approvals && $booking->approvals->count() > 0)
+                                <div class="mt-4 pt-3 border-t border-slate-100" x-data="{ showHistory: false }">
+                                    <button type="button" 
+                                            @click="showHistory = !showHistory" 
+                                            class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#001A72] transition cursor-pointer">
+                                        <i data-lucide="history" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        <span>Riwayat Evaluasi Kurasi ({{ $booking->approvals->count() }} Catatan)</span>
+                                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="showHistory ? 'rotate-180' : ''"></i>
+                                    </button>
+
+                                    <div x-show="showHistory" 
+                                         x-transition:enter="transition ease-out duration-150"
+                                         x-transition:enter-start="opacity-0 -translate-y-1"
+                                         x-transition:enter-end="opacity-100 translate-y-0"
+                                         class="mt-3 space-y-2.5 pl-4 border-l-2 border-slate-200">
+                                        @foreach($booking->approvals->sortBy('created_at') as $approval)
+                                            <div class="bg-slate-50 p-3 rounded-brand border border-slate-200 text-xs space-y-1 shadow-2xs">
+                                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                                    <div class="flex items-center gap-2">
+                                                        @if($approval->decision === 'approved')
+                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Disetujui</span>
+                                                        @elseif($approval->decision === 'revised')
+                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Perbaikan Berkas</span>
+                                                        @elseif($approval->decision === 'rejected')
+                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Ditolak</span>
+                                                        @elseif($approval->decision === 'payment_verified')
+                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">Verifikasi Bayar</span>
+                                                        @else
+                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{{ ucfirst($approval->decision) }}</span>
+                                                        @endif
+                                                        <span class="font-bold text-slate-800">{{ $approval->actionBy?->full_name ?? $approval->actionBy?->name ?? 'Kurator Marketing MCC' }}</span>
+                                                    </div>
+                                                    <span class="text-[11px] text-slate-500">{{ $approval->created_at ? $approval->created_at->translatedFormat('d M Y, H:i') . ' WIB' : '-' }}</span>
+                                                </div>
+                                                <p class="text-slate-700 leading-relaxed font-medium whitespace-pre-line text-xs">{{ $approval->notes }}</p>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

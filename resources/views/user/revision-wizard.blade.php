@@ -101,6 +101,35 @@
                     Slot jadwal tetap aman terikat di sistem
                 </span>
             </div>
+
+            @if($booking->approvals && $booking->approvals->count() > 1)
+                <div class="pt-2 border-t border-indigo-200/80" x-data="{ showAllHistory: false }">
+                    <button type="button" 
+                            @click="showAllHistory = !showAllHistory" 
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-[#001A72] hover:underline cursor-pointer">
+                        <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                        <span>Lihat Semua Rekam Jejak Kurasi Terdahulu ({{ $booking->approvals->count() }} Kali)</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="showAllHistory ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    <div x-show="showAllHistory" class="mt-2.5 space-y-2 pl-3 border-l-2 border-indigo-300">
+                        @foreach($booking->approvals->sortBy('created_at') as $approval)
+                            <div class="bg-white/90 p-2.5 rounded-brand border border-indigo-100 text-xs space-y-1">
+                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $approval->decision === 'revised' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-800' }}">
+                                            {{ ucfirst($approval->decision) }}
+                                        </span>
+                                        <span class="font-bold text-slate-800">{{ $approval->actionBy?->full_name ?? $approval->actionBy?->name ?? 'Kurator Marketing MCC' }}</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500">{{ $approval->created_at ? $approval->created_at->translatedFormat('d M Y, H:i') . ' WIB' : '-' }}</span>
+                                </div>
+                                <p class="text-slate-700 leading-relaxed text-xs">{{ $approval->notes }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Error Alert Banner -->

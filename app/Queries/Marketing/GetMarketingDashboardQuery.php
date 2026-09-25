@@ -54,6 +54,7 @@ class GetMarketingDashboardQuery
             ->with([
                 'user',
                 'eventDetail',
+                'approvals.actionBy',
                 'slots' => function ($slotQuery) {
                     $slotQuery->orderBy('event_start_at', 'asc')->with('room');
                 },
