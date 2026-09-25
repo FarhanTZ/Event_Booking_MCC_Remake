@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Actions\Marketing\ApproveBookingAction;
+use App\Actions\Marketing\RejectBookingAction;
 use App\Actions\Marketing\ReviseBookingAction;
 use App\Http\Requests\Marketing\ApproveBookingRequest;
+use App\Http\Requests\Marketing\RejectBookingRequest;
 use App\Http\Requests\Marketing\ReviseBookingRequest;
 use App\Models\Booking;
 use App\Queries\Marketing\GetMarketingDashboardQuery;
@@ -128,6 +130,27 @@ class DashboardController extends Controller
         $updatedBooking = $action->execute($dto);
 
         $message = "Permohonan {$updatedBooking->booking_code} berhasil dikembalikan untuk perbaikan/revisi dokumen dengan tenggat waktu 24 jam.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'booking' => $updatedBooking,
+            ]);
+        }
+
+        return redirect()->route('marketing.dashboard')->with('success', $message);
+    }
+
+    /**
+     * Reject booking proposal permanently and release slots back to public calendar (REQ-MKT-09).
+     */
+    public function reject(RejectBookingRequest $request, Booking $booking, RejectBookingAction $action): RedirectResponse|JsonResponse
+    {
+        $dto = $request->toDTO($booking->id, (string) $request->user()->id);
+        $updatedBooking = $action->execute($dto);
+
+        $message = "Permohonan {$updatedBooking->booking_code} berhasil ditolak permanen. Seluruh slot jadwal telah dilepaskan dan terbuka kembali untuk publik.";
 
         if ($request->wantsJson()) {
             return response()->json([
