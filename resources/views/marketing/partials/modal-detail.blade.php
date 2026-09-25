@@ -1,9 +1,9 @@
 <!-- ==================================================================== -->
-<!-- MODAL REVIEW PROPOSAL & AKSI TRIASE -->
+<!-- MODAL REVIEW PROPOSAL & AKSI TRIASE (CENTERED IN VIEWPORT) -->
 <!-- ==================================================================== -->
 <div x-show="showModal" 
      x-cloak
-     class="relative z-50" 
+     class="fixed inset-0 z-50 overflow-y-auto" 
      aria-labelledby="modal-title" 
      role="dialog" 
      aria-modal="true">
@@ -19,7 +19,8 @@
          @click="closeModal()" 
          class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
 
-    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
+    <!-- Centered Modal Wrapper -->
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-6 relative z-10 pointer-events-none">
         <div x-show="showModal" 
              x-transition:enter="ease-out duration-300"
              x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
@@ -27,13 +28,14 @@
              x-transition:leave="ease-in duration-200"
              x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
              x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-elevated transition-all sm:my-8 sm:w-full sm:max-w-3xl border border-slate-200">
+             @click.stop
+             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-3xl border border-slate-200 pointer-events-auto my-8">
             
             <!-- Modal Header -->
             <div class="bg-[#001A72] text-white px-6 py-4 flex items-center justify-between">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="font-mono font-bold text-amber-300 text-sm" x-text="activeItem.code"></span>
+                        <span class="font-mono font-bold text-white text-sm bg-white/10 px-2 py-0.5 rounded border border-white/20" x-text="activeItem.code"></span>
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" 
                               :class="activeItem.status_badge" 
                               x-text="activeItem.status"></span>
@@ -44,7 +46,7 @@
                     </div>
                     <h3 class="text-base font-bold text-white mt-1" x-text="activeItem.event_name"></h3>
                 </div>
-                <button @click="closeModal()" class="p-1 rounded text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                <button @click="closeModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
