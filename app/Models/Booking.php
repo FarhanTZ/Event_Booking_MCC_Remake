@@ -161,4 +161,9 @@ class Booking extends Model
     {
         return $this->hasOne(EventDetail::class, 'booking_id');
     }
+
+    public function approvals()
+    {
+        return $this->hasMany(BookingApproval::class, 'booking_id');
+    }
 }

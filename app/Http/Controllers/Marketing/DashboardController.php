@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
+use App\Actions\Marketing\ApproveBookingAction;
+use App\Http\Requests\Marketing\ApproveBookingRequest;
 use App\Models\Booking;
 use App\Queries\Marketing\GetMarketingDashboardQuery;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -88,5 +92,28 @@ class DashboardController extends Controller
 
         $fullPath = Storage::disk('public')->path($rawPath);
         return response()->file($fullPath);
+    }
+
+    /**
+     * Approve booking proposal with designated pricing scheme (REQ-MKT-07).
+     */
+    public function approve(ApproveBookingRequest $request, Booking $booking, ApproveBookingAction $action): RedirectResponse|JsonResponse
+    {
+        $dto = $request->toDTO($booking->id, (string) $request->user()->id);
+        $updatedBooking = $action->execute($dto);
+
+        $message = $dto->isSubsidy()
+            ? "Permohonan {$updatedBooking->booking_code} berhasil disetujui dengan Skema Subsidi Pemkot Malang (Gratis). E-Pass digital & QR Code telah aktif."
+            : "Permohonan {$updatedBooking->booking_code} berhasil disetujui dengan Skema Komersial. Menunggu pembayaran retribusi pemohon.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'booking' => $updatedBooking,
+            ]);
+        }
+
+        return redirect()->route('marketing.dashboard')->with('success', $message);
     }
 }

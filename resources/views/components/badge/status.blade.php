@@ -12,10 +12,15 @@
             "dot" => "bg-emerald-600",
             "label" => "Disetujui"
         ],
-        "locked", "in_progress", "awaiting_marketing", "awaiting_payment" => [
+        "locked", "in_progress", "awaiting_marketing" => [
             "class" => "bg-amber-50 text-amber-700 border-amber-200",
             "dot" => "bg-amber-500",
             "label" => "Menunggu Kurasi"
+        ],
+        "awaiting_payment" => [
+            "class" => "bg-amber-50 text-amber-700 border-amber-200",
+            "dot" => "bg-amber-500",
+            "label" => "Menunggu Pembayaran"
         ],
         "revised", "revision" => [
             "class" => "bg-indigo-50 text-indigo-700 border-indigo-200",
