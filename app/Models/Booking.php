@@ -119,12 +119,20 @@ class Booking extends Model
      */
     public function getUrgencyBadgeInfo(): ?array
     {
-        if (! $this->isUrgentTriage()) {
+        if ($this->status !== \App\Enums\BookingStatus::AWAITING_MARKETING) {
             return null;
         }
 
         $earliestDate = $this->getEarliestEventDate();
+        if (! $earliestDate) {
+            return null;
+        }
+
         $daysDiff = (int) \Carbon\Carbon::now()->startOfDay()->diffInDays($earliestDate->startOfDay(), false);
+        if ($daysDiff > 3) {
+            return null;
+        }
+
         $daysLabel = $daysDiff <= 0 ? 'Hari-H / Lewat' : "H-{$daysDiff}";
 
         return [

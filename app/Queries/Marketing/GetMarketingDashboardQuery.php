@@ -22,24 +22,26 @@ class GetMarketingDashboardQuery
     {
         $currentMonthStart = Carbon::now()->startOfMonth();
 
-        $awaitingCount = Booking::where('status', BookingStatus::AWAITING_MARKETING)->count();
-        $revisedCount = Booking::where('status', BookingStatus::REVISED)->count();
-        $awaitingPaymentCount = Booking::where('status', BookingStatus::AWAITING_PAYMENT)->count();
-        $approvedMonthCount = Booking::where('status', BookingStatus::CONFIRMED)
-            ->where('updated_at', '>=', $currentMonthStart)
-            ->count();
-        $totalConfirmed = Booking::where('status', BookingStatus::CONFIRMED)->count();
-        $rejectedCount = Booking::where('status', BookingStatus::REJECTED)->count();
-        $totalAll = Booking::count();
+        $metrics = Booking::query()
+            ->selectRaw("
+                COUNT(CASE WHEN status = 'awaiting_marketing' THEN 1 END) as awaiting_curation,
+                COUNT(CASE WHEN status = 'revised' THEN 1 END) as revised,
+                COUNT(CASE WHEN status = 'awaiting_payment' THEN 1 END) as awaiting_payment,
+                COUNT(CASE WHEN status = 'confirmed' AND updated_at >= ? THEN 1 END) as approved_this_month,
+                COUNT(CASE WHEN status = 'confirmed' THEN 1 END) as total_confirmed,
+                COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected,
+                COUNT(*) as total_all
+            ", [$currentMonthStart])
+            ->first();
 
         return [
-            'awaiting_curation' => $awaitingCount,
-            'revised' => $revisedCount,
-            'awaiting_payment' => $awaitingPaymentCount,
-            'approved_this_month' => $approvedMonthCount,
-            'total_confirmed' => $totalConfirmed,
-            'rejected' => $rejectedCount,
-            'total_all' => $totalAll,
+            'awaiting_curation' => (int) ($metrics->awaiting_curation ?? 0),
+            'revised' => (int) ($metrics->revised ?? 0),
+            'awaiting_payment' => (int) ($metrics->awaiting_payment ?? 0),
+            'approved_this_month' => (int) ($metrics->approved_this_month ?? 0),
+            'total_confirmed' => (int) ($metrics->total_confirmed ?? 0),
+            'rejected' => (int) ($metrics->rejected ?? 0),
+            'total_all' => (int) ($metrics->total_all ?? 0),
         ];
     }
 
