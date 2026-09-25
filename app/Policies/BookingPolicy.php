@@ -31,7 +31,8 @@ class BookingPolicy
         }
 
         // Applicant can only update if it is their booking AND in revised/draft status
-        return $booking->user_id === $user->id && in_array($booking->status, ['draft', 'revised'], true);
+        $statusVal = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+        return $booking->user_id === $user->id && in_array($statusVal, ['draft', 'revised'], true);
     }
 
     /**
@@ -44,6 +45,7 @@ class BookingPolicy
         }
 
         // Cannot cancel already completed or checked-in bookings
-        return $booking->user_id === $user->id && ! in_array($booking->status, ['checked_in', 'completed', 'cancelled'], true);
+        $statusVal = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+        return $booking->user_id === $user->id && ! in_array($statusVal, ['checked_in', 'completed', 'cancelled'], true);
     }
 }

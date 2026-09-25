@@ -48,6 +48,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/booking/wizard', [BookingWizardController::class, 'index'])->name('booking.wizard');
     Route::post('/booking/wizard', [BookingWizardController::class, 'store'])->name('booking.store');
     Route::get('/my-bookings', [DashboardController::class, 'index'])->name('my-bookings');
+    Route::get('/my-bookings/{booking}/revise', [DashboardController::class, 'showRevision'])->name('bookings.revise.show');
+    Route::post('/my-bookings/{booking}/revise', [DashboardController::class, 'submitRevision'])->name('bookings.revise.submit');
+    Route::get('/my-bookings/{booking}/epass', [DashboardController::class, 'showEpass'])->name('bookings.epass');
+    Route::get('/my-bookings/{booking}/epass/download', [DashboardController::class, 'downloadEpassPdf'])->name('bookings.epass.download');
 });
 
 /*
