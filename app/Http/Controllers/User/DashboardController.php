@@ -6,6 +6,7 @@ use App\Actions\Booking\SubmitBookingRevisionAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Booking\SubmitBookingRevisionRequest;
 use App\Models\Booking;
+use App\Services\EPassService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -126,5 +127,76 @@ class DashboardController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', $message);
+    }
+
+    /**
+     * Display the official digital E-Pass with dynamic QR code (REQ-USR-06).
+     */
+    public function showEpass(Request $request, Booking $booking, EPassService $epassService): View|RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->cannot('view', $booking)) {
+            abort(403, 'Anda tidak memiliki akses ke E-Pass permohonan ini.');
+        }
+
+        $statusVal = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+
+        // E-Pass is only available if booking is confirmed, checked in, or completed
+        if (! in_array($statusVal, ['confirmed', 'checked_in', 'completed'], true)) {
+            return redirect()->route('dashboard')->with(
+                'error',
+                'E-Pass Digital belum diterbitkan atau masih ditahan hingga permohonan disetujui / pembayaran divalidasi.'
+            );
+        }
+
+        $booking->load(['slots.room.facilities', 'eventDetail', 'user', 'confirmedBy']);
+
+        $qrCodeSvg = $epassService->generateQrCodeSvg($booking);
+        $scheduleData = $epassService->formatScheduleSessions($booking);
+
+        return view('user.epass', [
+            'booking' => $booking,
+            'qrCodeSvg' => $qrCodeSvg,
+            'scheduleData' => $scheduleData,
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Download the official E-Pass as a standalone PDF document.
+     */
+    public function downloadEpassPdf(Request $request, Booking $booking, EPassService $epassService)
+    {
+        $user = $request->user();
+
+        if ($user->cannot('view', $booking)) {
+            abort(403, 'Anda tidak memiliki akses ke E-Pass permohonan ini.');
+        }
+
+        $statusVal = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+
+        if (! in_array($statusVal, ['confirmed', 'checked_in', 'completed'], true)) {
+            return redirect()->route('dashboard')->with(
+                'error',
+                'E-Pass Digital belum diterbitkan atau masih ditahan hingga permohonan disetujui / pembayaran divalidasi.'
+            );
+        }
+
+        $booking->load(['slots.room.facilities', 'eventDetail', 'user', 'confirmedBy']);
+
+        $qrCodeSvg = $epassService->generateQrCodeSvg($booking, 160);
+        $scheduleData = $epassService->formatScheduleSessions($booking);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.epass', [
+            'booking' => $booking,
+            'qrCodeSvg' => $qrCodeSvg,
+            'scheduleData' => $scheduleData,
+            'user' => $user,
+        ])->setPaper('a4', 'portrait');
+
+        $fileName = "E-Pass-MCC-{$booking->booking_code}.pdf";
+
+        return $pdf->download($fileName);
     }
 }

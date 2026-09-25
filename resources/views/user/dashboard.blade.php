@@ -217,10 +217,11 @@
                                 <!-- Right Actions Section -->
                                 <div class="flex items-center gap-2 shrink-0 self-start sm:self-center">
                                     @if(in_array($statusKey, ['confirmed', 'checked_in', 'completed']))
-                                        <button type="button" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-brand text-xs font-semibold shadow-xs transition-colors cursor-pointer">
+                                        <a href="{{ route('bookings.epass', ['booking' => $booking->id]) }}"
+                                           class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-brand text-xs font-semibold shadow-xs transition-colors cursor-pointer">
                                             <i data-lucide="qr-code" class="w-4 h-4"></i>
                                             <span>Buka E-Pass Digital</span>
-                                        </button>
+                                        </a>
                                     @elseif($statusKey === 'revised')
                                         <a href="{{ route('bookings.revise.show', ['booking' => $booking->id]) }}"
                                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-brand text-xs font-bold shadow-xs transition-colors cursor-pointer">
