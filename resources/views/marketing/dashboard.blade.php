@@ -175,6 +175,7 @@
                 showModal: false,
                 showApprovalModal: false,
                 showReviseModal: false,
+                showRejectModal: false,
                 activeItem: {
                     id: '',
                     code: '',
@@ -218,6 +219,12 @@
                 },
                 reviseForm: {
                     revision_notes: '',
+                    isSubmitting: false,
+                    errorMessage: ''
+                },
+                rejectForm: {
+                    rejection_category: 'regulasi_gedung',
+                    rejection_notes: '',
                     isSubmitting: false,
                     errorMessage: ''
                 },
@@ -271,6 +278,22 @@
                 closeReviseModal() {
                     this.showReviseModal = false;
                     this.reviseForm.errorMessage = '';
+                },
+
+                openReject(item = null) {
+                    if (item) {
+                        this.activeItem = item;
+                    }
+                    this.rejectForm.rejection_category = 'regulasi_gedung';
+                    this.rejectForm.rejection_notes = '';
+                    this.rejectForm.errorMessage = '';
+                    this.rejectForm.isSubmitting = false;
+                    this.showRejectModal = true;
+                },
+
+                closeRejectModal() {
+                    this.showRejectModal = false;
+                    this.rejectForm.errorMessage = '';
                 },
 
                 formatRupiah(val) {

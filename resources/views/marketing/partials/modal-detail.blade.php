@@ -432,7 +432,7 @@
                 <!-- Tombol Tolak Proposal (Hanya tampil jika belum final) -->
                 <template x-if="activeItem.status_raw === 'awaiting_marketing' || activeItem.status_raw === 'revised'">
                     <button type="button"
-                            @click="alert('Fitur kurasi: Tolak Proposal ' + activeItem.code)"
+                            @click="openReject()"
                             class="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-brand bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
                         <span>Tolak Proposal</span>
@@ -815,6 +815,149 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                         </template>
                         <span>Kirim Permintaan Revisi (24 Jam)</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL PENOLAKAN PERMANEN PROPOSAL (REQ-MKT-09) -->
+<!-- ==================================================================== -->
+<div x-show="showRejectModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto" 
+     aria-labelledby="reject-modal-title" 
+     role="dialog" 
+     aria-modal="true">
+    
+    <!-- Backdrop -->
+    <div x-show="showRejectModal" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="closeRejectModal()" 
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Centered Modal Box -->
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-6 relative z-10 pointer-events-none">
+        <div x-show="showRejectModal" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             @click.stop
+             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-200 pointer-events-auto my-8">
+            
+            <!-- Modal Header -->
+            <div class="bg-rose-700 text-white px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-rose-200 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+                    </div>
+                    <div>
+                        <h3 id="reject-modal-title" class="text-sm font-bold text-white tracking-tight leading-snug">
+                            Penolakan Permanen Permohonan Event
+                        </h3>
+                        <p class="text-[11px] text-rose-100 font-mono" x-text="activeItem.code + ' &bull; ' + activeItem.institution"></p>
+                    </div>
+                </div>
+
+                <button @click="closeRejectModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Tutup Dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Reject Form Content -->
+            <form :action="'/marketing/bookings/' + activeItem.id + '/reject'" 
+                  method="POST" 
+                  @submit="rejectForm.isSubmitting = true" 
+                  class="p-6 space-y-5">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+                <!-- Context Information Alert -->
+                <div class="p-3.5 rounded-brand bg-rose-50 border border-rose-200 text-xs text-rose-950 space-y-1.5">
+                    <div class="flex items-center gap-2 font-bold text-rose-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Dampak Keputusan Penolakan Permanen (REQ-MKT-09):</span>
+                    </div>
+                    <ul class="text-[11px] text-rose-900 space-y-1 pl-5 list-disc">
+                        <li>Digunakan jika kegiatan bertentangan dengan norma, melanggar regulasi gedung, atau di luar 17 sub-sektor ekraf.</li>
+                        <li>Status permohonan akan seketika berubah menjadi <strong class="text-rose-950 font-bold">Ditolak (Rejected)</strong>.</li>
+                        <li><strong>Pelepasan Slot Otomatis:</strong> Seluruh slot ruangan terkait otomatis dinonaktifkan (<em>is_active = false</em>) sehingga langsung terbuka kembali di kalender publik.</li>
+                        <li>Keputusan ini bersifat permanen dan mengakhiri proses triase permohonan.</li>
+                    </ul>
+                </div>
+
+                <!-- Input Rejection Category (Dropdown / Select) -->
+                <div class="space-y-1.5">
+                    <label for="modal_rejection_category" class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                        Kategori Alasan Penolakan <span class="text-rose-500">*</span>
+                    </label>
+                    <select id="modal_rejection_category" 
+                            name="rejection_category" 
+                            x-model="rejectForm.rejection_category" 
+                            required 
+                            class="w-full p-2.5 text-xs font-semibold rounded-brand border border-slate-300 bg-white focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none">
+                        <option value="regulasi_gedung">Melanggar Regulasi &amp; Tata Tertib Gedung MCC</option>
+                        <option value="di_luar_ekraf">Di Luar 17 Sub-Sektor Ekonomi Kreatif (Non-Ekraf)</option>
+                        <option value="norma_ketertiban">Bertentangan dengan Norma Sosial / Ketertiban Umum</option>
+                        <option value="overcapacity_ekstrem">Kapasitas &amp; Teknis Berisiko Ekstrem (Overcapacity)</option>
+                        <option value="lainnya">Alasan Teknis / Operasional Lainnya</option>
+                    </select>
+                </div>
+
+                <!-- Input Rejection Notes (Textarea) -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label for="modal_rejection_notes" class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                            Uraian Catatan Penolakan Tertulis <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[11px] font-mono font-semibold"
+                              :class="rejectForm.rejection_notes.length >= 20 ? 'text-emerald-700' : 'text-slate-400'"
+                              x-text="rejectForm.rejection_notes.length + ' / min 20 karakter'"></span>
+                    </div>
+                    <textarea id="modal_rejection_notes" 
+                              name="rejection_notes" 
+                              x-model="rejectForm.rejection_notes" 
+                              required 
+                              rows="4" 
+                              minlength="20"
+                              maxlength="2000"
+                              placeholder="Uraikan secara jelas dan tertulis alasan penolakan permohonan ini untuk catatan evaluasi dan transparansi (contoh: 'Kegiatan yang diajukan tidak termasuk dalam 17 sub-sektor ekonomi kreatif yang difasilitasi oleh Gedung MCC dan berpotensi mengganggu aktivitas ruangan lain')..."
+                              class="w-full p-3 text-xs rounded-brand border border-slate-300 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none leading-relaxed"></textarea>
+                    <template x-if="rejectForm.rejection_notes.length > 0 && rejectForm.rejection_notes.length < 20">
+                        <p class="text-[11px] text-rose-600 font-semibold">
+                            Uraian alasan terlalu pendek. Harap berikan alasan penolakan yang rinci dan jelas (minimal 20 karakter).
+                        </p>
+                    </template>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="border-t border-slate-200 pt-4 flex items-center justify-end gap-2.5">
+                    <button type="button" 
+                            @click="closeRejectModal()" 
+                            class="min-h-[44px] px-4 py-2 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                        Batal
+                    </button>
+
+                    <button type="submit" 
+                            :disabled="rejectForm.isSubmitting || rejectForm.rejection_notes.trim().length < 20"
+                            class="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-brand bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <template x-if="rejectForm.isSubmitting">
+                            <svg class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <template x-if="!rejectForm.isSubmitting">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+                        </template>
+                        <span>Konfirmasi Penolakan Permanen</span>
                     </button>
                 </div>
             </form>

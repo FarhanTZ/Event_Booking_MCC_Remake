@@ -17,6 +17,7 @@ class DashboardController extends Controller
 
         // Query real bookings belonging to the authenticated user
         $bookings = $user->bookings()
+            ->with(['slots.room', 'eventDetail', 'approvals'])
             ->latest('created_at')
             ->get();
 

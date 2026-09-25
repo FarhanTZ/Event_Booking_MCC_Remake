@@ -161,6 +161,7 @@
                                 <div class="flex items-center gap-2">
                                     @php
                                         $statusKey = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+                                        $latestApproval = $booking->approvals->last();
                                     @endphp
                                     @if(in_array($statusKey, ['confirmed', 'checked_in', 'completed']))
                                         <button class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-brand text-xs font-semibold shadow-xs transition-colors">
@@ -172,11 +173,48 @@
                                             <i data-lucide="upload" class="w-4 h-4"></i>
                                             <span>Unggah Revisi</span>
                                         </button>
+                                    @elseif($statusKey === 'rejected')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                            <i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-600"></i>
+                                            <span>Permohonan Ditolak</span>
+                                        </span>
+                                    @elseif($statusKey === 'cancelled')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                            <i data-lucide="slash" class="w-3.5 h-3.5 text-slate-500"></i>
+                                            <span>Dibatalkan</span>
+                                        </span>
+                                    @elseif($statusKey === 'awaiting_payment')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <i data-lucide="credit-card" class="w-3.5 h-3.5 text-amber-600"></i>
+                                            <span>Menunggu Pembayaran Retribusi</span>
+                                        </span>
                                     @else
                                         <span class="text-xs text-slate-400 italic">Dalam proses antrean kurasi</span>
                                     @endif
                                 </div>
                             </div>
+
+                            @if($statusKey === 'rejected' && $latestApproval && $latestApproval->notes)
+                                <div class="mt-5 p-4 rounded-brand bg-rose-50 border border-rose-200 flex items-start gap-3.5 text-xs text-rose-900 shadow-2xs">
+                                    <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                                        <i data-lucide="info" class="w-4 h-4"></i>
+                                    </div>
+                                    <div class="space-y-1 flex-1">
+                                        <span class="font-extrabold text-rose-800 block text-[11px] uppercase tracking-wider">Alasan Penolakan Kurator:</span>
+                                        <p class="text-rose-900 leading-relaxed font-medium text-xs">{{ $latestApproval->notes }}</p>
+                                    </div>
+                                </div>
+                            @elseif($statusKey === 'revised' && $latestApproval && $latestApproval->notes)
+                                <div class="mt-5 p-4 rounded-brand bg-indigo-50 border border-indigo-200 flex items-start gap-3.5 text-xs text-indigo-900 shadow-2xs">
+                                    <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                    </div>
+                                    <div class="space-y-1 flex-1">
+                                        <span class="font-extrabold text-indigo-800 block text-[11px] uppercase tracking-wider">Catatan Evaluasi Revisi:</span>
+                                        <p class="text-indigo-900 leading-relaxed font-medium text-xs">{{ $latestApproval->notes }}</p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
