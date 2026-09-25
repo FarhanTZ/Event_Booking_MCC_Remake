@@ -256,10 +256,8 @@
                                             @endforelse
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3.5">
-                                        <span class="inline-block px-2 py-0.5 bg-[#001A72] text-white text-[10px] font-bold rounded">
-                                            Lantai {{ $sess['room']->floor_level }}
-                                        </span>
+                                    <td class="px-4 py-3.5 font-medium text-slate-700 whitespace-nowrap">
+                                        Lantai {{ $sess['room']->floor_level }}
                                     </td>
                                     <td class="px-4 py-3.5 font-medium text-slate-800 whitespace-nowrap">
                                         {{ $sess['date_formatted'] }}
@@ -273,15 +271,15 @@
                                     <td class="px-4 py-3.5 text-center font-bold text-slate-900">
                                         {{ $sess['duration_hours'] }} Jam
                                     </td>
-                                    <td class="px-4 py-3.5 text-right font-medium">
+                                    <td class="px-4 py-3.5 text-right font-medium whitespace-nowrap">
                                         @if($sess['room']->base_hourly_rate > 0)
                                             <span class="text-slate-900 font-bold">
                                                 Rp {{ number_format($sess['room']->base_hourly_rate * $sess['duration_hours'], 0, ',', '.') }}
                                             </span>
                                             <span class="block text-[10px] text-slate-400">Komersial</span>
                                         @else
-                                            <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                                Gratis / Subsidi
+                                            <span class="text-slate-700 font-bold">
+                                                Gratis
                                             </span>
                                         @endif
                                     </td>
@@ -296,14 +294,14 @@
                                 <td class="px-4 py-3 text-center text-sm font-extrabold text-[#001A72]">
                                     {{ $totalHours }} Jam
                                 </td>
-                                <td class="px-4 py-3 text-right text-xs">
+                                <td class="px-4 py-3 text-right text-xs whitespace-nowrap">
                                     @if($totalFee > 0)
                                         <span class="text-sm font-extrabold text-slate-900">
                                             Rp {{ number_format($totalFee, 0, ',', '.') }}
                                         </span>
                                     @else
-                                        <span class="text-emerald-800 font-bold">
-                                            Subsidi Penuh (Rp 0)
+                                        <span class="text-slate-800 font-bold">
+                                            Gratis
                                         </span>
                                     @endif
                                 </td>
