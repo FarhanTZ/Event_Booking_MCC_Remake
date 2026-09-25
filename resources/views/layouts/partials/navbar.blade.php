@@ -1,53 +1,54 @@
 <header x-data="{ mobileMenuOpen: false, userDropdownOpen: false }" class="bg-white text-slate-900 border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-            <!-- Brand Logo MCC (Official Blue Logo on White Navbar) -->
-            <div class="flex items-center gap-3">
-                <a href="/" class="flex items-center gap-3 group">
+            <!-- SISI KIRI: Brand Logo & Navigation Links -->
+            <div class="flex items-center gap-6 lg:gap-8">
+                <a href="/" class="flex items-center gap-3 group shrink-0">
                     <img src="{{ asset('assets/images/media/branding/mcc-aset-logo blue 1.png') }}" 
                          alt="Malang Creative Center Logo" 
                          class="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity">
                 </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-5 lg:gap-6">
+                    <a href="/" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5 {{ request()->is('/') ? 'text-[#001A72] font-bold' : '' }}">
+                        <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
+                        <span>Beranda</span>
+                    </a>
+                    <a href="/katalog" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5 {{ request()->is('katalog*') ? 'text-[#001A72] font-bold' : '' }}">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
+                        <span>Katalog Ruangan</span>
+                    </a>
+                    <a href="/jadwal" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5 {{ request()->is('jadwal*') ? 'text-[#001A72] font-bold' : '' }}">
+                        <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                        <span>Jadwal Gedung</span>
+                    </a>
+                    <a href="/panduan" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5 {{ request()->is('panduan*') ? 'text-[#001A72] font-bold' : '' }}">
+                        <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
+                        <span>Panduan & SOP</span>
+                    </a>
+                </nav>
             </div>
 
-            <!-- Desktop Navigation Links -->
-            <nav class="hidden md:flex items-center gap-6">
-                <a href="/" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5">
-                    <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
-                    <span>Beranda</span>
-                </a>
-                <a href="/katalog" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5">
-                    <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
-                    <span>Katalog Ruangan</span>
-                </a>
-                <a href="/jadwal" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5">
-                    <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
-                    <span>Jadwal Gedung</span>
-                </a>
-                <a href="/panduan" class="text-sm font-semibold text-slate-700 hover:text-[#001A72] transition-colors flex items-center gap-1.5">
-                    <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
-                    <span>Panduan & SOP</span>
-                </a>
-            </nav>
-
-            <!-- Auth / Action Buttons -->
-            <div class="hidden md:flex items-center gap-3">
+            <!-- SISI KANAN: User Profile / Auth Action Buttons -->
+            <div class="hidden md:flex items-center gap-3 shrink-0">
                 @if(auth()->check())
                     <!-- Authenticated User Menu -->
                     <div class="relative" @click.away="userDropdownOpen = false">
-                        <button @click="userDropdownOpen = !userDropdownOpen" class="flex items-center gap-2 p-1.5 rounded-brand hover:bg-slate-100 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-[#001A72]">
-                            <div class="w-8 h-8 rounded-full bg-[#001A72] text-white font-bold flex items-center justify-center text-sm">
-                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                        <button @click="userDropdownOpen = !userDropdownOpen" class="flex items-center gap-2.5 p-1.5 rounded-brand hover:bg-slate-100 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-[#001A72] cursor-pointer">
+                            <div class="w-8 h-8 rounded-full bg-[#001A72] text-white font-bold flex items-center justify-center text-sm shadow-2xs">
+                                {{ strtoupper(substr(auth()->user()->full_name ?? auth()->user()->name ?? 'U', 0, 1)) }}
                             </div>
                             <div class="text-xs">
-                                <span class="font-bold text-slate-900 block">{{ auth()->user()->name ?? 'User Pemohon' }}</span>
-                                <span class="text-slate-500">{{ auth()->user()->institution_name ?? 'Komunitas Kreatif' }}</span>
+                                <span class="font-bold text-slate-900 block truncate max-w-[140px]">{{ auth()->user()->full_name ?? auth()->user()->name ?? 'User Pemohon' }}</span>
+                                <span class="text-slate-500 block truncate max-w-[140px] text-[10px]">{{ auth()->user()->institution_name ?? 'Komunitas Kreatif' }}</span>
                             </div>
                             <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
                         </button>
 
                         <!-- Dropdown Menu -->
                         <div x-show="userDropdownOpen" 
+                             x-cloak
                              x-transition:enter="transition ease-out duration-100"
                              x-transition:enter-start="transform opacity-0 scale-95"
                              x-transition:enter-end="transform opacity-100 scale-100"
@@ -66,14 +67,14 @@
                                 <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i>
                                 <span>Dashboard Pemohon</span>
                             </a>
-                            <a href="/my-bookings" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-[#EEF2FF] hover:text-[#001A72]">
-                                <i data-lucide="ticket" class="w-4 h-4 text-slate-400"></i>
-                                <span>Riwayat & E-Pass</span>
+                            <a href="/jadwal" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-[#EEF2FF] hover:text-[#001A72]">
+                                <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                                <span>Cek Slot & Keranjang</span>
                             </a>
                             <div class="border-t border-slate-100 my-1"></div>
                             <form method="POST" action="/logout">
                                 @csrf
-                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 text-left">
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 text-left cursor-pointer">
                                     <i data-lucide="log-out" class="w-4 h-4"></i>
                                     <span>Keluar</span>
                                 </button>
@@ -103,7 +104,7 @@
     </div>
 
     <!-- Mobile menu drawer -->
-    <div x-show="mobileMenuOpen" x-transition class="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-6 space-y-2">
+    <div x-show="mobileMenuOpen" x-cloak x-transition class="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-6 space-y-2">
         <a href="/" class="block px-3 py-2 rounded-brand text-base font-semibold text-slate-700 hover:text-[#001A72] hover:bg-slate-50">Beranda</a>
         <a href="/katalog" class="block px-3 py-2 rounded-brand text-base font-semibold text-slate-700 hover:text-[#001A72] hover:bg-slate-50">Katalog Ruangan</a>
         <a href="/jadwal" class="block px-3 py-2 rounded-brand text-base font-semibold text-slate-700 hover:text-[#001A72] hover:bg-slate-50">Jadwal Gedung</a>
@@ -111,8 +112,10 @@
         
         <div class="border-t border-slate-200 pt-3">
             @if(auth()->check())
+                @if(auth()->user()->isMarketing() || auth()->user()->isSuperAdmin())
+                    <a href="{{ route('marketing.dashboard') }}" class="block px-3 py-2 rounded-brand text-base font-bold text-[#001A72] bg-[#EEF2FF] mb-1">Portal Kurasi Marketing</a>
+                @endif
                 <a href="/dashboard" class="block px-3 py-2 rounded-brand text-base font-semibold text-slate-700 hover:bg-slate-50">Dashboard Pemohon</a>
-                <a href="/my-bookings" class="block px-3 py-2 rounded-brand text-base font-semibold text-slate-700 hover:bg-slate-50">Riwayat & E-Pass</a>
                 <form method="POST" action="/logout" class="mt-2">
                     @csrf
                     <button type="submit" class="w-full text-left block px-3 py-2 rounded-brand text-base font-semibold text-rose-600 hover:bg-rose-50">Keluar</button>
