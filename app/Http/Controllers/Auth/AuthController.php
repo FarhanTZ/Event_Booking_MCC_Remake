@@ -6,6 +6,7 @@ use App\Actions\Auth\LoginUserAction;
 use App\Actions\Auth\RegisterUserAction;
 use App\DataTransferObjects\LoginUserData;
 use App\DataTransferObjects\RegisterUserData;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -43,6 +44,11 @@ class AuthController extends Controller
             if ($dto->redirectSlot) {
                 return redirect('/booking/wizard?' . $dto->redirectSlot)
                     ->with('success', "Selamat datang kembali, {$user->full_name}! Slot reservasi Anda siap dilanjutkan.");
+            }
+
+            if ($user->role === UserRole::MARKETING) {
+                return redirect()->intended(route('marketing.dashboard'))
+                    ->with('success', "Selamat datang di Portal Kurasi & Marketing, {$user->full_name}!");
             }
 
             return redirect()->intended(route('dashboard'))

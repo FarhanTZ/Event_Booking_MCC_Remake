@@ -52,12 +52,87 @@ class Booking extends Model
     ];
 
     protected $casts = [
+        'status' => \App\Enums\BookingStatus::class,
         'paid_at' => 'datetime',
         'checked_in_at' => 'datetime',
         'completed_at' => 'datetime',
         'revision_deadline' => 'datetime',
         'nominal_amount' => 'decimal:2',
     ];
+
+    public function isAwaitingMarketing(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::AWAITING_MARKETING;
+    }
+
+    public function isAwaitingPayment(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::AWAITING_PAYMENT;
+    }
+
+    public function isConfirmed(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::CONFIRMED;
+    }
+
+    public function isRevised(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::REVISED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::REJECTED;
+    }
+
+    /**
+     * Get the earliest event session start timestamp.
+     */
+    public function getEarliestEventDate(): ?\Carbon\Carbon
+    {
+        $firstSlot = $this->slots->sortBy('event_start_at')->first();
+        return $firstSlot ? \Carbon\Carbon::parse($firstSlot->event_start_at) : null;
+    }
+
+    /**
+     * Determine if the booking requires Urgent Triage (<= H-3 from event execution).
+     */
+    public function isUrgentTriage(): bool
+    {
+        if ($this->status !== \App\Enums\BookingStatus::AWAITING_MARKETING) {
+            return false;
+        }
+
+        $earliestDate = $this->getEarliestEventDate();
+        if (! $earliestDate) {
+            return false;
+        }
+
+        $daysDiff = \Carbon\Carbon::now()->startOfDay()->diffInDays($earliestDate->startOfDay(), false);
+        return $daysDiff <= 3;
+    }
+
+    /**
+     * Get urgency badge label and status.
+     *
+     * @return array{label: string, days: int, is_critical: bool}|null
+     */
+    public function getUrgencyBadgeInfo(): ?array
+    {
+        if (! $this->isUrgentTriage()) {
+            return null;
+        }
+
+        $earliestDate = $this->getEarliestEventDate();
+        $daysDiff = (int) \Carbon\Carbon::now()->startOfDay()->diffInDays($earliestDate->startOfDay(), false);
+        $daysLabel = $daysDiff <= 0 ? 'Hari-H / Lewat' : "H-{$daysDiff}";
+
+        return [
+            'label' => "Mendesak ({$daysLabel})",
+            'days' => $daysDiff,
+            'is_critical' => $daysDiff <= 1,
+        ];
+    }
 
     public function user()
     {

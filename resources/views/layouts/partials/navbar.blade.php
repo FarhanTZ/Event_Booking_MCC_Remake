@@ -54,7 +54,14 @@
                              x-transition:leave="transition ease-in duration-75"
                              x-transition:leave-start="transform opacity-100 scale-100"
                              x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-56 bg-white rounded-brand shadow-elevated border border-slate-200 py-2 z-50 text-slate-900">
+                             class="absolute right-0 mt-2 w-60 bg-white rounded-brand shadow-elevated border border-slate-200 py-2 z-50 text-slate-900">
+                            @if(auth()->user()->isMarketing() || auth()->user()->isSuperAdmin())
+                                <a href="{{ route('marketing.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#001A72] bg-[#EEF2FF] hover:bg-indigo-100">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-[#001A72]"></i>
+                                    <span>Portal Kurasi Marketing</span>
+                                </a>
+                                <div class="border-t border-slate-100 my-1"></div>
+                            @endif
                             <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-[#EEF2FF] hover:text-[#001A72]">
                                 <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i>
                                 <span>Dashboard Pemohon</span>

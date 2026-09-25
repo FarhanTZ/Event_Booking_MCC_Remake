@@ -145,7 +145,7 @@
                                 <div class="space-y-1.5">
                                     <div class="flex items-center gap-2">
                                         <span class="font-mono text-xs font-bold text-slate-500">#{{ $booking->booking_code }}</span>
-                                        <x-badge.status :status="$booking->status">{{ ucfirst($booking->status) }}</x-badge.status>
+                                        <x-badge.status :status="$booking->status">{{ $booking->status instanceof \App\Enums\BookingStatus ? $booking->status->label() : ucfirst((string)$booking->status) }}</x-badge.status>
                                     </div>
                                     <h3 class="font-bold text-slate-900 text-sm">
                                         Permohonan Reservasi Gedung MCC
@@ -159,12 +159,15 @@
                                 </div>
 
                                 <div class="flex items-center gap-2">
-                                    @if(in_array($booking->status, ['confirmed', 'checked_in']))
+                                    @php
+                                        $statusKey = $booking->status instanceof \BackedEnum ? $booking->status->value : (string) $booking->status;
+                                    @endphp
+                                    @if(in_array($statusKey, ['confirmed', 'checked_in', 'completed']))
                                         <button class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-brand text-xs font-semibold shadow-xs transition-colors">
                                             <i data-lucide="qr-code" class="w-4 h-4"></i>
                                             <span>Buka E-Pass Digital</span>
                                         </button>
-                                    @elseif($booking->status === 'revised')
+                                    @elseif($statusKey === 'revised')
                                         <button class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-brand text-xs font-semibold shadow-xs transition-colors">
                                             <i data-lucide="upload" class="w-4 h-4"></i>
                                             <span>Unggah Revisi</span>
