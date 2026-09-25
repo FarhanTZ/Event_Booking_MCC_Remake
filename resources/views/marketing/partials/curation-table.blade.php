@@ -24,6 +24,45 @@
         </div>
     </div>
 
+    <!-- Status Tabs Bar (REQ-MKT-10 Tab Khusus Awaiting Payment & Kurasi) -->
+    <div class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200/80 flex items-center gap-2 overflow-x-auto custom-scrollbar">
+        <a href="{{ route('marketing.dashboard', array_merge(request()->except('status', 'page'), ['status' => 'all'])) }}" 
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap {{ $currentStatus === 'all' ? 'bg-[#001A72] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+            Semua ({{ $metrics['total_all'] }})
+        </a>
+
+        <a href="{{ route('marketing.dashboard', array_merge(request()->except('status', 'page'), ['status' => 'awaiting_marketing'])) }}" 
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'awaiting_marketing' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-amber-800 hover:bg-amber-50 border border-amber-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'awaiting_marketing' ? 'bg-white' : 'bg-amber-500' }}"></span>
+            <span>Menunggu Kurasi ({{ $metrics['awaiting_curation'] }})</span>
+        </a>
+
+        <a href="{{ route('marketing.dashboard', array_merge(request()->except('status', 'page'), ['status' => 'revised'])) }}" 
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'revised' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-indigo-800 hover:bg-indigo-50 border border-indigo-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'revised' ? 'bg-white' : 'bg-indigo-500' }}"></span>
+            <span>Perlu Revisi ({{ $metrics['revised'] }})</span>
+        </a>
+
+        <!-- Tab Khusus Verifikasi Bayar (REQ-MKT-10) -->
+        <a href="{{ route('marketing.dashboard', array_merge(request()->except('status', 'page'), ['status' => 'awaiting_payment'])) }}" 
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'awaiting_payment' ? 'bg-purple-700 text-white shadow-xs' : 'bg-white text-purple-800 hover:bg-purple-50 border border-purple-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'awaiting_payment' ? 'bg-white' : 'bg-purple-600' }}"></span>
+            <span>Verifikasi Pembayaran Kasir ({{ $metrics['awaiting_payment'] }})</span>
+        </a>
+
+        <a href="{{ route('marketing.dashboard', array_merge(request()->except('status', 'page'), ['status' => 'confirmed'])) }}" 
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'confirmed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'confirmed' ? 'bg-white' : 'bg-emerald-500' }}"></span>
+            <span>Disetujui ({{ $metrics['total_confirmed'] }})</span>
+        </a>
+
+        <a href="{{ route('marketing.dashboard', array_merge(request()->except('status', 'page'), ['status' => 'rejected'])) }}" 
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'rejected' ? 'bg-rose-600 text-white shadow-xs' : 'bg-white text-rose-800 hover:bg-rose-50 border border-rose-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'rejected' ? 'bg-white' : 'bg-rose-500' }}"></span>
+            <span>Ditolak ({{ $metrics['rejected'] }})</span>
+        </a>
+    </div>
+
     <!-- Table Container -->
     <div class="overflow-x-auto">
         <table class="w-full text-left text-xs text-slate-700">
@@ -286,15 +325,28 @@
                             </span>
                         </td>
 
-                        <!-- 6. Aksi Review Modal Button (Circular Eye Icon) -->
+                        <!-- 6. Aksi Review Modal Button (Circular Eye Icon & Quick Payment Action) -->
                         <td class="px-5 py-4 align-top text-right">
-                            <button type="button"
-                                    @click='openModal(@json($modalData))'
-                                    title="Lihat Detail & Kurasi"
-                                    aria-label="Lihat Detail & Kurasi"
-                                    class="w-9 h-9 inline-flex items-center justify-center rounded-full bg-[#001A72] hover:bg-[#001250] text-white transition shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                            </button>
+                            <div class="inline-flex items-center justify-end gap-1.5">
+                                @if($booking->status === \App\Enums\BookingStatus::AWAITING_PAYMENT || (is_string($booking->status) && $booking->status === 'awaiting_payment'))
+                                    <button type="button"
+                                            @click='openPayment(@json($modalData))'
+                                            title="Konfirmasi Pembayaran Diterima"
+                                            aria-label="Konfirmasi Pembayaran Diterima"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/><path d="m14 15 2 2 4-4"/></svg>
+                                        <span>Konfirmasi Bayar</span>
+                                    </button>
+                                @endif
+
+                                <button type="button"
+                                        @click='openModal(@json($modalData))'
+                                        title="Lihat Detail & Kurasi"
+                                        aria-label="Lihat Detail & Kurasi"
+                                        class="w-9 h-9 inline-flex items-center justify-center rounded-full bg-[#001A72] hover:bg-[#001250] text-white transition shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 @empty

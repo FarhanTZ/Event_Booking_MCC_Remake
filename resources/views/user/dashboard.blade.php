@@ -302,18 +302,37 @@
 
                             <!-- Full Width: Instruksi Pembayaran (Khusus status awaiting_payment) -->
                             @if($statusKey === 'awaiting_payment')
-                                <div class="mt-3.5 p-4 sm:p-4.5 bg-amber-50 border border-amber-200 rounded-brand space-y-2.5 text-xs text-amber-950 w-full">
+                                <div class="mt-4 p-4 sm:p-4.5 bg-amber-50 border border-amber-200 rounded-brand space-y-2.5 text-xs text-amber-950 w-full shadow-2xs">
                                     <div class="flex items-center justify-between gap-2.5 flex-wrap">
                                         <div class="flex items-center gap-2 font-bold text-xs sm:text-sm text-amber-900">
                                             <i data-lucide="receipt" class="w-4 h-4 text-amber-600 shrink-0"></i>
-                                            <span>Instruksi Pembayaran Retribusi Daerah:</span>
+                                            <span>Skema Komersial &amp; Koordinasi Pembayaran Retribusi:</span>
                                         </div>
-                                        <span class="font-extrabold font-mono text-xs px-2.5 py-0.5 rounded-brand bg-white text-amber-900 border border-amber-300 shadow-2xs">
-                                            Rp {{ number_format($booking->nominal_amount, 0, ',', '.') }}
-                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[11px] text-amber-800 font-semibold">Estimasi Tarif:</span>
+                                            <span class="font-extrabold font-mono text-xs px-2.5 py-0.5 rounded-brand bg-white text-amber-900 border border-amber-300 shadow-2xs">
+                                                Rp {{ number_format($booking->nominal_amount, 0, ',', '.') }}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div class="bg-white px-3.5 py-2.5 rounded-brand border border-amber-100 text-xs sm:text-sm text-amber-950 leading-relaxed font-medium whitespace-pre-line shadow-2xs flex items-center min-h-[38px]">
-                                        <div class="w-full">{{ $booking->payment_notes ?? 'Silakan lakukan pembayaran sesuai instruksi marketing MCC.' }}</div>
+
+                                    <div class="bg-white p-3.5 rounded-brand border border-amber-100 text-xs text-slate-800 space-y-2 shadow-2xs">
+                                        <p class="leading-relaxed">
+                                            {{ $booking->payment_notes ?: 'Permohonan Anda telah disetujui dengan Skema Komersial. Detail tata cara penyetoran retribusi daerah dan konfirmasi pembayaran akan dikoordinasikan langsung oleh tim Marketing MCC melalui WhatsApp.' }}
+                                        </p>
+                                        
+                                        <div class="pt-2 border-t border-amber-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
+                                            <span class="inline-flex items-center gap-1.5 text-amber-800 font-medium">
+                                                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i>
+                                                Slot jadwal Anda <strong>tetap aman terikat</strong> selama proses koordinasi.
+                                            </span>
+                                            <a href="https://wa.me/6281234567890?text=Halo%20Marketing%20MCC,%20saya%20ingin%20konfirmasi%20pembayaran%20booking%20{{ $booking->booking_code }}"
+                                               target="_blank"
+                                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-brand transition shadow-2xs">
+                                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                                <span>Hubungi Marketing MCC via WhatsApp</span>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             @endif

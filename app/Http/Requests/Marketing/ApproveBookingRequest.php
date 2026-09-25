@@ -40,7 +40,7 @@ class ApproveBookingRequest extends FormRequest
         return [
             'pricing_scheme' => ['required', 'string', 'in:subsidy,commercial'],
             'nominal_amount' => ['required_if:pricing_scheme,commercial', 'nullable', 'numeric', 'min:0'],
-            'payment_notes' => ['required_if:pricing_scheme,commercial', 'nullable', 'string', 'max:2000'],
+            'payment_notes' => ['nullable', 'string', 'max:2000'],
             'approval_notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -56,8 +56,7 @@ class ApproveBookingRequest extends FormRequest
             'nominal_amount.required_if' => 'Nominal tarif wajib diisi untuk skema komersial/berbayar.',
             'nominal_amount.numeric' => 'Nominal tarif harus berupa angka yang valid.',
             'nominal_amount.min' => 'Nominal tarif tidak boleh bernilai negatif.',
-            'payment_notes.required_if' => 'Nomor rekening kas daerah atau instruksi pembayaran wajib dicantumkan untuk skema komersial.',
-            'payment_notes.max' => 'Instruksi pembayaran maksimal 2000 karakter.',
+            'payment_notes.max' => 'Instruksi pembayaran / catatan koordinasi maksimal 2000 karakter.',
             'approval_notes.max' => 'Catatan kurator maksimal 2000 karakter.',
         ];
     }

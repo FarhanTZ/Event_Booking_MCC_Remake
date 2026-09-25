@@ -76,4 +76,6 @@ Route::middleware(['auth', 'role:marketing,super_admin'])
             ->name('bookings.revise');
         Route::post('/bookings/{booking}/reject', [MarketingDashboardController::class, 'reject'])
             ->name('bookings.reject');
+        Route::post('/bookings/{booking}/confirm-payment', [MarketingDashboardController::class, 'confirmPayment'])
+            ->name('bookings.confirm-payment');
     });

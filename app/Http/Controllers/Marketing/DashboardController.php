@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Actions\Marketing\ApproveBookingAction;
+use App\Actions\Marketing\ConfirmPaymentAction;
 use App\Actions\Marketing\RejectBookingAction;
 use App\Actions\Marketing\ReviseBookingAction;
 use App\Http\Requests\Marketing\ApproveBookingRequest;
+use App\Http\Requests\Marketing\ConfirmPaymentRequest;
 use App\Http\Requests\Marketing\RejectBookingRequest;
 use App\Http\Requests\Marketing\ReviseBookingRequest;
 use App\Models\Booking;
@@ -151,6 +153,27 @@ class DashboardController extends Controller
         $updatedBooking = $action->execute($dto);
 
         $message = "Permohonan {$updatedBooking->booking_code} berhasil ditolak permanen. Seluruh slot jadwal telah dilepaskan dan terbuka kembali untuk publik.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'booking' => $updatedBooking,
+            ]);
+        }
+
+        return redirect()->route('marketing.dashboard')->with('success', $message);
+    }
+
+    /**
+     * Confirm received payment for commercial booking and activate digital E-Pass (REQ-MKT-10).
+     */
+    public function confirmPayment(ConfirmPaymentRequest $request, Booking $booking, ConfirmPaymentAction $action): RedirectResponse|JsonResponse
+    {
+        $dto = $request->toDTO($booking->id, (string) $request->user()->id);
+        $updatedBooking = $action->execute($dto);
+
+        $message = "Pembayaran permohonan {$updatedBooking->booking_code} berhasil diverifikasi & dikonfirmasi. Status permohonan menjadi Disetujui (Confirmed) dan akses E-Pass digital telah aktif untuk pemohon.";
 
         if ($request->wantsJson()) {
             return response()->json([

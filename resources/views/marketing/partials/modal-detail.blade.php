@@ -458,6 +458,16 @@
                         <span>Setujui Proposal</span>
                     </button>
                 </template>
+
+                <!-- Tombol Konfirmasi Pembayaran Kasir (REQ-MKT-10) -->
+                <template x-if="activeItem.status_raw === 'awaiting_payment'">
+                    <button type="button"
+                            @click="openPayment()"
+                            class="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2 rounded-brand bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/><path d="m14 15 2 2 4-4"/></svg>
+                        <span>Konfirmasi Pembayaran Diterima</span>
+                    </button>
+                </template>
             </div>
 
         </div>
@@ -630,18 +640,20 @@
                             </template>
                         </div>
 
-                        <!-- Payment Notes / Rekening Kas Daerah -->
+                        <!-- Optional: Payment Notes / Koordinasi WhatsApp -->
                         <div>
                             <label for="modal_payment_notes" class="block text-xs font-bold text-slate-800 mb-1">
-                                Nomor Rekening Kas Daerah &amp; Instruksi Bayar <span class="text-rose-500">*</span>
+                                Catatan / Instruksi Pembayaran &amp; Koordinasi WhatsApp (Opsional)
                             </label>
                             <textarea id="modal_payment_notes" 
                                       name="payment_notes" 
                                       x-model="approvalForm.payment_notes" 
-                                      required 
-                                      rows="3" 
-                                      placeholder="Contoh: Silakan transfer ke Rekening Kas Daerah Bank Jatim: 0111-0022-3344 a.n BPKAD Kota Malang. Batas pembayaran 2x24 jam."
+                                      rows="2" 
+                                      placeholder="Contoh: Rincian tarif dan tata cara penyetoran retribusi daerah akan dikonfirmasikan lebih lanjut oleh tim Marketing MCC melalui WhatsApp PIC."
                                       class="w-full p-2.5 text-xs rounded-brand border border-slate-300 focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72] outline-none"></textarea>
+                            <p class="text-[11px] text-slate-500 mt-1">
+                                Pembahasan detail mekanisme pembayaran dapat langsung dikoordinasikan secara fleksibel bersama pemohon melalui kontak WhatsApp.
+                            </p>
                         </div>
 
                         <!-- Info Alert Komersial -->
@@ -653,7 +665,7 @@
                             <ul class="text-[11px] text-amber-800 space-y-1 pl-5 list-disc">
                                 <li>Status permohonan berpindah menjadi <strong class="text-amber-900 font-extrabold">Menunggu Pembayaran (Awaiting Payment)</strong>.</li>
                                 <li>Hak seluruh slot jadwal di database <strong>tetap aman terikat</strong> (tidak dapat dipesan pengguna lain).</li>
-                                <li>Penerbitan <strong>E-Pass &amp; QR Code ditahan sementara</strong> hingga bukti pembayaran divalidasi oleh Marketing.</li>
+                                <li>Penerbitan <strong>E-Pass &amp; QR Code ditahan sementara</strong> hingga bukti pembayaran divalidasi oleh Marketing / Kasir.</li>
                             </ul>
                         </div>
                     </div>
@@ -958,6 +970,150 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
                         </template>
                         <span>Konfirmasi Penolakan Permanen</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL VERIFIKASI PEMBAYARAN KASIR (REQ-MKT-10) -->
+<!-- ==================================================================== -->
+<div x-show="showPaymentModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto" 
+     aria-labelledby="payment-modal-title" 
+     role="dialog" 
+     aria-modal="true">
+    
+    <!-- Backdrop -->
+    <div x-show="showPaymentModal" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="closePaymentModal()" 
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Centered Modal Box -->
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-6 relative z-10 pointer-events-none">
+        <div x-show="showPaymentModal" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             @click.stop
+             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-200 pointer-events-auto my-8">
+            
+            <!-- Modal Header -->
+            <div class="bg-purple-900 text-white px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-purple-300 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/><path d="m14 15 2 2 4-4"/></svg>
+                    </div>
+                    <div>
+                        <h3 id="payment-modal-title" class="text-sm font-bold text-white tracking-tight leading-snug">
+                            Verifikasi &amp; Konfirmasi Pembayaran Kasir
+                        </h3>
+                        <p class="text-[11px] text-purple-200 font-mono" x-text="activeItem.code + ' &bull; ' + activeItem.institution"></p>
+                    </div>
+                </div>
+
+                <button @click="closePaymentModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Tutup Dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Payment Confirmation Form Content -->
+            <form :action="'/marketing/bookings/' + activeItem.id + '/confirm-payment'" 
+                  method="POST" 
+                  @submit="paymentForm.isSubmitting = true" 
+                  class="p-6 space-y-5">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+                <!-- Summary Box Tagihan -->
+                <div class="p-4 bg-purple-50 border border-purple-200 rounded-brand text-xs text-purple-950 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-700">Total Tagihan Retribusi Gedung:</span>
+                        <span class="font-mono font-black text-sm text-purple-900" x-text="'Rp ' + formatRupiah(activeItem.nominal_amount)"></span>
+                    </div>
+                    <div class="border-t border-purple-200/80 pt-1.5 text-[11px] text-purple-900 space-y-0.5">
+                        <span class="font-bold block">Acara: <span class="font-semibold text-slate-800" x-text="activeItem.event_name"></span></span>
+                        <template x-if="activeItem.payment_notes">
+                            <span class="block text-slate-600">Instruksi Bayar: <span class="italic" x-text="activeItem.payment_notes"></span></span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Info Alert Dampak Verifikasi -->
+                <div class="p-3.5 rounded-brand bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
+                    <div class="flex items-center gap-2 font-bold text-emerald-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span>Konsekuensi Validasi Pembayaran (REQ-MKT-10):</span>
+                    </div>
+                    <ul class="text-[11px] text-emerald-900 space-y-1 pl-5 list-disc">
+                        <li>Status permohonan berpindah dari <strong class="text-amber-900">awaiting_payment</strong> menjadi <strong class="text-emerald-900 font-extrabold">Disetujui Sah (Confirmed)</strong>.</li>
+                        <li>Sistem otomatis mencatat timestamp bayar (<em>paid_at = NOW()</em>) dan identitas kurator/kasir penyetuju.</li>
+                        <li>Seketika menerbitkan <strong>E-Pass digital &amp; Dynamic QR Code</strong> validasi hari-H untuk pemohon.</li>
+                    </ul>
+                </div>
+
+                <!-- Input Nomor Referensi Transaksi / Kuitansi STS -->
+                <div class="space-y-1.5">
+                    <label for="modal_payment_reference" class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                        Nomor Referensi Transaksi / No. Kuitansi STS <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="modal_payment_reference" 
+                           name="payment_reference" 
+                           x-model="paymentForm.payment_reference" 
+                           required 
+                           minlength="3" 
+                           maxlength="100" 
+                           placeholder="Contoh: STS-MCC-2026/09/001 atau NOREF-BJM-988776655" 
+                           class="w-full p-2.5 text-xs font-mono font-bold rounded-brand border border-slate-300 focus:border-purple-700 focus:ring-1 focus:ring-purple-700 outline-none">
+                    <p class="text-[11px] text-slate-500">
+                        Masukkan nomor kuitansi STS (Surat Tanda Setor) Kas Daerah atau nomor referensi transfer bank yang valid.
+                    </p>
+                </div>
+
+                <!-- Optional: Notes Kasir / Petugas -->
+                <div class="space-y-1">
+                    <label for="modal_kasir_notes" class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                        Catatan Kasir / Validasi Tambahan (Opsional)
+                    </label>
+                    <textarea id="modal_kasir_notes" 
+                              name="payment_notes" 
+                              x-model="paymentForm.payment_notes" 
+                              rows="2" 
+                              placeholder="Contoh: Pembayaran telah dikonfirmasi masuk ke rekening Kas Daerah BPKAD Kota Malang pada tanggal 25/09/2026 pukul 10:15 WIB." 
+                              class="w-full p-2 text-xs rounded-brand border border-slate-300 focus:border-purple-700 focus:ring-1 focus:ring-purple-700 outline-none leading-relaxed"></textarea>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="border-t border-slate-200 pt-4 flex items-center justify-end gap-2.5">
+                    <button type="button" 
+                            @click="closePaymentModal()" 
+                            class="min-h-[44px] px-4 py-2 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                        Batal
+                    </button>
+
+                    <button type="submit" 
+                            :disabled="paymentForm.isSubmitting || paymentForm.payment_reference.trim().length < 3" 
+                            class="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-brand bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <template x-if="paymentForm.isSubmitting">
+                            <svg class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <template x-if="!paymentForm.isSubmitting">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        </template>
+                        <span>Konfirmasi Pembayaran Lunas</span>
                     </button>
                 </div>
             </form>

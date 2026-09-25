@@ -176,6 +176,7 @@
                 showApprovalModal: false,
                 showReviseModal: false,
                 showRejectModal: false,
+                showPaymentModal: false,
                 activeItem: {
                     id: '',
                     code: '',
@@ -225,6 +226,12 @@
                 rejectForm: {
                     rejection_category: 'regulasi_gedung',
                     rejection_notes: '',
+                    isSubmitting: false,
+                    errorMessage: ''
+                },
+                paymentForm: {
+                    payment_reference: '',
+                    payment_notes: '',
                     isSubmitting: false,
                     errorMessage: ''
                 },
@@ -294,6 +301,22 @@
                 closeRejectModal() {
                     this.showRejectModal = false;
                     this.rejectForm.errorMessage = '';
+                },
+
+                openPayment(item = null) {
+                    if (item) {
+                        this.activeItem = item;
+                    }
+                    this.paymentForm.payment_reference = '';
+                    this.paymentForm.payment_notes = '';
+                    this.paymentForm.errorMessage = '';
+                    this.paymentForm.isSubmitting = false;
+                    this.showPaymentModal = true;
+                },
+
+                closePaymentModal() {
+                    this.showPaymentModal = false;
+                    this.paymentForm.errorMessage = '';
                 },
 
                 formatRupiah(val) {
