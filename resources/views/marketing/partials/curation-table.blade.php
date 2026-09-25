@@ -108,6 +108,24 @@
                         $remainingBufferMins = $totalMinutesWithBuffer % 60;
                         $totalWithBufferFormatted = ($totalBufferHours > 0 ? "{$totalBufferHours} Jam " : '') . ($remainingBufferMins > 0 ? "{$remainingBufferMins} Menit" : ($totalBufferHours > 0 ? '' : '0 Menit'));
 
+                        $proposalSignedUrl = null;
+                        if ($booking->eventDetail && $booking->eventDetail->proposal_file_url) {
+                            $proposalSignedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                                'marketing.proposal.preview',
+                                now()->addHours(3),
+                                ['booking' => $booking->id]
+                            );
+                        }
+
+                        $posterSignedUrl = null;
+                        if ($booking->eventDetail && $booking->eventDetail->poster_image_url) {
+                            $posterSignedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                                'marketing.poster.preview',
+                                now()->addHours(3),
+                                ['booking' => $booking->id]
+                            );
+                        }
+
                         $modalData = [
                             'code' => $booking->booking_code,
                             'status' => $statusEnum->label(),
@@ -138,7 +156,9 @@
                             'participants' => $estimatedParticipants,
                             'description' => $booking->eventDetail->event_description ?? '-',
                             'equipment' => $booking->eventDetail->equipment_needed ?? 'Tidak membawa peralatan khusus',
-                            'proposal_url' => $booking->eventDetail && $booking->eventDetail->proposal_file_url ? asset('storage/' . $booking->eventDetail->proposal_file_url) : null,
+                            'proposal_url' => $proposalSignedUrl ?? ($booking->eventDetail && $booking->eventDetail->proposal_file_url ? asset('storage/' . ltrim(str_replace('/storage/', '', $booking->eventDetail->proposal_file_url), '/')) : null),
+                            'poster_url' => $posterSignedUrl ?? ($booking->eventDetail && $booking->eventDetail->poster_image_url ? asset('storage/' . ltrim(str_replace('/storage/', '', $booking->eventDetail->poster_image_url), '/')) : null),
+                            'official_letter' => $booking->eventDetail->official_letter_number ?? null,
                             'pricing_scheme' => $booking->pricing_scheme === 'commercial' ? 'Komersial' : 'Subsidi Pemkot Malang (Gratis)',
                             'slots' => $mappedSlots,
                             'slots_count' => $booking->slots->count(),

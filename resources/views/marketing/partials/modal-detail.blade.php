@@ -345,25 +345,77 @@
                     </div>
                 </div>
 
-                <!-- Seksi 4: Berkas Proposal -->
+                <!-- Seksi 4: Berkas Proposal & Poster Kegiatan (REQ-MKT-06) -->
                 <div>
                     <h4 class="text-xs font-bold uppercase tracking-wider text-[#001A72] mb-2 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        <span>4. Berkas Proposal &amp; Skema Pembiayaan</span>
+                        <span>4. Berkas Proposal &amp; Banner Poster Acara</span>
                     </h4>
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-50 rounded-brand border border-slate-200">
-                        <div>
-                            <span class="text-xs font-bold text-slate-800 block">Skema Penetapan Biaya:</span>
-                            <span class="text-xs font-semibold text-indigo-700" x-text="activeItem.pricing_scheme"></span>
+
+                    <div class="space-y-3 bg-slate-50 p-4 rounded-brand border border-slate-200 text-xs">
+                        <!-- Baris 1: Skema Pembiayaan & Nomor Surat -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-slate-200">
+                            <div>
+                                <span class="text-slate-400 block text-[11px]">Skema Penetapan Biaya:</span>
+                                <span class="text-xs font-bold text-indigo-900" x-text="activeItem.pricing_scheme"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-[11px]">Nomor Surat Pengantar / Resmi:</span>
+                                <span class="text-xs font-bold text-slate-800 font-mono" x-text="activeItem.official_letter || 'Tidak dicantumkan'"></span>
+                            </div>
                         </div>
-                        <template x-if="activeItem.proposal_url">
-                            <a :href="activeItem.proposal_url" 
-                               target="_blank" 
-                               class="inline-flex items-center gap-2 px-4 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-xs">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                                <span>Buka Berkas Proposal (PDF)</span>
-                            </a>
-                        </template>
+
+                        <!-- Baris 2: Berkas Proposal (Buka di Tab Baru) -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-brand border border-slate-200">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-brand bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="10" x2="8" y1="12" y2="12"/><line x1="16" x2="8" y1="16" y2="16"/></svg>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-900 block text-xs">Dokumen Proposal Acara (Format PDF)</span>
+                                    <span class="text-[11px] text-slate-500 block">Dapat langsung ditinjau di tab peramban baru</span>
+                                </div>
+                            </div>
+
+                            <template x-if="activeItem.proposal_url">
+                                <a :href="activeItem.proposal_url" 
+                                   target="_blank" 
+                                   class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white font-bold transition shadow-xs shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+                                    <span>Buka Proposal di Tab Baru</span>
+                                </a>
+                            </template>
+
+                            <template x-if="!activeItem.proposal_url">
+                                <span class="text-[11px] text-slate-400 font-semibold italic">Tidak ada berkas proposal</span>
+                            </template>
+                        </div>
+
+                        <!-- Baris 3: Banner Poster Acara (Buka di Tab Baru) -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-brand border border-slate-200">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-brand bg-indigo-50 text-[#001A72] flex items-center justify-center shrink-0 border border-indigo-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-900 block text-xs">Banner / Poster Acara (Format Gambar)</span>
+                                    <span class="text-[11px] text-slate-500 block">Pratinjau visual poster pendukung kegiatan</span>
+                                </div>
+                            </div>
+
+                            <template x-if="activeItem.poster_url">
+                                <a :href="activeItem.poster_url" 
+                                   target="_blank" 
+                                   class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-brand bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold transition shadow-2xs shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+                                    <span>Buka Poster di Tab Baru</span>
+                                </a>
+                            </template>
+
+                            <template x-if="!activeItem.poster_url">
+                                <span class="text-[11px] text-slate-400 font-semibold italic">Tidak melampirkan poster</span>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
