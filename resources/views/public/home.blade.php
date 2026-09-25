@@ -53,7 +53,7 @@
                         <span>Jelajahi Fasilitas Ruangan</span>
                     </a>
                     <a href="/jadwal" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-brand bg-[#001250] border border-white/30 text-white text-sm font-semibold hover:bg-[#000A30] hover:border-white/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
-                        <i data-lucide="calendar" class="w-4 h-4 text-amber-300"></i>
+                        <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
                         <span>Cek Ketersediaan Slot</span>
                     </a>
                 </div>

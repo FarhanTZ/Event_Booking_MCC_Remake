@@ -191,7 +191,7 @@
     <!-- Header Hero Bar -->
     <section class="bg-[#001A72] text-white py-10 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/10 text-amber-300 text-xs font-semibold mb-3 border border-white/20">
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/10 text-white text-xs font-semibold mb-3 border border-white/20">
                 <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                 <span>Multi-Room & Multi-Schedule Tray Engine (REQ-USR-07)</span>
             </div>
@@ -379,7 +379,7 @@
                                 <!-- 5. Status: Is In Basket -->
                                 <template x-if="slot.status === 'available' && isInBasket(selectedRoomId, selectedDate, slot.time)">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#001A72] text-white shadow-xs">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-amber-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                         <span>Dipilih di Keranjang Jadwal</span>
                                     </span>
                                 </template>
@@ -511,15 +511,15 @@
             <div class="flex items-center gap-3 min-w-0">
                 <button @click="showBasketDrawer = !showBasketDrawer" 
                         class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center shrink-0 transition cursor-pointer relative">
-                    <i data-lucide="shopping-bag" class="w-5 h-5 text-amber-300"></i>
-                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 text-slate-950 rounded-full text-[11px] font-extrabold flex items-center justify-center shadow-xs" 
+                    <i data-lucide="shopping-bag" class="w-5 h-5 text-white"></i>
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-white text-[#001A72] rounded-full text-[11px] font-extrabold flex items-center justify-center shadow-xs" 
                           x-text="basket.length"></span>
                 </button>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <span class="font-bold text-sm sm:text-base text-white truncate">Keranjang Jadwal Terpilih</span>
                         <button @click="showBasketDrawer = !showBasketDrawer" 
-                                class="text-xs text-amber-300 hover:underline font-semibold inline-flex items-center gap-0.5 cursor-pointer">
+                                class="text-xs text-indigo-150 hover:underline font-semibold inline-flex items-center gap-0.5 cursor-pointer text-slate-200 hover:text-white">
                             <span x-text="showBasketDrawer ? 'Tutup Rincian' : 'Lihat Rincian'"></span>
                             <svg x-show="showBasketDrawer" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                             <svg x-show="!showBasketDrawer" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
@@ -541,8 +541,8 @@
 
                 <button @click="proceedToWizard()" 
                         :disabled="isLocking" 
-                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-brand bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer">
-                    <i data-lucide="lock" class="w-4 h-4" :class="isLocking ? 'animate-spin' : ''"></i>
+                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-brand bg-white hover:bg-slate-100 text-[#001A72] text-xs sm:text-sm font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer">
+                    <i data-lucide="lock" class="w-4 h-4 text-[#001A72]" :class="isLocking ? 'animate-spin' : ''"></i>
                     <span x-text="isLocking ? 'Mengunci Batch Slot...' : `Lanjut Pesan (${basket.length} Jadwal)`"></span>
                 </button>
             </div>

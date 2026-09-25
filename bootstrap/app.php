@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Global Security Middleware Stack (Pilar 1)
         $middleware->append(SecurityHeadersMiddleware::class);
         $middleware->append(HoneypotProtectionMiddleware::class);
+
+        // Route Middleware Aliases
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

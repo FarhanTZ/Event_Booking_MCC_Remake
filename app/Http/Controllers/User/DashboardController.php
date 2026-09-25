@@ -21,9 +21,9 @@ class DashboardController extends Controller
             ->get();
 
         $metrics = [
-            'awaiting' => $bookings->whereIn('status', ['draft', 'awaiting_marketing'])->count(),
-            'revised' => $bookings->where('status', 'revised')->count(),
-            'confirmed' => $bookings->whereIn('status', ['confirmed', 'checked_in', 'completed'])->count(),
+            'awaiting' => $bookings->filter(fn($b) => in_array($b->status instanceof \BackedEnum ? $b->status->value : $b->status, ['draft', 'awaiting_marketing']))->count(),
+            'revised' => $bookings->filter(fn($b) => ($b->status instanceof \BackedEnum ? $b->status->value : $b->status) === 'revised')->count(),
+            'confirmed' => $bookings->filter(fn($b) => in_array($b->status instanceof \BackedEnum ? $b->status->value : $b->status, ['confirmed', 'checked_in', 'completed']))->count(),
             'total' => $bookings->count(),
         ];
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Public\CalendarController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\User\BookingWizardController;
+use App\Http\Controllers\Marketing\DashboardController as MarketingDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,3 +49,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/booking/wizard', [BookingWizardController::class, 'store'])->name('booking.store');
     Route::get('/my-bookings', [DashboardController::class, 'index'])->name('my-bookings');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Marketing & Curation Routes (Role: marketing, super_admin)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:marketing,super_admin'])
+    ->prefix('marketing')
+    ->name('marketing.')
+    ->group(function () {
+        Route::get('/dashboard', [MarketingDashboardController::class, 'index'])->name('dashboard');
+    });

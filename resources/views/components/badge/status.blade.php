@@ -5,26 +5,32 @@
 ])
 
 @php
-    $config = match($status) {
-        "confirmed", "approved", "active" => [
+    $statusVal = $status instanceof \BackedEnum ? $status->value : (string) $status;
+    $config = match($statusVal) {
+        "confirmed", "approved", "active", "completed" => [
             "class" => "bg-emerald-50 text-emerald-700 border-emerald-200",
             "dot" => "bg-emerald-600",
             "label" => "Disetujui"
         ],
-        "locked", "in_progress", "awaiting_marketing" => [
+        "locked", "in_progress", "awaiting_marketing", "awaiting_payment" => [
             "class" => "bg-amber-50 text-amber-700 border-amber-200",
             "dot" => "bg-amber-500",
-            "label" => "Terkunci 15m"
+            "label" => "Menunggu Kurasi"
         ],
         "revised", "revision" => [
             "class" => "bg-indigo-50 text-indigo-700 border-indigo-200",
             "dot" => "bg-indigo-600",
             "label" => "Perlu Revisi"
         ],
-        "rejected", "incident" => [
+        "rejected", "incident", "cancelled" => [
             "class" => "bg-rose-50 text-rose-700 border-rose-200",
             "dot" => "bg-rose-600",
-            "label" => "Ditolak / KTP Ditahan"
+            "label" => "Ditolak"
+        ],
+        "checked_in" => [
+            "class" => "bg-teal-50 text-teal-700 border-teal-200",
+            "dot" => "bg-teal-600",
+            "label" => "Check-in Berlangsung"
         ],
         "buffer" => [
             "class" => "bg-slate-100 text-slate-600 border-slate-200",
@@ -33,8 +39,8 @@
         ],
         default => [
             "class" => "bg-slate-100 text-slate-700 border-slate-200",
-            "dot" => "bg-emerald-500",
-            "label" => "Tersedia"
+            "dot" => "bg-slate-500",
+            "label" => $status instanceof \App\Enums\BookingStatus ? $status->label() : ucfirst($statusVal)
         ]
     };
 @endphp
