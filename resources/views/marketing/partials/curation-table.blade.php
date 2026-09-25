@@ -68,6 +68,46 @@
                             }
                         }
 
+                        $estimatedParticipants = (int) ($booking->eventDetail->estimated_participants ?? 0);
+                        $totalMinutes = 0;
+                        $hasOvercapacity = false;
+
+                        $mappedSlots = $booking->slots->map(function($s) use ($estimatedParticipants, &$totalMinutes, &$hasOvercapacity) {
+                            $start = \Carbon\Carbon::parse($s->event_start_at);
+                            $end = \Carbon\Carbon::parse($s->event_end_at);
+                            $diffMins = max(0, $start->diffInMinutes($end));
+                            $totalMinutes += $diffMins;
+
+                            $roomCapacity = (int) ($s->room->capacity ?? 0);
+                            $isOver = $roomCapacity > 0 && $estimatedParticipants > $roomCapacity;
+                            if ($isOver) {
+                                $hasOvercapacity = true;
+                            }
+
+                            $bufferEnd = (clone $end)->addMinutes(30);
+
+                            return [
+                                'room_name' => $s->room->name ?? 'Ruangan MCC',
+                                'floor' => 'Lantai ' . ($s->room->floor_level ?? 1),
+                                'capacity' => $roomCapacity,
+                                'capacity_formatted' => $roomCapacity . ' Orang',
+                                'date' => $start->translatedFormat('l, d F Y'),
+                                'time' => $start->format('H:i') . ' - ' . $end->format('H:i') . ' WIB',
+                                'duration_label' => (floor($diffMins / 60) > 0 ? floor($diffMins / 60) . ' Jam ' : '') . ($diffMins % 60 > 0 ? ($diffMins % 60) . ' Menit' : ''),
+                                'buffer_time' => $end->format('H:i') . ' - ' . $bufferEnd->format('H:i') . ' WIB',
+                                'is_overcapacity' => $isOver,
+                                'overcapacity_diff' => $isOver ? ($estimatedParticipants - $roomCapacity) : 0,
+                            ];
+                        })->values()->toArray();
+
+                        $totalHours = floor($totalMinutes / 60);
+                        $remainingMins = $totalMinutes % 60;
+                        $totalDurationFormatted = ($totalHours > 0 ? "{$totalHours} Jam " : '') . ($remainingMins > 0 ? "{$remainingMins} Menit" : ($totalHours > 0 ? '' : '0 Menit'));
+                        $totalMinutesWithBuffer = $totalMinutes + ($booking->slots->count() * 30);
+                        $totalBufferHours = floor($totalMinutesWithBuffer / 60);
+                        $remainingBufferMins = $totalMinutesWithBuffer % 60;
+                        $totalWithBufferFormatted = ($totalBufferHours > 0 ? "{$totalBufferHours} Jam " : '') . ($remainingBufferMins > 0 ? "{$remainingBufferMins} Menit" : ($totalBufferHours > 0 ? '' : '0 Menit'));
+
                         $modalData = [
                             'code' => $booking->booking_code,
                             'status' => $statusEnum->label(),
@@ -95,20 +135,16 @@
                             'event_category' => $booking->eventDetail->event_category ?? '-',
                             'ekraf_subsector' => $booking->eventDetail->ekraf_subsector ?? '-',
                             'event_type' => $booking->eventDetail->event_type ?? '-',
-                            'participants' => (int) ($booking->eventDetail->estimated_participants ?? 0),
+                            'participants' => $estimatedParticipants,
                             'description' => $booking->eventDetail->event_description ?? '-',
                             'equipment' => $booking->eventDetail->equipment_needed ?? 'Tidak membawa peralatan khusus',
                             'proposal_url' => $booking->eventDetail && $booking->eventDetail->proposal_file_url ? asset('storage/' . $booking->eventDetail->proposal_file_url) : null,
                             'pricing_scheme' => $booking->pricing_scheme === 'commercial' ? 'Komersial' : 'Subsidi Pemkot Malang (Gratis)',
-                            'slots' => $booking->slots->map(function($s) {
-                                return [
-                                    'room_name' => $s->room->name ?? 'Ruangan',
-                                    'floor' => 'Lantai ' . ($s->room->floor_level ?? 1),
-                                    'capacity' => ($s->room->capacity ?? 0) . ' Orang',
-                                    'date' => \Carbon\Carbon::parse($s->event_start_at)->translatedFormat('l, d M Y'),
-                                    'time' => \Carbon\Carbon::parse($s->event_start_at)->format('H:i') . ' - ' . \Carbon\Carbon::parse($s->event_end_at)->format('H:i') . ' WIB',
-                                ];
-                            })->values()->toArray(),
+                            'slots' => $mappedSlots,
+                            'slots_count' => $booking->slots->count(),
+                            'total_duration' => $totalDurationFormatted,
+                            'total_duration_with_buffer' => $totalWithBufferFormatted,
+                            'has_overcapacity' => $hasOvercapacity,
                         ];
                     @endphp
                     <tr class="hover:bg-slate-50/90 transition-colors {{ $urgencyInfo ? 'bg-rose-50/20' : '' }}">

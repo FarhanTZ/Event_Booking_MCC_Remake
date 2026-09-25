@@ -95,33 +95,112 @@
                     </div>
                 </div>
 
-                <!-- Seksi 1: Ringkasan Ruangan & Jadwal -->
-                <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-[#001A72] mb-2 flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                        <span>1. Jadwal &amp; Ruangan Terpilih</span>
-                    </h4>
+                <!-- Seksi 1: Evaluasi Jadwal Multi-Ruangan & Multi-Hari (REQ-MKT-05) -->
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-[#001A72] flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                            <span>1. Evaluasi Jadwal Multi-Ruangan &amp; Multi-Hari</span>
+                        </h4>
+
+                        <!-- Ringkasan Akumulasi Pemakaian Gedung -->
+                        <div class="flex items-center gap-2 text-[11px]">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-indigo-50 text-[#001A72] font-bold border border-indigo-100">
+                                <span x-text="(activeItem.slots_count || activeItem.slots.length) + ' Sesi'"></span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-100 text-slate-800 font-bold border border-slate-200">
+                                <span class="text-slate-500 font-normal">Akumulasi:</span>
+                                <strong x-text="activeItem.total_duration"></strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Warning Alert jika Overcapacity terdeteksi -->
+                    <template x-if="activeItem.has_overcapacity">
+                        <div class="p-3 rounded-brand bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-xs text-rose-900">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <div>
+                                <span class="font-extrabold text-rose-700 block text-[11px] uppercase tracking-wide">Peringatan Overcapacity Terdeteksi</span>
+                                <p class="text-[11px] text-rose-800 leading-relaxed mt-0.5">
+                                    Estimasi peserta (<strong x-text="activeItem.participants + ' orang'"></strong>) melebihi batas kapasitas maksimal salah satu ruangan terpilih. Kurator disarankan meminta revisi ruangan atau penyesuaian kuota peserta.
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Tabel Terpadu Multi-Ruangan -->
                     <div class="border border-slate-200 rounded-brand overflow-hidden">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                                <tr>
-                                    <th class="px-3 py-2">Ruangan</th>
-                                    <th class="px-3 py-2">Lantai</th>
-                                    <th class="px-3 py-2">Tanggal Sesi</th>
-                                    <th class="px-3 py-2">Waktu</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                <template x-for="(slot, idx) in activeItem.slots" :key="idx">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-[11px]">
                                     <tr>
-                                        <td class="px-3 py-2 font-bold text-slate-900" x-text="slot.room_name"></td>
-                                        <td class="px-3 py-2 text-slate-600" x-text="slot.floor"></td>
-                                        <td class="px-3 py-2 font-semibold text-[#001A72]" x-text="slot.date"></td>
-                                        <td class="px-3 py-2 font-mono text-slate-800" x-text="slot.time"></td>
+                                        <th class="px-3 py-2.5">Ruangan &amp; Lantai</th>
+                                        <th class="px-3 py-2.5">Tanggal Sesi</th>
+                                        <th class="px-3 py-2.5">Jam Acara</th>
+                                        <th class="px-3 py-2.5">Sterilisasi (+30m)</th>
+                                        <th class="px-3 py-2.5 text-right">Kapasitas Maksimal</th>
                                     </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <template x-for="(slot, idx) in activeItem.slots" :key="idx">
+                                        <tr class="hover:bg-slate-50/80 transition-colors" :class="slot.is_overcapacity ? 'bg-rose-50/40' : ''">
+                                            <td class="px-3 py-2.5 align-middle">
+                                                <span class="font-bold text-slate-900 block" x-text="slot.room_name"></span>
+                                                <span class="text-[10px] text-slate-500 font-semibold" x-text="slot.floor"></span>
+                                            </td>
+                                            <td class="px-3 py-2.5 align-middle font-medium text-slate-800" x-text="slot.date"></td>
+                                            <td class="px-3 py-2.5 align-middle font-mono font-semibold text-[#001A72]" x-text="slot.time"></td>
+                                            <td class="px-3 py-2.5 align-middle text-[11px] text-slate-600 font-mono" x-text="slot.buffer_time"></td>
+                                            <td class="px-3 py-2.5 align-middle text-right">
+                                                <div class="inline-flex items-center justify-end gap-1.5 font-semibold text-slate-800">
+                                                    <span x-text="slot.capacity_formatted || (slot.capacity + ' Orang')"></span>
+                                                    
+                                                    <!-- Warning Icon jika Melebihi Batas (Overcapacity) -->
+                                                    <template x-if="slot.is_overcapacity">
+                                                        <div class="relative inline-flex items-center shrink-0"
+                                                             x-data="{ showCapTooltip: false }"
+                                                             @mouseenter="showCapTooltip = true"
+                                                             @mouseleave="showCapTooltip = false">
+                                                            <span class="inline-flex items-center justify-center p-0.5 rounded-full text-rose-600 bg-rose-100 animate-pulse cursor-pointer shadow-2xs"
+                                                                  :title="'Overcapacity +' + slot.overcapacity_diff + ' orang'">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>
+                                                            </span>
+                                                            <div x-show="showCapTooltip"
+                                                                 x-transition:enter="transition ease-out duration-150"
+                                                                 x-transition:enter-start="opacity-0 translate-x-1"
+                                                                 x-transition:enter-end="opacity-100 translate-x-0"
+                                                                 x-transition:leave="transition ease-in duration-100"
+                                                                 x-transition:leave-start="opacity-100 translate-x-0"
+                                                                 x-transition:leave-end="opacity-0 translate-x-1"
+                                                                 style="display: none;"
+                                                                 class="absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 pointer-events-none drop-shadow-xl whitespace-nowrap">
+                                                                <div class="bg-rose-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg border border-rose-700 flex items-center gap-1">
+                                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span>
+                                                                    <span x-text="'Kelebihan ' + slot.overcapacity_diff + ' orang'"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- Checkmark Icon jika Kapasitas Sesuai -->
+                                                    <template x-if="!slot.is_overcapacity">
+                                                        <span class="text-emerald-600 inline-flex items-center shrink-0" title="Kapasitas Memadai">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Footer Akumulasi Durasi Gedung -->
+                        <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-600">
+                            <span>Total akumulasi waktu acara: <strong class="text-slate-900" x-text="activeItem.total_duration"></strong></span>
+                            <span>Total termasuk buffer sterilisasi: <strong class="text-[#001A72]" x-text="activeItem.total_duration_with_buffer"></strong></span>
+                        </div>
                     </div>
                 </div>
 
@@ -255,8 +334,13 @@
                             <p class="text-slate-700 bg-slate-50 p-3 rounded border border-slate-100 leading-relaxed whitespace-pre-line" x-text="activeItem.description"></p>
                         </div>
                         <div>
-                            <span class="text-slate-400 block mb-1">Peralatan Mandiri yang Dibawa:</span>
-                            <p class="text-slate-700 bg-slate-50 p-2.5 rounded border border-slate-100" x-text="activeItem.equipment"></p>
+                            <span class="text-slate-500 block mb-1.5 font-bold text-[11px] flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/><line x1="12" x2="12" y1="12" y2="12"/></svg>
+                                <span>Daftar Peralatan Eksternal Mandiri (Barang Bawaan Pemohon):</span>
+                            </span>
+                            <div class="bg-slate-50 p-3 rounded-brand border border-slate-200">
+                                <p class="text-slate-800 leading-relaxed font-medium whitespace-pre-line" x-text="activeItem.equipment"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
