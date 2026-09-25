@@ -15,8 +15,8 @@
 
                 <!-- Portal Badge -->
                 <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-brand bg-white/10 text-amber-300 text-xs font-extrabold border border-white/15 tracking-wide uppercase">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-brand bg-white/10 text-white text-xs font-extrabold border border-white/15 tracking-wide uppercase">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                         <span>Portal Kurasi Marketing</span>
                     </span>
                 </div>
@@ -45,20 +45,20 @@
 
                 <!-- Tanggal Hari Ini -->
                 <div class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-white/10 text-xs text-indigo-100 font-semibold border border-white/15">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                     <span>{{ now()->translatedFormat('l, d F Y') }}</span>
                 </div>
 
                 <!-- User Profile Snapshot -->
                 <div class="flex items-center gap-2.5 pl-2 sm:pl-3 sm:border-l border-white/20">
-                    <div class="w-8 h-8 rounded-brand bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs">
+                    <div class="w-8 h-8 rounded-brand bg-white text-[#001A72] font-black text-xs flex items-center justify-center shadow-xs">
                         {{ strtoupper(substr(auth()->user()->full_name ?? auth()->user()->name ?? 'M', 0, 1)) }}
                     </div>
                     <div class="hidden sm:block text-left">
                         <span class="font-bold text-white text-xs block leading-tight truncate max-w-[130px]">
                             {{ auth()->user()->full_name ?? auth()->user()->name ?? 'Petugas Marketing' }}
                         </span>
-                        <span class="text-amber-300 text-[10px] font-semibold block leading-tight">
+                        <span class="text-slate-200 text-[10px] font-semibold block leading-tight">
                             Kurator MCC
                         </span>
                     </div>

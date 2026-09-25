@@ -192,7 +192,7 @@
                     <!-- Primary Booking Button -->
                     <a href="/jadwal?room_id={{ $room->id }}" 
                        class="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                        <i data-lucide="calendar" class="w-4 h-4 text-amber-300"></i>
+                        <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
                         <span>Cek Ketersediaan Slot & Booking</span>
                     </a>
 

@@ -144,9 +144,9 @@
     <div class="sticky top-0 z-40 bg-[#001A72] text-white px-4 sm:px-6 lg:px-8 py-3 shadow-md">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-                <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
                 <span class="text-xs font-medium text-slate-100">Slot Multi-Jadwal Terkunci Sementara (15m):</span>
-                <span class="font-mono font-bold text-sm tracking-wider text-amber-300" x-text="formatTime(timeRemaining)">15:00</span>
+                <span class="font-mono font-bold text-sm tracking-wider text-white bg-white/10 px-2 py-0.5 rounded" x-text="formatTime(timeRemaining)">15:00</span>
             </div>
             <span class="text-xs text-indigo-200 hidden md:inline">Selesaikan pengisian proposal sebelum kunci otomatis dilepaskan.</span>
         </div>

@@ -70,9 +70,9 @@
         <div class="border-t border-slate-800 mt-8 pt-5 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-3">
             <p>&copy; {{ date('Y') }} Malang Creative Center. All rights reserved.</p>
             <div class="flex items-center gap-4">
-                <span class="text-amber-400 font-semibold flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    Zero Double-Booking Engine
+                <span class="text-white font-semibold flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Zero Double-Booking Engine</span>
                 </span>
             </div>
         </div>

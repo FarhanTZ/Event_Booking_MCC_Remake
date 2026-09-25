@@ -43,7 +43,7 @@
     <!-- Solid Brand Hero Section -->
     <section class="bg-[#001A72] text-white py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto text-left">
-            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/10 text-amber-300 text-xs font-semibold mb-3 border border-white/20">
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/10 text-white text-xs font-semibold mb-3 border border-white/20">
                 <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
                 <span>Sistem Reservasi Mandiri Resmi MCC</span>
             </div>
@@ -127,7 +127,7 @@
                                 <i data-lucide="users" class="w-3.5 h-3.5 text-slate-300"></i>
                                 <span x-text="'Kapasitas ' + room.capacity + ' Orang'"></span>
                             </span>
-                            <span class="text-[11px] text-amber-300 font-semibold uppercase tracking-wider">
+                            <span class="text-[11px] text-white font-semibold uppercase tracking-wider">
                                 Siap Digunakan
                             </span>
                         </div>
@@ -167,7 +167,7 @@
                             </a>
                             <a :href="'/jadwal?room_id=' + room.id" 
                                class="flex-1 inline-flex justify-center items-center gap-1.5 py-2 px-3 bg-[#001A72] hover:bg-[#001250] active:bg-[#000A30] text-white rounded-brand text-xs font-bold shadow-xs hover:shadow transition-all">
-                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-300"></i>
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-white"></i>
                                 <span>Cek Jadwal</span>
                             </a>
                         </div>

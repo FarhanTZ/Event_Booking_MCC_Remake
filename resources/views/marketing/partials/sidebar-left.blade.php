@@ -59,11 +59,11 @@
             <a href="{{ route('marketing.dashboard') }}" 
                class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs bg-[#001A72] text-white shadow-xs transition">
                 <div class="flex items-center gap-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
                     <span>Antrean Kurasi</span>
                 </div>
                 @if($metrics['awaiting_curation'] > 0)
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 shadow-2xs">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-[#001A72] shadow-2xs">
                         {{ $metrics['awaiting_curation'] }}
                     </span>
                 @endif
@@ -146,22 +146,6 @@
                 </div>
                 <span class="text-[11px] font-mono font-bold text-emerald-700">{{ $metrics['approved_this_month'] }}</span>
             </a>
-        </div>
-    </div>
-
-    <!-- 5. Footer Sidebar Kiri: Status Operasional -->
-    <div class="pt-3 border-t border-slate-100 mt-auto">
-        <div class="bg-slate-50 rounded-brand p-3 border border-slate-200/80 space-y-1">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Sistem Kurasi Aktif</span>
-                </div>
-                <span class="text-[9px] font-mono font-bold text-slate-400">MCC v2.0</span>
-            </div>
-            <p class="text-[10px] text-slate-500 leading-tight">
-                Jam Operasional: 08:00 – 22:00 WIB
-            </p>
         </div>
     </div>
 </aside>

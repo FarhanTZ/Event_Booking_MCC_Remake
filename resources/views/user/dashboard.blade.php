@@ -40,7 +40,7 @@
                     </div>
                 @endif
                 <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-white/10 text-amber-300 text-xs font-bold mb-1.5 border border-white/20">
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-white/10 text-white text-xs font-bold mb-1.5 border border-white/20">
                         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 
                         <span>{{ $user->account_type->label() }}</span>
                     </div>
