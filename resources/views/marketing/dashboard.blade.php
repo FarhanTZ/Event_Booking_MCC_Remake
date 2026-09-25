@@ -174,6 +174,7 @@
                 sidebarRight: true,
                 showModal: false,
                 showApprovalModal: false,
+                showReviseModal: false,
                 activeItem: {
                     id: '',
                     code: '',
@@ -215,6 +216,11 @@
                     isSubmitting: false,
                     errorMessage: ''
                 },
+                reviseForm: {
+                    revision_notes: '',
+                    isSubmitting: false,
+                    errorMessage: ''
+                },
 
                 toggleLeft() {
                     this.sidebarLeft = !this.sidebarLeft;
@@ -250,6 +256,21 @@
                 closeApprovalModal() {
                     this.showApprovalModal = false;
                     this.approvalForm.errorMessage = '';
+                },
+
+                openRevise(item = null) {
+                    if (item) {
+                        this.activeItem = item;
+                    }
+                    this.reviseForm.revision_notes = '';
+                    this.reviseForm.errorMessage = '';
+                    this.reviseForm.isSubmitting = false;
+                    this.showReviseModal = true;
+                },
+
+                closeReviseModal() {
+                    this.showReviseModal = false;
+                    this.reviseForm.errorMessage = '';
                 },
 
                 formatRupiah(val) {

@@ -442,7 +442,7 @@
                 <!-- Tombol Minta Revisi (Hanya tampil jika belum final) -->
                 <template x-if="activeItem.status_raw === 'awaiting_marketing'">
                     <button type="button"
-                            @click="alert('Fitur kurasi: Minta Revisi ' + activeItem.code)"
+                            @click="openRevise()"
                             class="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-brand bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-xs cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                         <span>Minta Revisi</span>
@@ -690,6 +690,131 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                         </template>
                         <span>Konfirmasi Persetujuan Proposal</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL PERMINTAAN REVISI PROPOSAL (REQ-MKT-08) -->
+<!-- ==================================================================== -->
+<div x-show="showReviseModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto" 
+     aria-labelledby="revise-modal-title" 
+     role="dialog" 
+     aria-modal="true">
+    
+    <!-- Backdrop -->
+    <div x-show="showReviseModal" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="closeReviseModal()" 
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Centered Modal Box -->
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-6 relative z-10 pointer-events-none">
+        <div x-show="showReviseModal" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             @click.stop
+             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-200 pointer-events-auto my-8">
+            
+            <!-- Modal Header -->
+            <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </div>
+                    <div>
+                        <h3 id="revise-modal-title" class="text-sm font-bold text-white tracking-tight leading-snug">
+                            Permintaan Revisi Dokumen Proposal
+                        </h3>
+                        <p class="text-[11px] text-indigo-200 font-mono" x-text="activeItem.code + ' &bull; ' + activeItem.institution"></p>
+                    </div>
+                </div>
+
+                <button @click="closeReviseModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Tutup Dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Revise Form Content -->
+            <form :action="'/marketing/bookings/' + activeItem.id + '/revise'" 
+                  method="POST" 
+                  @submit="reviseForm.isSubmitting = true" 
+                  class="p-6 space-y-5">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+                <!-- Context Information Alert -->
+                <div class="p-3.5 rounded-brand bg-indigo-50 border border-indigo-200 text-xs text-indigo-950 space-y-1.5">
+                    <div class="flex items-center gap-2 font-bold text-indigo-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Ketentuan Permintaan Revisi (REQ-MKT-08):</span>
+                    </div>
+                    <ul class="text-[11px] text-indigo-900 space-y-1 pl-5 list-disc">
+                        <li>Digunakan jika substansi acara layak namun terdapat <strong>kekurangan administratif minor</strong> pada berkas proposal.</li>
+                        <li>Status permohonan akan menjadi <strong class="text-indigo-950 font-bold">Perlu Revisi (Revised)</strong>.</li>
+                        <li>Sistem otomatis menetapkan <strong>tenggat waktu 24 jam</strong> (<em>grace period</em>) bagi pemohon untuk mengunggah berkas perbaikan.</li>
+                        <li>Hak seluruh slot jadwal di database <strong>tetap aman terikat</strong> dan tidak dapat direbut oleh pemesan lain selama masa 24 jam.</li>
+                    </ul>
+                </div>
+
+                <!-- Input Revision Notes -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label for="modal_revision_notes" class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                            Catatan Evaluasi Revisi Spesifik <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[11px] font-mono font-semibold"
+                              :class="reviseForm.revision_notes.length >= 20 ? 'text-emerald-700' : 'text-slate-400'"
+                              x-text="reviseForm.revision_notes.length + ' / min 20 karakter'"></span>
+                    </div>
+                    <textarea id="modal_revision_notes" 
+                              name="revision_notes" 
+                              x-model="reviseForm.revision_notes" 
+                              required 
+                              rows="4" 
+                              minlength="20"
+                              maxlength="2000"
+                              placeholder="Tuliskan kekurangan dokumen atau revisi teknis yang perlu diperbaiki oleh pemohon (contoh: 'Mohon lampirkan rundown acara terperinci dan surat pengantar resmi bertandatangan pimpinan pada berkas proposal')..."
+                              class="w-full p-3 text-xs rounded-brand border border-slate-300 focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72] outline-none leading-relaxed"></textarea>
+                    <template x-if="reviseForm.revision_notes.length > 0 && reviseForm.revision_notes.length < 20">
+                        <p class="text-[11px] text-rose-600 font-semibold">
+                            Catatan terlalu pendek. Harap berikan instruksi perbaikan yang jelas dan spesifik (minimal 20 karakter).
+                        </p>
+                    </template>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="border-t border-slate-200 pt-4 flex items-center justify-end gap-2.5">
+                    <button type="button" 
+                            @click="closeReviseModal()" 
+                            class="min-h-[44px] px-4 py-2 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                        Batal
+                    </button>
+
+                    <button type="submit" 
+                            :disabled="reviseForm.isSubmitting || reviseForm.revision_notes.trim().length < 20"
+                            class="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-brand bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <template x-if="reviseForm.isSubmitting">
+                            <svg class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <template x-if="!reviseForm.isSubmitting">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        </template>
+                        <span>Kirim Permintaan Revisi (24 Jam)</span>
                     </button>
                 </div>
             </form>
