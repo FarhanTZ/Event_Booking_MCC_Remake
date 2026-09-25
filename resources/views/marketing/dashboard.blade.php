@@ -173,11 +173,17 @@
                 sidebarLeft: true,
                 sidebarRight: true,
                 showModal: false,
+                showApprovalModal: false,
+                showReviseModal: false,
                 activeItem: {
+                    id: '',
                     code: '',
                     status: '',
                     status_badge: '',
                     status_raw: '',
+                    pricing_scheme_raw: 'subsidy',
+                    nominal_amount: 0,
+                    payment_notes: '',
                     urgency_label: null,
                     created_at: '',
                     institution: '',
@@ -193,8 +199,27 @@
                     description: '',
                     equipment: '',
                     proposal_url: null,
+                    poster_url: null,
+                    official_letter: null,
                     pricing_scheme: '',
-                    slots: []
+                    slots: [],
+                    slots_count: 0,
+                    total_duration: '',
+                    total_duration_with_buffer: '',
+                    has_overcapacity: false
+                },
+                approvalForm: {
+                    pricing_scheme: 'subsidy',
+                    nominal_amount: '',
+                    payment_notes: '',
+                    approval_notes: '',
+                    isSubmitting: false,
+                    errorMessage: ''
+                },
+                reviseForm: {
+                    revision_notes: '',
+                    isSubmitting: false,
+                    errorMessage: ''
                 },
 
                 toggleLeft() {
@@ -212,6 +237,47 @@
 
                 closeModal() {
                     this.showModal = false;
+                },
+
+                openApproval(item = null) {
+                    if (item) {
+                        this.activeItem = item;
+                    }
+                    const isComm = this.activeItem.pricing_scheme_raw === 'commercial';
+                    this.approvalForm.pricing_scheme = isComm ? 'commercial' : 'subsidy';
+                    this.approvalForm.nominal_amount = isComm && this.activeItem.nominal_amount > 0 ? this.activeItem.nominal_amount : '';
+                    this.approvalForm.payment_notes = isComm ? (this.activeItem.payment_notes || '') : '';
+                    this.approvalForm.approval_notes = '';
+                    this.approvalForm.errorMessage = '';
+                    this.approvalForm.isSubmitting = false;
+                    this.showApprovalModal = true;
+                },
+
+                closeApprovalModal() {
+                    this.showApprovalModal = false;
+                    this.approvalForm.errorMessage = '';
+                },
+
+                openRevise(item = null) {
+                    if (item) {
+                        this.activeItem = item;
+                    }
+                    this.reviseForm.revision_notes = '';
+                    this.reviseForm.errorMessage = '';
+                    this.reviseForm.isSubmitting = false;
+                    this.showReviseModal = true;
+                },
+
+                closeReviseModal() {
+                    this.showReviseModal = false;
+                    this.reviseForm.errorMessage = '';
+                },
+
+                formatRupiah(val) {
+                    if (!val && val !== 0) return '';
+                    let num = typeof val === 'string' ? val.replace(/[^0-9]/g, '') : val.toString();
+                    if (!num) return '';
+                    return new Intl.NumberFormat('id-ID').format(num);
                 }
             };
         }

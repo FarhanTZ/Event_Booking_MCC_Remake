@@ -66,4 +66,8 @@ Route::middleware(['auth', 'role:marketing,super_admin'])
         Route::get('/bookings/{booking}/poster-preview', [MarketingDashboardController::class, 'streamPoster'])
             ->name('poster.preview')
             ->middleware('signed');
+        Route::post('/bookings/{booking}/approve', [MarketingDashboardController::class, 'approve'])
+            ->name('bookings.approve');
+        Route::post('/bookings/{booking}/revise', [MarketingDashboardController::class, 'revise'])
+            ->name('bookings.revise');
     });

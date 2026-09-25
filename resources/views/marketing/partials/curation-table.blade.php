@@ -127,10 +127,14 @@
                         }
 
                         $modalData = [
+                            'id' => $booking->id,
                             'code' => $booking->booking_code,
                             'status' => $statusEnum->label(),
                             'status_badge' => $statusEnum->badgeClasses(),
                             'status_raw' => $booking->status instanceof \App\Enums\BookingStatus ? $booking->status->value : (string) $booking->status,
+                            'pricing_scheme_raw' => $booking->pricing_scheme,
+                            'nominal_amount' => (float) $booking->nominal_amount,
+                            'payment_notes' => $booking->payment_notes ?? '',
                             'urgency_label' => $urgencyInfo['label'] ?? null,
                             'created_at' => $booking->created_at->translatedFormat('l, d F Y - H:i') . ' WIB',
                             'institution' => $booking->eventDetail->institution_name_snapshot ?? ($user->institution_name ?? $user->full_name),

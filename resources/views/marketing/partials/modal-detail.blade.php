@@ -429,27 +429,395 @@
                     Tutup
                 </button>
 
+                <!-- Tombol Tolak Proposal (Hanya tampil jika belum final) -->
+                <template x-if="activeItem.status_raw === 'awaiting_marketing' || activeItem.status_raw === 'revised'">
                     <button type="button"
                             @click="alert('Fitur kurasi: Tolak Proposal ' + activeItem.code)"
                             class="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-brand bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
                         <span>Tolak Proposal</span>
                     </button>
+                </template>
 
+                <!-- Tombol Minta Revisi (Hanya tampil jika belum final) -->
+                <template x-if="activeItem.status_raw === 'awaiting_marketing'">
                     <button type="button"
-                            @click="alert('Fitur kurasi: Minta Revisi ' + activeItem.code)"
+                            @click="openRevise()"
                             class="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-brand bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-xs cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                         <span>Minta Revisi</span>
                     </button>
+                </template>
 
-                <button type="button"
-                        @click="alert('Fitur kurasi: Setujui Proposal ' + activeItem.code)"
-                        class="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-xs cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    <span>Setujui Proposal</span>
+                <!-- Tombol Setujui Proposal (REQ-MKT-07) -->
+                <template x-if="activeItem.status_raw === 'awaiting_marketing' || activeItem.status_raw === 'revised'">
+                    <button type="button"
+                            @click="openApproval()"
+                            class="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        <span>Setujui Proposal</span>
+                    </button>
+                </template>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL PERSETUJUAN & PENETAPAN SKEMA PEMBIAYAAN (REQ-MKT-07) -->
+<!-- ==================================================================== -->
+<div x-show="showApprovalModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto" 
+     aria-labelledby="approval-modal-title" 
+     role="dialog" 
+     aria-modal="true">
+    
+    <!-- Backdrop -->
+    <div x-show="showApprovalModal" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="closeApprovalModal()" 
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Centered Modal Box -->
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-6 relative z-10 pointer-events-none">
+        <div x-show="showApprovalModal" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             @click.stop
+             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-200 pointer-events-auto my-8">
+            
+            <!-- Modal Header -->
+            <div class="bg-[#001A72] text-white px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-emerald-400 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    </div>
+                    <div>
+                        <h3 id="approval-modal-title" class="text-sm font-bold text-white tracking-tight leading-snug">
+                            Persetujuan Kurasi &amp; Penetapan Biaya
+                        </h3>
+                        <p class="text-[11px] text-slate-200 font-mono" x-text="activeItem.code + ' &bull; ' + activeItem.institution"></p>
+                    </div>
+                </div>
+
+                <button @click="closeApprovalModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Tutup Dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
+
+            <!-- Approval Form Content -->
+            <form :action="'/marketing/bookings/' + activeItem.id + '/approve'" 
+                  method="POST" 
+                  @submit="approvalForm.isSubmitting = true" 
+                  class="p-6 space-y-5">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+                <!-- Form Introduction / Summary -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-brand text-xs text-slate-700 space-y-1">
+                    <span class="font-extrabold text-slate-900 block truncate" x-text="activeItem.event_name"></span>
+                    <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 font-medium">
+                        <span x-text="'Kategori: ' + activeItem.event_category"></span>
+                        <span>&bull;</span>
+                        <span x-text="'Sub-Sektor: ' + activeItem.ekraf_subsector"></span>
+                        <span>&bull;</span>
+                        <span x-text="activeItem.participants + ' Peserta'"></span>
+                    </div>
+                </div>
+
+                <!-- Skema Pembiayaan Selection (Radio Group) -->
+                <div class="space-y-2.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                        Pilih Skema Pembiayaan Resmi <span class="text-rose-500">*</span>
+                    </label>
+
+                    <!-- Option 1: Skema Subsidi Pemkot Malang -->
+                    <label class="relative flex items-start p-3.5 rounded-brand border-2 cursor-pointer transition-all"
+                           :class="approvalForm.pricing_scheme === 'subsidy' ? 'border-[#001A72] bg-indigo-50/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
+                        <input type="radio" 
+                               name="pricing_scheme" 
+                               value="subsidy" 
+                               x-model="approvalForm.pricing_scheme" 
+                               class="mt-1 h-4 w-4 text-[#001A72] border-slate-300 focus:ring-[#001A72]">
+                        <div class="ml-3 flex-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-extrabold text-xs text-slate-900">
+                                    Skema Subsidi Pemkot Malang
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    Gratis Rp 0.00
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                Untuk kegiatan Komunitas Ekraf &amp; Non-Komersial.
+                            </p>
+                        </div>
+                    </label>
+
+                    <!-- Option 2: Skema Komersial / Berbayar -->
+                    <label class="relative flex items-start p-3.5 rounded-brand border-2 cursor-pointer transition-all"
+                           :class="approvalForm.pricing_scheme === 'commercial' ? 'border-[#001A72] bg-indigo-50/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
+                        <input type="radio" 
+                               name="pricing_scheme" 
+                               value="commercial" 
+                               x-model="approvalForm.pricing_scheme" 
+                               class="mt-1 h-4 w-4 text-[#001A72] border-slate-300 focus:ring-[#001A72]">
+                        <div class="ml-3 flex-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-extrabold text-xs text-slate-900">
+                                    Skema Komersial / Berbayar
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                    Retribusi Daerah
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                Dikenakan tarif retribusi sesuai Perda Kota Malang.
+                            </p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Dynamic Detail Box for Subsidi -->
+                <template x-if="approvalForm.pricing_scheme === 'subsidy'">
+                    <div class="p-3.5 rounded-brand bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1.5">
+                        <div class="flex items-center gap-2 font-bold text-emerald-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <span>Dampak Keputusan Subsidi:</span>
+                        </div>
+                        <ul class="text-[11px] text-emerald-800 space-y-1 pl-5 list-disc">
+                            <li>Nominal otomatis disetel menjadi <strong>Rp 0.00</strong>.</li>
+                            <li>Status permohonan langsung berpindah menjadi <strong class="text-emerald-900 font-extrabold">Disetujui (Confirmed)</strong>.</li>
+                            <li>Sistem otomatis mengaktifkan <strong>penerbitan E-Pass digital &amp; QR Code</strong> validasi hari-H untuk pemohon.</li>
+                        </ul>
+                    </div>
+                </template>
+
+                <!-- Dynamic Fields for Komersial -->
+                <template x-if="approvalForm.pricing_scheme === 'commercial'">
+                    <div class="space-y-4 pt-1">
+                        <!-- Nominal Amount Input -->
+                        <div>
+                            <label for="modal_nominal_amount" class="block text-xs font-bold text-slate-800 mb-1">
+                                Nominal Tarif Retribusi (Rupiah) <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative rounded-brand">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-slate-500 font-bold text-xs">Rp</span>
+                                </div>
+                                <input type="number" 
+                                       id="modal_nominal_amount" 
+                                       name="nominal_amount" 
+                                       x-model="approvalForm.nominal_amount" 
+                                       required 
+                                       min="0" 
+                                       step="1000" 
+                                       placeholder="Contoh: 1500000"
+                                       class="w-full pl-10 pr-3 py-2 text-xs font-semibold rounded-brand border border-slate-300 focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72] outline-none">
+                            </div>
+                            <template x-if="approvalForm.nominal_amount && approvalForm.nominal_amount > 0">
+                                <p class="text-[11px] text-[#001A72] font-semibold mt-1" x-text="'Terbilang: Rp ' + formatRupiah(approvalForm.nominal_amount)"></p>
+                            </template>
+                        </div>
+
+                        <!-- Payment Notes / Rekening Kas Daerah -->
+                        <div>
+                            <label for="modal_payment_notes" class="block text-xs font-bold text-slate-800 mb-1">
+                                Nomor Rekening Kas Daerah &amp; Instruksi Bayar <span class="text-rose-500">*</span>
+                            </label>
+                            <textarea id="modal_payment_notes" 
+                                      name="payment_notes" 
+                                      x-model="approvalForm.payment_notes" 
+                                      required 
+                                      rows="3" 
+                                      placeholder="Contoh: Silakan transfer ke Rekening Kas Daerah Bank Jatim: 0111-0022-3344 a.n BPKAD Kota Malang. Batas pembayaran 2x24 jam."
+                                      class="w-full p-2.5 text-xs rounded-brand border border-slate-300 focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72] outline-none"></textarea>
+                        </div>
+
+                        <!-- Info Alert Komersial -->
+                        <div class="p-3.5 rounded-brand bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1.5">
+                            <div class="flex items-center gap-2 font-bold text-amber-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <span>Dampak Keputusan Komersial:</span>
+                            </div>
+                            <ul class="text-[11px] text-amber-800 space-y-1 pl-5 list-disc">
+                                <li>Status permohonan berpindah menjadi <strong class="text-amber-900 font-extrabold">Menunggu Pembayaran (Awaiting Payment)</strong>.</li>
+                                <li>Hak seluruh slot jadwal di database <strong>tetap aman terikat</strong> (tidak dapat dipesan pengguna lain).</li>
+                                <li>Penerbitan <strong>E-Pass &amp; QR Code ditahan sementara</strong> hingga bukti pembayaran divalidasi oleh Marketing.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Optional: Approval / Curator Notes -->
+                <div>
+                    <label for="modal_approval_notes" class="block text-xs font-bold text-slate-800 mb-1">
+                        Catatan Internal Kurator (Opsional)
+                    </label>
+                    <textarea id="modal_approval_notes" 
+                              name="approval_notes" 
+                              x-model="approvalForm.approval_notes" 
+                              rows="2" 
+                              placeholder="Catatan tambahan hasil kurasi tim marketing..."
+                              class="w-full p-2 text-xs rounded-brand border border-slate-300 focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72] outline-none"></textarea>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="border-t border-slate-200 pt-4 flex items-center justify-end gap-2.5">
+                    <button type="button" 
+                            @click="closeApprovalModal()" 
+                            class="min-h-[44px] px-4 py-2 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                        Batal
+                    </button>
+
+                    <button type="submit" 
+                            :disabled="approvalForm.isSubmitting"
+                            class="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <template x-if="approvalForm.isSubmitting">
+                            <svg class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <template x-if="!approvalForm.isSubmitting">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        </template>
+                        <span>Konfirmasi Persetujuan Proposal</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL PERMINTAAN REVISI PROPOSAL (REQ-MKT-08) -->
+<!-- ==================================================================== -->
+<div x-show="showReviseModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto" 
+     aria-labelledby="revise-modal-title" 
+     role="dialog" 
+     aria-modal="true">
+    
+    <!-- Backdrop -->
+    <div x-show="showReviseModal" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="closeReviseModal()" 
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Centered Modal Box -->
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-6 relative z-10 pointer-events-none">
+        <div x-show="showReviseModal" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             @click.stop
+             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-200 pointer-events-auto my-8">
+            
+            <!-- Modal Header -->
+            <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </div>
+                    <div>
+                        <h3 id="revise-modal-title" class="text-sm font-bold text-white tracking-tight leading-snug">
+                            Permintaan Revisi Dokumen Proposal
+                        </h3>
+                        <p class="text-[11px] text-indigo-200 font-mono" x-text="activeItem.code + ' &bull; ' + activeItem.institution"></p>
+                    </div>
+                </div>
+
+                <button @click="closeReviseModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Tutup Dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Revise Form Content -->
+            <form :action="'/marketing/bookings/' + activeItem.id + '/revise'" 
+                  method="POST" 
+                  @submit="reviseForm.isSubmitting = true" 
+                  class="p-6 space-y-5">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+                <!-- Context Information Alert -->
+                <div class="p-3.5 rounded-brand bg-indigo-50 border border-indigo-200 text-xs text-indigo-950 space-y-1.5">
+                    <div class="flex items-center gap-2 font-bold text-indigo-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Ketentuan Permintaan Revisi (REQ-MKT-08):</span>
+                    </div>
+                    <ul class="text-[11px] text-indigo-900 space-y-1 pl-5 list-disc">
+                        <li>Digunakan jika substansi acara layak namun terdapat <strong>kekurangan administratif minor</strong> pada berkas proposal.</li>
+                        <li>Status permohonan akan menjadi <strong class="text-indigo-950 font-bold">Perlu Revisi (Revised)</strong>.</li>
+                        <li>Sistem otomatis menetapkan <strong>tenggat waktu 24 jam</strong> (<em>grace period</em>) bagi pemohon untuk mengunggah berkas perbaikan.</li>
+                        <li>Hak seluruh slot jadwal di database <strong>tetap aman terikat</strong> dan tidak dapat direbut oleh pemesan lain selama masa 24 jam.</li>
+                    </ul>
+                </div>
+
+                <!-- Input Revision Notes -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label for="modal_revision_notes" class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                            Catatan Evaluasi Revisi Spesifik <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[11px] font-mono font-semibold"
+                              :class="reviseForm.revision_notes.length >= 20 ? 'text-emerald-700' : 'text-slate-400'"
+                              x-text="reviseForm.revision_notes.length + ' / min 20 karakter'"></span>
+                    </div>
+                    <textarea id="modal_revision_notes" 
+                              name="revision_notes" 
+                              x-model="reviseForm.revision_notes" 
+                              required 
+                              rows="4" 
+                              minlength="20"
+                              maxlength="2000"
+                              placeholder="Tuliskan kekurangan dokumen atau revisi teknis yang perlu diperbaiki oleh pemohon (contoh: 'Mohon lampirkan rundown acara terperinci dan surat pengantar resmi bertandatangan pimpinan pada berkas proposal')..."
+                              class="w-full p-3 text-xs rounded-brand border border-slate-300 focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72] outline-none leading-relaxed"></textarea>
+                    <template x-if="reviseForm.revision_notes.length > 0 && reviseForm.revision_notes.length < 20">
+                        <p class="text-[11px] text-rose-600 font-semibold">
+                            Catatan terlalu pendek. Harap berikan instruksi perbaikan yang jelas dan spesifik (minimal 20 karakter).
+                        </p>
+                    </template>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="border-t border-slate-200 pt-4 flex items-center justify-end gap-2.5">
+                    <button type="button" 
+                            @click="closeReviseModal()" 
+                            class="min-h-[44px] px-4 py-2 rounded-brand border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                        Batal
+                    </button>
+
+                    <button type="submit" 
+                            :disabled="reviseForm.isSubmitting || reviseForm.revision_notes.trim().length < 20"
+                            class="min-h-[44px] inline-flex items-center gap-2 px-5 py-2 rounded-brand bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <template x-if="reviseForm.isSubmitting">
+                            <svg class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <template x-if="!reviseForm.isSubmitting">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        </template>
+                        <span>Kirim Permintaan Revisi (24 Jam)</span>
+                    </button>
+                </div>
+            </form>
 
         </div>
     </div>
