@@ -45,6 +45,87 @@
                         $userAccountType = $booking->user->account_type ?? \App\Enums\AccountType::KOMUNITAS;
                         $accountTypeLabel = is_object($userAccountType) && method_exists($userAccountType, 'label') ? $userAccountType->label() : ucfirst((string)$userAccountType);
 
+                        $user = $booking->user;
+                        $isSuspended = (bool) ($user->is_suspended ?? false);
+                        $suspensionReason = $user->suspension_reason ?? null;
+                        $suspendedAt = $user->suspended_at ? \Carbon\Carbon::parse($user->suspended_at)->translatedFormat('d F Y') : null;
+                        
+                        $addressParts = array_filter([
+                            $user->address ?? null,
+                            $user->district ? 'Kec. ' . $user->district : null,
+                            $user->city ?? null,
+                        ]);
+                        $addressFull = !empty($addressParts) ? implode(', ', $addressParts) : 'Belum mencantumkan alamat detail';
+
+                        $socialMediaList = [];
+                        if (!empty($user->social_media)) {
+                            if (is_array($user->social_media)) {
+                                foreach ($user->social_media as $platform => $handle) {
+                                    $socialMediaList[] = is_numeric($platform) ? $handle : ucfirst($platform) . ': ' . $handle;
+                                }
+                            } else {
+                                $socialMediaList[] = (string) $user->social_media;
+                            }
+                        }
+
+                        $estimatedParticipants = (int) ($booking->eventDetail->estimated_participants ?? 0);
+                        $totalMinutes = 0;
+                        $hasOvercapacity = false;
+
+                        $mappedSlots = $booking->slots->map(function($s) use ($estimatedParticipants, &$totalMinutes, &$hasOvercapacity) {
+                            $start = \Carbon\Carbon::parse($s->event_start_at);
+                            $end = \Carbon\Carbon::parse($s->event_end_at);
+                            $diffMins = max(0, $start->diffInMinutes($end));
+                            $totalMinutes += $diffMins;
+
+                            $roomCapacity = (int) ($s->room->capacity ?? 0);
+                            $isOver = $roomCapacity > 0 && $estimatedParticipants > $roomCapacity;
+                            if ($isOver) {
+                                $hasOvercapacity = true;
+                            }
+
+                            $bufferEnd = (clone $end)->addMinutes(30);
+
+                            return [
+                                'room_name' => $s->room->name ?? 'Ruangan MCC',
+                                'floor' => 'Lantai ' . ($s->room->floor_level ?? 1),
+                                'capacity' => $roomCapacity,
+                                'capacity_formatted' => $roomCapacity . ' Orang',
+                                'date' => $start->translatedFormat('l, d F Y'),
+                                'time' => $start->format('H:i') . ' - ' . $end->format('H:i') . ' WIB',
+                                'duration_label' => (floor($diffMins / 60) > 0 ? floor($diffMins / 60) . ' Jam ' : '') . ($diffMins % 60 > 0 ? ($diffMins % 60) . ' Menit' : ''),
+                                'buffer_time' => $end->format('H:i') . ' - ' . $bufferEnd->format('H:i') . ' WIB',
+                                'is_overcapacity' => $isOver,
+                                'overcapacity_diff' => $isOver ? ($estimatedParticipants - $roomCapacity) : 0,
+                            ];
+                        })->values()->toArray();
+
+                        $totalHours = floor($totalMinutes / 60);
+                        $remainingMins = $totalMinutes % 60;
+                        $totalDurationFormatted = ($totalHours > 0 ? "{$totalHours} Jam " : '') . ($remainingMins > 0 ? "{$remainingMins} Menit" : ($totalHours > 0 ? '' : '0 Menit'));
+                        $totalMinutesWithBuffer = $totalMinutes + ($booking->slots->count() * 30);
+                        $totalBufferHours = floor($totalMinutesWithBuffer / 60);
+                        $remainingBufferMins = $totalMinutesWithBuffer % 60;
+                        $totalWithBufferFormatted = ($totalBufferHours > 0 ? "{$totalBufferHours} Jam " : '') . ($remainingBufferMins > 0 ? "{$remainingBufferMins} Menit" : ($totalBufferHours > 0 ? '' : '0 Menit'));
+
+                        $proposalSignedUrl = null;
+                        if ($booking->eventDetail && $booking->eventDetail->proposal_file_url) {
+                            $proposalSignedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                                'marketing.proposal.preview',
+                                now()->addHours(3),
+                                ['booking' => $booking->id]
+                            );
+                        }
+
+                        $posterSignedUrl = null;
+                        if ($booking->eventDetail && $booking->eventDetail->poster_image_url) {
+                            $posterSignedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                                'marketing.poster.preview',
+                                now()->addHours(3),
+                                ['booking' => $booking->id]
+                            );
+                        }
+
                         $modalData = [
                             'code' => $booking->booking_code,
                             'status' => $statusEnum->label(),
@@ -52,29 +133,38 @@
                             'status_raw' => $booking->status instanceof \App\Enums\BookingStatus ? $booking->status->value : (string) $booking->status,
                             'urgency_label' => $urgencyInfo['label'] ?? null,
                             'created_at' => $booking->created_at->translatedFormat('l, d F Y - H:i') . ' WIB',
-                            'institution' => $booking->eventDetail->institution_name_snapshot ?? ($booking->user->institution_name ?? $booking->user->full_name),
+                            'institution' => $booking->eventDetail->institution_name_snapshot ?? ($user->institution_name ?? $user->full_name),
                             'account_type' => $accountTypeLabel,
-                            'user_email' => $booking->user->email ?? '-',
-                            'pic_name' => $booking->eventDetail->pic_name_snapshot ?? $booking->user->full_name,
-                            'pic_phone' => $booking->eventDetail->pic_phone_snapshot ?? $booking->user->phone_number,
+                            'user_name' => $user->full_name ?? '-',
+                            'user_email' => $user->email ?? '-',
+                            'user_phone' => $user->phone_number ?? '-',
+                            'user_address' => $addressFull,
+                            'user_city' => $user->city ?? '-',
+                            'user_district' => $user->district ?? '-',
+                            'social_media' => !empty($socialMediaList) ? implode(' • ', $socialMediaList) : '-',
+                            'website' => $user->website ?? '-',
+                            'is_suspended' => $isSuspended,
+                            'suspension_reason' => $suspensionReason,
+                            'suspended_at' => $suspendedAt,
+                            'incident_count' => 0,
+                            'pic_name' => $booking->eventDetail->pic_name_snapshot ?? $user->full_name,
+                            'pic_phone' => $booking->eventDetail->pic_phone_snapshot ?? $user->phone_number,
                             'event_name' => $booking->eventDetail->event_name ?? '-',
                             'event_category' => $booking->eventDetail->event_category ?? '-',
                             'ekraf_subsector' => $booking->eventDetail->ekraf_subsector ?? '-',
                             'event_type' => $booking->eventDetail->event_type ?? '-',
-                            'participants' => (int) ($booking->eventDetail->estimated_participants ?? 0),
+                            'participants' => $estimatedParticipants,
                             'description' => $booking->eventDetail->event_description ?? '-',
                             'equipment' => $booking->eventDetail->equipment_needed ?? 'Tidak membawa peralatan khusus',
-                            'proposal_url' => $booking->eventDetail && $booking->eventDetail->proposal_file_url ? asset('storage/' . $booking->eventDetail->proposal_file_url) : null,
+                            'proposal_url' => $proposalSignedUrl ?? ($booking->eventDetail && $booking->eventDetail->proposal_file_url ? asset('storage/' . ltrim(str_replace('/storage/', '', $booking->eventDetail->proposal_file_url), '/')) : null),
+                            'poster_url' => $posterSignedUrl ?? ($booking->eventDetail && $booking->eventDetail->poster_image_url ? asset('storage/' . ltrim(str_replace('/storage/', '', $booking->eventDetail->poster_image_url), '/')) : null),
+                            'official_letter' => $booking->eventDetail->official_letter_number ?? null,
                             'pricing_scheme' => $booking->pricing_scheme === 'commercial' ? 'Komersial' : 'Subsidi Pemkot Malang (Gratis)',
-                            'slots' => $booking->slots->map(function($s) {
-                                return [
-                                    'room_name' => $s->room->name ?? 'Ruangan',
-                                    'floor' => 'Lantai ' . ($s->room->floor_level ?? 1),
-                                    'capacity' => ($s->room->capacity ?? 0) . ' Orang',
-                                    'date' => \Carbon\Carbon::parse($s->event_start_at)->translatedFormat('l, d M Y'),
-                                    'time' => \Carbon\Carbon::parse($s->event_start_at)->format('H:i') . ' - ' . \Carbon\Carbon::parse($s->event_end_at)->format('H:i') . ' WIB',
-                                ];
-                            })->values()->toArray(),
+                            'slots' => $mappedSlots,
+                            'slots_count' => $booking->slots->count(),
+                            'total_duration' => $totalDurationFormatted,
+                            'total_duration_with_buffer' => $totalWithBufferFormatted,
+                            'has_overcapacity' => $hasOvercapacity,
                         ];
                     @endphp
                     <tr class="hover:bg-slate-50/90 transition-colors {{ $urgencyInfo ? 'bg-rose-50/20' : '' }}">

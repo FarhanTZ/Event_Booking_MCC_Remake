@@ -60,4 +60,10 @@ Route::middleware(['auth', 'role:marketing,super_admin'])
     ->name('marketing.')
     ->group(function () {
         Route::get('/dashboard', [MarketingDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/bookings/{booking}/proposal-preview', [MarketingDashboardController::class, 'streamProposal'])
+            ->name('proposal.preview')
+            ->middleware('signed');
+        Route::get('/bookings/{booking}/poster-preview', [MarketingDashboardController::class, 'streamPoster'])
+            ->name('poster.preview')
+            ->middleware('signed');
     });

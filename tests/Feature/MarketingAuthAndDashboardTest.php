@@ -191,8 +191,8 @@ class MarketingAuthAndDashboardTest extends TestCase
         $response = $this->actingAs($marketing)->get(route('marketing.dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('Antrean Kurasi Proposal');
-        $response->assertSee('Verifikasi Pembayaran');
+        $response->assertSee('Permohonan');
+        $response->assertSee('Verifikasi Bayar');
         $response->assertSee('MCC-20260924-AWAITING');
         $response->assertSee('Mendesak'); // Urgent H-2 badge
         $response->assertSee('Workshop Animasi 3D Digital');
@@ -373,5 +373,56 @@ class MarketingAuthAndDashboardTest extends TestCase
         $resEkrafMusic = $this->actingAs($marketing)->get(route('marketing.dashboard', ['sub_sector' => 'Musik']));
         $resEkrafMusic->assertStatus(200);
         $resEkrafMusic->assertDontSee('MCC-FLOOR5-CULINARY');
+    }
+
+    public function test_marketing_can_access_proposal_preview_with_signed_url(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        \Illuminate\Support\Facades\Storage::disk('public')->put('proposals/test_proposal.pdf', '%PDF-1.4 test content');
+
+        $marketing = User::create([
+            'full_name' => 'Tim Marketing MCC',
+            'email' => 'marketing@mcc.id',
+            'phone_number' => '+6281234567890',
+            'password_hash' => Hash::make('Password123!'),
+            'role' => UserRole::MARKETING,
+            'account_type' => AccountType::INSTANSI,
+            'institution_name' => 'Malang Creative Center',
+            'address' => 'Malang',
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-20260925-TESTPDF',
+            'user_id' => $marketing->id,
+            'status' => BookingStatus::AWAITING_MARKETING,
+            'clearance_status' => 'pending',
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0.00,
+        ]);
+
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Pameran Desain Komunikasi Visual',
+            'event_category' => 'Komunitas',
+            'ekraf_subsector' => 'Desain Komunikasi Visual',
+            'event_type' => 'Terbuka Untuk Umum',
+            'estimated_participants' => 50,
+            'event_description' => 'Pameran karya mahasiswa DKV se-Jawa Timur.',
+            'proposal_file_url' => '/storage/proposals/test_proposal.pdf',
+            'pic_name_snapshot' => 'Andi Wijaya',
+            'pic_phone_snapshot' => '+6281234567890',
+            'institution_name_snapshot' => 'Asosiasi DKV Malang',
+            'tos_agreed_at' => Carbon::now(),
+        ]);
+
+        $previewUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'marketing.proposal.preview',
+            now()->addHour(),
+            ['booking' => $booking->id]
+        );
+
+        $response = $this->actingAs($marketing)->get($previewUrl);
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
     }
 }

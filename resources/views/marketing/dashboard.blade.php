@@ -62,18 +62,25 @@
             box-shadow: -5px 0 0 #EEF2FF, 5px 0 0 #EEF2FF !important;
         }
         /* Custom MCC Scrollbar */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #94A3B8 #F1F5F9;
+        }
         .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
+            width: 7px;
+            height: 7px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
+            background: #F1F5F9;
             border-radius: 9999px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #94A3B8;
+            border-radius: 9999px;
+            border: 1px solid #F1F5F9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748B;
         }
     </style>
 </head>
