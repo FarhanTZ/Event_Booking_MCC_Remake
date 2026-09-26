@@ -98,6 +98,15 @@ class FrontOfficeManifestTest extends TestCase
         $response->assertSee('FR-FO-01');
     }
 
+    public function test_front_office_user_can_access_dedicated_checkin_page(): void
+    {
+        $response = $this->actingAs($this->frontOfficeUser)->get(route('front_office.checkin'));
+        $response->assertOk();
+        $response->assertViewIs('front_office.checkin.index');
+        $response->assertSee('Validasi Check-In Kedatangan');
+        $response->assertSee('FR-FO-02');
+    }
+
     public function test_manifest_displays_only_confirmed_checked_in_and_completed_sessions_for_today(): void
     {
         $today = Carbon::today();
@@ -346,5 +355,220 @@ class FrontOfficeManifestTest extends TestCase
         $resUnmatched->assertOk();
         $resUnmatched->assertDontSee('MCC-XYZ-777');
         $resUnmatched->assertSee('Tidak ada sesi acara pada manifes hari ini');
+    }
+
+    public function test_checkin_validation_via_qr_token_succeeds_on_today_session(): void
+    {
+        $fixedNow = Carbon::create(2026, 9, 26, 14, 0, 0);
+        Carbon::setTestNow($fixedNow);
+
+        $startTime = $fixedNow->copy()->addMinutes(30); // Berada dalam toleransi 60 menit
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-QR-CHECKIN-1',
+            'checkin_token' => 'secure_qr_token_1234567890abcdef',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CONFIRMED,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Workshop UI/UX Desain',
+            'event_category' => 'Komunitas',
+            'estimated_participants' => 25,
+            'event_description' => 'Workshop desain digital.',
+            'pic_name_snapshot' => 'Budi Santoso',
+            'pic_phone_snapshot' => '+6281234567890',
+            'institution_name_snapshot' => 'Komunitas Sinema Malang',
+            'proposal_file_url' => '/storage/proposals/test_qr.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor2->id,
+            'event_start_at' => $startTime,
+            'event_end_at' => $startTime->copy()->addHours(3),
+            'operational_range' => "[{$startTime->toIso8601String()}, {$startTime->copy()->addHours(3)->addMinutes(30)->toIso8601String()})",
+            'is_active' => true,
+        ]);
+
+        // 1. Inspect Check-in via QR Token
+        $inspectResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.inspect'), [
+            'checkin_token' => 'secure_qr_token_1234567890abcdef',
+        ]);
+        $inspectResponse->assertOk();
+        $inspectResponse->assertJson([
+            'success' => true,
+            'is_early' => false,
+            'booking' => [
+                'booking_code' => 'MCC-QR-CHECKIN-1',
+                'event_name' => 'Workshop UI/UX Desain',
+            ],
+        ]);
+
+        // 2. Process Check-in
+        $processResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'checkin_token' => 'secure_qr_token_1234567890abcdef',
+        ]);
+        $processResponse->assertOk();
+        $processResponse->assertJson(['success' => true]);
+
+        // Database assertion
+        $booking->refresh();
+        $this->assertEquals(BookingStatus::CHECKED_IN, $booking->status);
+        $this->assertNotNull($booking->checked_in_at);
+        $this->assertEquals($this->frontOfficeUser->id, $booking->checked_in_by);
+    }
+
+    public function test_checkin_validation_via_manual_code_succeeds(): void
+    {
+        $fixedNow = Carbon::create(2026, 9, 26, 14, 0, 0);
+        Carbon::setTestNow($fixedNow);
+
+        $startTime = $fixedNow->copy()->addMinutes(20);
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-MANUAL-001',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CONFIRMED,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Seminar Teknologi Cloud',
+            'event_category' => 'Kampus',
+            'estimated_participants' => 60,
+            'event_description' => 'Seminar infrastruktur modern.',
+            'pic_name_snapshot' => 'Agus Hartono',
+            'pic_phone_snapshot' => '+628111222333',
+            'institution_name_snapshot' => 'Politeknik Negeri Malang',
+            'proposal_file_url' => '/storage/proposals/test_manual.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor5->id,
+            'event_start_at' => $startTime,
+            'event_end_at' => $startTime->copy()->addHours(2),
+            'operational_range' => "[{$startTime->toIso8601String()}, {$startTime->copy()->addHours(2)->addMinutes(30)->toIso8601String()})",
+            'is_active' => true,
+        ]);
+
+        $processResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'booking_code' => 'MCC-MANUAL-001',
+        ]);
+        $processResponse->assertOk();
+
+        $booking->refresh();
+        $this->assertEquals(BookingStatus::CHECKED_IN, $booking->status);
+    }
+
+    public function test_checkin_is_rejected_if_event_date_is_not_today(): void
+    {
+        $tomorrow = Carbon::tomorrow()->setTime(10, 0);
+
+        $bookingTomorrow = Booking::create([
+            'booking_code' => 'MCC-FUTURE-NOTTODAY',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CONFIRMED,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+        ]);
+        EventDetail::create([
+            'booking_id' => $bookingTomorrow->id,
+            'event_name' => 'Seminar Esok Hari',
+            'event_category' => 'Komunitas',
+            'estimated_participants' => 30,
+            'event_description' => 'Acara besok.',
+            'pic_name_snapshot' => 'Joko',
+            'pic_phone_snapshot' => '+6281234567890',
+            'institution_name_snapshot' => 'Komunitas Sinema Malang',
+            'proposal_file_url' => '/storage/proposals/test_future.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        BookingSlot::create([
+            'booking_id' => $bookingTomorrow->id,
+            'room_id' => $this->roomFloor2->id,
+            'event_start_at' => $tomorrow,
+            'event_end_at' => $tomorrow->copy()->addHours(3),
+            'operational_range' => "[{$tomorrow->toIso8601String()}, {$tomorrow->copy()->addHours(3)->addMinutes(30)->toIso8601String()})",
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'booking_code' => 'MCC-FUTURE-NOTTODAY',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['checkin']);
+        $this->assertStringContainsString('bukan hari ini', $response->json('errors.checkin.0'));
+    }
+
+    public function test_early_checkin_more_than_60_minutes_requires_confirmation(): void
+    {
+        $fixedNow = Carbon::create(2026, 9, 26, 10, 0, 0);
+        Carbon::setTestNow($fixedNow);
+
+        // Acara dimulai 120 menit lagi (pukul 12:00, > 60 menit batas toleransi)
+        $todayFutureTime = $fixedNow->copy()->addMinutes(120);
+
+        $bookingEarly = Booking::create([
+            'booking_code' => 'MCC-EARLY-ARRIVAL',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CONFIRMED,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+        ]);
+        EventDetail::create([
+            'booking_id' => $bookingEarly->id,
+            'event_name' => 'Persiapan Konser Musik',
+            'event_category' => 'Komersial',
+            'estimated_participants' => 50,
+            'event_description' => 'Persiapan loading alat.',
+            'pic_name_snapshot' => 'Doni',
+            'pic_phone_snapshot' => '+6281234567890',
+            'institution_name_snapshot' => 'EO Musik Malang',
+            'proposal_file_url' => '/storage/proposals/test_early.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        BookingSlot::create([
+            'booking_id' => $bookingEarly->id,
+            'room_id' => $this->roomFloor5->id,
+            'event_start_at' => $todayFutureTime,
+            'event_end_at' => $todayFutureTime->copy()->addHours(4),
+            'operational_range' => "[{$todayFutureTime->toIso8601String()}, {$todayFutureTime->copy()->addHours(4)->addMinutes(30)->toIso8601String()})",
+            'is_active' => true,
+        ]);
+
+        // 1. Inspect detects early arrival (>60m)
+        $inspectResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.inspect'), [
+            'booking_code' => 'MCC-EARLY-ARRIVAL',
+        ]);
+        $inspectResponse->assertOk();
+        $inspectResponse->assertJson([
+            'success' => true,
+            'is_early' => true,
+        ]);
+        $this->assertNotNull($inspectResponse->json('warning_message'));
+
+        // 2. Submit without confirmation fails with warning
+        $unconfirmedResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'booking_code' => 'MCC-EARLY-ARRIVAL',
+            'confirm_early' => false,
+        ]);
+        $unconfirmedResponse->assertStatus(422);
+        $unconfirmedResponse->assertJsonValidationErrors(['early_warning']);
+
+        // 3. Submit with confirmation succeeds
+        $confirmedResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'booking_code' => 'MCC-EARLY-ARRIVAL',
+            'confirm_early' => true,
+        ]);
+        $confirmedResponse->assertOk();
+
+        $bookingEarly->refresh();
+        $this->assertEquals(BookingStatus::CHECKED_IN, $bookingEarly->status);
     }
 }

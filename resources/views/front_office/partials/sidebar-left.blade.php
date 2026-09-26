@@ -55,18 +55,32 @@
                 Menu Front Office
             </span>
 
-            <!-- Manifes Acara Harian (Active) -->
+            <!-- Manifes Acara Harian -->
             <a href="{{ route('front_office.manifest') }}" 
-               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs bg-[#001A72] text-white shadow-xs transition">
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('front_office.manifest') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
                 <div class="flex items-center gap-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('front_office.manifest') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
                     <span>Manifes Acara Hari Ini</span>
                 </div>
                 @if($metrics['total_slots_today'] > 0)
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-[#001A72] shadow-2xs">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ request()->routeIs('front_office.manifest') ? 'bg-white text-[#001A72]' : 'bg-slate-100 text-slate-700' }} shadow-2xs">
                         {{ $metrics['total_slots_today'] }}
                     </span>
                 @endif
+            </a>
+
+            <!-- Validasi Check-In (Opens New Tab) -->
+            <a href="{{ route('front_office.checkin') }}" 
+               target="_blank"
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('front_office.checkin') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-700 hover:text-[#001A72] hover:bg-[#EEF2FF] bg-slate-50 border border-slate-200' }} transition group shadow-2xs">
+                <div class="flex items-center gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('front_office.checkin') ? 'text-white' : 'text-emerald-600' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="10" height="10" x="7" y="7" rx="1"/></svg>
+                    <span>Validasi Check-In</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded {{ request()->routeIs('front_office.checkin') ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800' }}">Tab Baru</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 group-hover:text-[#001A72] group-hover:translate-x-0.5 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                </div>
             </a>
 
             <!-- Kalender Slot Gedung -->

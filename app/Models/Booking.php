@@ -142,6 +142,16 @@ class Booking extends Model
         ];
     }
 
+    public function isCheckedIn(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::CHECKED_IN;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::COMPLETED;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -150,6 +160,16 @@ class Booking extends Model
     public function confirmedBy()
     {
         return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    public function checkedInBy()
+    {
+        return $this->belongsTo(User::class, 'checked_in_by');
+    }
+
+    public function completedBy()
+    {
+        return $this->belongsTo(User::class, 'completed_by');
     }
 
     public function slots()

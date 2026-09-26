@@ -193,12 +193,25 @@
 
                         <!-- 6. Aksi Resepsionis -->
                         <td class="px-5 py-4 text-center whitespace-nowrap">
-                            <button type="button"
-                                    @click="openManifestModal({{ json_encode($slotPayload) }})"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-[#001A72] text-white hover:bg-[#001250] text-xs font-bold transition shadow-2xs cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                <span>Detail Manifes</span>
-                            </button>
+                            <div class="flex items-center justify-center gap-1.5">
+                                @if($booking->status === \App\Enums\BookingStatus::CONFIRMED)
+                                    <a href="{{ route('front_office.checkin', ['code' => $booking->booking_code]) }}"
+                                       target="_blank"
+                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                                       title="Validasi Check-In Sesi Ini (Buka Tab Baru)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Check-In</span>
+                                    </a>
+                                @endif
+
+                                <button type="button"
+                                        @click="openManifestModal({{ json_encode($slotPayload) }})"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-brand bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer border border-slate-200"
+                                        title="Lihat Rincian Manifes">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <span>Detail</span>
+                                </button>
+                            </div>
                         </td>
 
                     </tr>

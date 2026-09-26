@@ -94,4 +94,7 @@ Route::middleware(['auth', 'role:front_office,super_admin'])
     ->name('front_office.')
     ->group(function () {
         Route::get('/manifest', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'index'])->name('manifest');
+        Route::get('/checkin', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'showCheckinPage'])->name('checkin');
+        Route::post('/checkin/inspect', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'inspectCheckin'])->name('checkin.inspect');
+        Route::post('/checkin/process', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'processCheckin'])->name('checkin.process');
     });
