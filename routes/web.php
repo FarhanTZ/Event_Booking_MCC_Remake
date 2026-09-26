@@ -83,3 +83,15 @@ Route::middleware(['auth', 'role:marketing,super_admin'])
         Route::get('/schedule/export-csv', [MarketingDashboardController::class, 'exportScheduleCsv'])
             ->name('schedule.export.csv');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Front Office Routes (Role: front_office, super_admin)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:front_office,super_admin'])
+    ->prefix('front-office')
+    ->name('front_office.')
+    ->group(function () {
+        Route::get('/manifest', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'index'])->name('manifest');
+    });

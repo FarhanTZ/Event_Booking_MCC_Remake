@@ -51,6 +51,11 @@ class AuthController extends Controller
                     ->with('success', "Selamat datang di Portal Kurasi & Marketing, {$user->full_name}!");
             }
 
+            if ($user->role === UserRole::FRONT_OFFICE) {
+                return redirect()->intended(route('front_office.manifest'))
+                    ->with('success', "Selamat datang di Manifes Front Office, {$user->full_name}!");
+            }
+
             return redirect()->intended(route('dashboard'))
                 ->with('success', "Selamat datang kembali, {$user->full_name}!");
         } catch (ValidationException $e) {

@@ -1,0 +1,194 @@
+<!-- ==================================================================== -->
+<!-- MODAL DETAIL MANIFES SESI ACARA (FRONT OFFICE) -->
+<!-- ==================================================================== -->
+<div x-show="showModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto" 
+     aria-labelledby="modal-title" 
+     role="dialog" 
+     aria-modal="true">
+    
+    <!-- Backdrop -->
+    <div x-show="showModal" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="closeModal()" 
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Centered Modal Wrapper -->
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-6 relative z-10 pointer-events-none">
+        <div x-show="showModal" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             @click.stop
+             class="relative transform overflow-hidden rounded-brand bg-white text-left shadow-2xl transition-all w-full max-w-2xl border border-slate-200 pointer-events-auto my-8">
+            
+            <!-- Modal Header -->
+            <div class="bg-[#001A72] text-white px-6 py-4 flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-indigo-200 block">Detail Manifes Sesi Acara</span>
+                    <h3 class="text-base font-bold text-white tracking-tight leading-snug truncate" x-text="activeSlot.event_name"></h3>
+                </div>
+
+                <button @click="closeModal()" class="p-1.5 rounded-brand text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Tutup Modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                
+                <!-- Strip Header Status & Kode Booking -->
+                <div class="bg-slate-50 p-3.5 rounded-brand border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Kode Booking</span>
+                        <span class="font-mono font-extrabold text-[#001A72] text-sm" x-text="activeSlot.booking_code"></span>
+                    </div>
+
+                    <div class="text-right">
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Status Tiket</span>
+                        <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-block shadow-2xs" 
+                              :class="activeSlot.status_badge" 
+                              x-text="activeSlot.status_label"></span>
+                    </div>
+                </div>
+
+                <!-- Informasi Sesi Hari Ini -->
+                <div class="bg-[#EEF2FF] border border-indigo-100 rounded-brand p-4 space-y-2">
+                    <div class="flex items-center gap-2 text-xs font-bold text-[#001A72]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Sesi Operasional Terpilih</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-xs pt-1">
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Ruangan:</span>
+                            <span class="font-extrabold text-slate-900 text-sm" x-text="activeSlot.room_name"></span>
+                            <span class="text-[11px] text-slate-500 block" x-text="'Lantai ' + activeSlot.floor_level + ' (Kapasitas ' + activeSlot.capacity + ' Orang)'"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Waktu Sesi:</span>
+                            <span class="font-extrabold text-slate-900 text-sm font-mono" x-text="activeSlot.slot_start + ' - ' + activeSlot.slot_end"></span>
+                            <span class="text-[11px] text-[#001A72] font-semibold block" x-text="'Durasi: ' + activeSlot.duration"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Penanggung Jawab & Kontak -->
+                <div class="border border-slate-200 rounded-brand p-4 space-y-3">
+                    <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>Identitas Penyelenggara &amp; PIC Lapangan</span>
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Lembaga / Komunitas:</span>
+                            <span class="font-bold text-slate-800" x-text="activeSlot.institution_name"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Skema Pemakaian:</span>
+                            <span class="font-bold text-slate-800" x-text="activeSlot.pricing_scheme"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Nama PIC Acara:</span>
+                            <span class="font-bold text-slate-800" x-text="activeSlot.pic_name"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Kontak WhatsApp PIC:</span>
+                            <span class="font-bold text-[#001A72] font-mono" x-text="activeSlot.pic_phone"></span>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <span class="text-slate-500 text-[11px] block">Kontak Darurat Alternatif:</span>
+                            <span class="font-bold text-slate-700 font-mono" x-text="activeSlot.emergency_phone"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daftar Seluruh Sesi Slot Permohonan (Khusus Multi-Slot / Multi-Day) -->
+                <template x-if="activeSlot.all_slots && activeSlot.all_slots.length > 1">
+                    <div class="border border-slate-200 rounded-brand p-4 space-y-3 bg-slate-50/60">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                <span>Seluruh Rangkaian Sesi Permohonan (<span x-text="activeSlot.all_slots.length"></span> Sesi)</span>
+                            </h4>
+                            <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                                Multi-Slot / Multi-Day
+                            </span>
+                        </div>
+                        <div class="space-y-2">
+                            <template x-for="(s, idx) in activeSlot.all_slots" :key="s.id">
+                                <div class="p-2.5 rounded-brand border text-xs flex items-center justify-between"
+                                     :class="s.id === activeSlot.id ? 'bg-[#EEF2FF] border-[#001A72] text-[#001A72] font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold"
+                                              :class="s.id === activeSlot.id ? 'bg-[#001A72] text-white' : 'bg-slate-100 text-slate-600'"
+                                              x-text="idx + 1"></span>
+                                        <div>
+                                            <span x-text="s.room_name + ' (Lt. ' + s.floor_level + ')'"></span>
+                                            <span class="text-[10px] block" :class="s.id === activeSlot.id ? 'text-indigo-800' : 'text-slate-500'" x-text="s.start + ' - ' + s.end"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <template x-if="s.id === activeSlot.id">
+                                            <span class="px-2 py-0.5 rounded bg-[#001A72] text-white text-[10px] font-extrabold">
+                                                Sesi Aktif Hari Ini
+                                            </span>
+                                        </template>
+                                        <template x-if="s.id !== activeSlot.id">
+                                            <span class="text-[10px] text-slate-500 font-semibold" x-text="s.is_today ? 'Hari ini di jam lain' : 'Hari Lain'"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Detail Acara & Estimasi Peserta -->
+                <div class="border border-slate-200 rounded-brand p-4 space-y-2.5">
+                    <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        Deskripsi &amp; Estimasi Peserta
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Kategori Acara:</span>
+                            <span class="font-bold text-slate-800" x-text="activeSlot.event_category"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 text-[11px] block">Subsektor Ekraf:</span>
+                            <span class="font-bold text-slate-800" x-text="activeSlot.ekraf_subsector"></span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-slate-500 text-[11px] block">Estimasi Peserta:</span>
+                            <span class="font-bold text-slate-800" x-text="activeSlot.estimated_participants + ' Orang'"></span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-slate-500 text-[11px] block">Deskripsi Acara:</span>
+                            <p class="text-slate-700 mt-1 leading-relaxed whitespace-pre-line bg-slate-50 p-2.5 rounded border border-slate-200" x-text="activeSlot.event_description"></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-end">
+                <button type="button"
+                        @click="closeModal()"
+                        class="px-4 py-2 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
