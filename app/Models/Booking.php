@@ -186,4 +186,14 @@ class Booking extends Model
     {
         return $this->hasMany(BookingApproval::class, 'booking_id');
     }
+
+    public function ktpVaultLogs()
+    {
+        return $this->hasMany(KtpVaultLog::class, 'booking_id');
+    }
+
+    public function latestKtpVaultLog()
+    {
+        return $this->hasOne(KtpVaultLog::class, 'booking_id')->latestOfMany('id');
+    }
 }

@@ -17,6 +17,17 @@
     <!-- HTML5 QR Code Scanner Library for Robust Cross-Browser Camera & File Scanning -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
+    <!-- jsQR Library for high-reliability fallback QR matrix decoding -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+    <!-- PDF.js for rendering and extracting QR from E-Pass PDF files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
     <style>
         html, body {
             overflow-x: hidden !important;
@@ -134,7 +145,7 @@
                 <!-- STATE 1: SCANNER ATAU INPUT KODE -->
                 <div x-show="!verifiedBooking" class="p-6 sm:p-8">
                     
-                    <!-- TAB 1: SCANNER KAMERA -->
+                    <!-- TAB 1: SCANNER KAMERA & UPLOAD FILE (GAMBAR / PDF) -->
                     <div x-show="method === 'scanner'" class="space-y-4">
                         <div class="relative bg-slate-950 rounded-xl overflow-hidden min-h-[280px] border border-slate-800 flex flex-col items-center justify-center">
                             
@@ -149,7 +160,7 @@
                                 <div>
                                     <div class="font-bold text-sm text-white">Arahkan Kamera ke QR Code E-Pass</div>
                                     <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">
-                                        Pindai barcode/QR dari layar smartphone atau cetakan tiket
+                                        Pindai barcode/QR langsung atau upload file tiket (Gambar / Dokumen PDF)
                                     </p>
                                 </div>
                                 <button type="button" 
@@ -161,12 +172,12 @@
                             </div>
                         </div>
 
-                        <!-- Opsi Upload Gambar QR jika Kamera Fisik Bermasalah -->
+                        <!-- Opsi Upload File Gambar / PDF jika Kamera Bermasalah -->
                         <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                             <label class="inline-flex items-center gap-1.5 text-[#001A72] hover:underline font-semibold cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                                <span>Upload File Gambar QR E-Pass</span>
-                                <input type="file" accept="image/*" class="hidden" @change="scanQrFile($event)">
+                                <span>Upload File Tiket (Gambar / PDF E-Pass)</span>
+                                <input type="file" accept="image/*,application/pdf" class="hidden" @change="scanQrFile($event)">
                             </label>
 
                             <button type="button" x-show="isCameraStreaming" @click="stopCamera()" class="text-rose-600 hover:underline font-semibold cursor-pointer">
@@ -208,7 +219,7 @@
 
                 </div>
 
-                <!-- STATE 2: HASIL VERIFIKASI & KONFIRMASI CHECK-IN -->
+                <!-- STATE 2: HASIL VERIFIKASI & FORM PENERIMAAN KTP FISIK (FR-FO-03) -->
                 <div x-show="verifiedBooking" class="p-6 sm:p-8 space-y-6">
                     
                     <!-- Verified Header -->
@@ -225,7 +236,7 @@
                         <span class="font-mono font-bold text-xs text-[#001A72] bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100" x-text="verifiedBooking?.booking_code"></span>
                     </div>
 
-                    <!-- Event Detail Card -->
+                    <!-- Event Detail Summary Card -->
                     <div class="space-y-3">
                         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Informasi Kegiatan</span>
                         <h3 class="text-base font-extrabold text-slate-900 leading-snug" x-text="verifiedBooking?.event_name"></h3>
@@ -249,7 +260,7 @@
                             </div>
 
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <span class="text-[10px] text-slate-400 block font-medium">Penanggung Jawab (PIC)</span>
+                                <span class="text-[10px] text-slate-400 block font-medium">Penanggung Jawab (PIC Registrasi)</span>
                                 <span class="font-bold text-slate-800 text-xs block mt-0.5 truncate" x-text="verifiedBooking?.pic_name"></span>
                                 <span class="text-[10px] font-mono text-slate-500" x-text="verifiedBooking?.pic_phone"></span>
                             </div>
@@ -273,21 +284,80 @@
                         </div>
                     </template>
 
+                    <!-- FR-FO-03: FORM PENCATATAN JAMINAN FISIK KTP & KONTAK HARI-H -->
+                    <div class="p-5 bg-indigo-50/60 border border-indigo-100 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-indigo-100/80">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-[#001A72] text-white flex items-center justify-center font-black text-xs">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                                </div>
+                                <h4 class="text-xs font-black text-slate-900 tracking-tight">
+                                    Pencatatan Jaminan Fisik KTP &amp; Kontak Lapangan (FR-FO-03)
+                                </h4>
+                            </div>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded">
+                                Tanpa NIK Digital
+                            </span>
+                        </div>
+
+                        <div class="space-y-3.5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                <!-- Input 1: Nama Pemilik KTP -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-800 mb-1">
+                                        1. Nama Pemilik KTP Fisik <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="ktpHolderName" 
+                                           placeholder="Nama penanggung jawab penyerah KTP" 
+                                           class="block w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-300 bg-white focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72]/20 transition placeholder:font-normal placeholder:text-slate-400">
+                                </div>
+
+                                <!-- Input 2: WhatsApp Hari-H -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-800 mb-1">
+                                        2. Nomor WhatsApp Hari-H <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="picWhatsappNumber" 
+                                           placeholder="Contoh: 081234567890" 
+                                           class="block w-full px-3.5 py-2.5 text-xs font-mono font-bold rounded-xl border border-slate-300 bg-white focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72]/20 transition placeholder:font-normal placeholder:text-slate-400">
+                                </div>
+                            </div>
+
+                            <!-- Input 3: Catatan Tambahan (Opsional) -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                                    Catatan Tambahan Meja Depan (Opsional)
+                                </label>
+                                <input type="text" 
+                                       x-model="notes" 
+                                       placeholder="Misal: Diserahkan oleh wakil panitia" 
+                                       class="block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72]/20 transition placeholder:text-slate-400">
+                            </div>
+                        </div>
+
+                        <div class="p-2.5 bg-white/80 rounded-xl border border-indigo-100 flex items-center gap-2 text-[11px] text-slate-600 font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <span>Privasi Terjaga: Sistem tidak memindai foto &amp; tidak meminta NIK digital. KTP fisik langsung dipegang FO.</span>
+                        </div>
+                    </div>
+
                     <!-- Action Buttons -->
                     <div class="flex items-center gap-3 pt-2">
                         <button type="button" 
                                 @click="resetVerification()"
                                 class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
-                            Batal
+                            Batal / Scan Ulang
                         </button>
                         
                         <button type="button" 
                                 @click="processFinalCheckin()"
-                                :disabled="isSubmitting || (isEarlyArrival && !confirmEarlyTolerance)"
-                                class="flex-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                :disabled="isSubmitting || !ktpHolderName || !picWhatsappNumber || (isEarlyArrival && !confirmEarlyTolerance)"
+                                class="flex-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg x-show="!isSubmitting" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                             <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <span x-text="isSubmitting ? 'Memproses...' : 'Aktivasi Check-In'"></span>
+                            <span x-text="isSubmitting ? 'Memproses Check-In & Simpan KTP...' : 'Konfirmasi KTP & Aktivasi Check-In'"></span>
                         </button>
                     </div>
 
@@ -315,6 +385,11 @@
                 confirmEarlyTolerance: false,
                 isCameraStreaming: false,
                 html5QrCode: null,
+
+                // FR-FO-03 KTP Guarantee State
+                ktpHolderName: '',
+                picWhatsappNumber: '',
+                notes: '',
 
                 init() {
                     if (this.bookingCode) {
@@ -367,7 +442,6 @@
                     } catch (e) {
                         console.warn('Environment camera failed, trying fallback to any camera:', e);
                         try {
-                            // Fallback jika tidak ada kamera 'environment' (misal: webcam laptop)
                             const cameras = await Html5Qrcode.getCameras();
                             if (cameras && cameras.length > 0) {
                                 const cameraId = cameras[0].id;
@@ -411,25 +485,212 @@
                     const file = event.target.files[0];
                     if (!file) return;
 
+                    this.errorMessage = '';
+                    this.isVerifying = true;
+
                     try {
-                        if (!this.html5QrCode) {
-                            this.html5QrCode = new Html5Qrcode("qr-reader");
+                        // 1. Jika file adalah PDF (E-Pass Dokumen Digital)
+                        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                            if (!window.pdfjsLib) {
+                                throw new Error('Modul pembaca PDF belum siap. Coba muat ulang halaman.');
+                            }
+
+                            const arrayBuffer = await file.arrayBuffer();
+                            const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                            
+                            let qrFound = false;
+
+                            for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 3); pageNum++) {
+                                const page = await pdf.getPage(pageNum);
+                                const viewport = page.getViewport({ scale: 2.0 });
+                                
+                                const canvas = document.createElement('canvas');
+                                const context = canvas.getContext('2d', { willReadFrequently: true });
+                                canvas.height = viewport.height;
+                                canvas.width = viewport.width;
+
+                                await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                                // Coba decode via jsQR langsung pada canvas
+                                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                                if (window.jsQR) {
+                                    const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
+                                        inversionAttempts: "dontInvert"
+                                    }) || window.jsQR(imageData.data, imageData.width, imageData.height, {
+                                        inversionAttempts: "onlyInvert"
+                                    });
+
+                                    if (code && code.data) {
+                                        this.onQrSuccess(code.data);
+                                        qrFound = true;
+                                        break;
+                                    }
+                                }
+
+                                // Fallback via html5QrCode
+                                if (!qrFound) {
+                                    if (!this.html5QrCode) {
+                                        this.html5QrCode = new Html5Qrcode("qr-reader");
+                                    }
+                                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                                    const renderedImageFile = new File([blob], `page_${pageNum}.png`, { type: 'image/png' });
+                                    try {
+                                        const decodedResult = await this.html5QrCode.scanFile(renderedImageFile, true);
+                                        if (decodedResult) {
+                                            this.onQrSuccess(decodedResult);
+                                            qrFound = true;
+                                            break;
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+
+                            if (!qrFound) {
+                                this.errorMessage = 'QR Code tidak terdeteksi di dalam dokumen PDF E-Pass. Pastikan file adalah E-Pass resmi MCC.';
+                            }
+                            return;
                         }
-                        const decodedText = await this.html5QrCode.scanFile(file, true);
-                        this.onQrSuccess(decodedText);
+
+                        // 2. Jika file adalah Gambar (PNG, JPG, JPEG, WEBP, SVG, dll)
+                        let decodedText = null;
+
+                        // Stage A: Coba scan direct via html5QrCode
+                        try {
+                            if (!this.html5QrCode) {
+                                this.html5QrCode = new Html5Qrcode("qr-reader");
+                            }
+                            decodedText = await this.html5QrCode.scanFile(file, true);
+                        } catch (html5Err) {
+                            console.warn('html5QrCode scanFile failed, attempting jsQR multi-scale decoder...', html5Err);
+                        }
+
+                        // Stage B: Multi-scale Canvas decoding dengan jsQR (Sangat ampuh untuk gambar resolusi tinggi/rendah/screenshot HP)
+                        if (!decodedText) {
+                            decodedText = await this.decodeImageWithJsQR(file);
+                        }
+
+                        if (decodedText) {
+                            this.onQrSuccess(decodedText);
+                        } else {
+                            throw new Error('QR Code tidak dapat terbaca dari gambar.');
+                        }
+
                     } catch (err) {
-                        this.errorMessage = 'QR Code tidak terdeteksi pada gambar tersebut. Pastikan gambar jelas.';
+                        console.error('File scan error:', err);
+                        this.errorMessage = 'QR Code tidak dapat terbaca dari file yang diupload. Pastikan gambar jelas, tidak buram, dan memuat QR E-Pass yang valid.';
+                    } finally {
+                        this.isVerifying = false;
+                        event.target.value = '';
                     }
+                },
+
+                // Helper Multi-Scale Image QR Decoder
+                async decodeImageWithJsQR(file) {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        const objectUrl = URL.createObjectURL(file);
+
+                        img.onload = () => {
+                            URL.revokeObjectURL(objectUrl);
+
+                            if (!window.jsQR) {
+                                resolve(null);
+                                return;
+                            }
+
+                            // Coba beberapa skala resolusi (Skala asli, 1200px, 800px, 500px)
+                            const scales = [1.0, 1200 / Math.max(img.width, img.height), 800 / Math.max(img.width, img.height), 500 / Math.max(img.width, img.height)];
+                            
+                            for (let scale of scales) {
+                                if (scale > 1.2) continue; // Jangan perbesar jika gambar sudah kecil
+                                const targetW = Math.round(img.width * scale);
+                                const targetH = Math.round(img.height * scale);
+                                if (targetW < 50 || targetH < 50) continue;
+
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                                canvas.width = targetW;
+                                canvas.height = targetH;
+                                ctx.drawImage(img, 0, 0, targetW, targetH);
+
+                                const imgData = ctx.getImageData(0, 0, targetW, targetH);
+                                
+                                // Percobaan 1: Regular
+                                let code = window.jsQR(imgData.data, imgData.width, imgData.height, {
+                                    inversionAttempts: "attemptBoth"
+                                });
+
+                                if (code && code.data) {
+                                    resolve(code.data);
+                                    return;
+                                }
+                            }
+
+                            resolve(null);
+                        };
+
+                        img.onerror = () => {
+                            URL.revokeObjectURL(objectUrl);
+                            resolve(null);
+                        };
+
+                        img.src = objectUrl;
+                    });
                 },
 
                 onQrSuccess(decodedText) {
                     this.stopCamera();
-                    // Parsing decodedText (bisa berisi token langsung atau kode booking)
-                    if (decodedText.startsWith('MCC-') || decodedText.length < 20) {
-                        this.bookingCode = decodedText.trim();
+                    let raw = (decodedText || '').trim();
+
+                    // 1. Jika hasil scan berupa JSON terstruktur E-Pass MCC
+                    if (raw.startsWith('{') && raw.endsWith('}')) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            if (parsed.token) {
+                                this.checkinToken = parsed.token;
+                                this.bookingCode = parsed.code || '';
+                                this.verifyBooking();
+                                return;
+                            } else if (parsed.code) {
+                                this.bookingCode = parsed.code.toUpperCase();
+                                this.checkinToken = '';
+                                this.verifyBooking();
+                                return;
+                            }
+                        } catch (e) {
+                            console.warn('JSON parsing failed:', e);
+                        }
+                    }
+
+                    // 2. Jika hasil scan berupa URL
+                    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+                        try {
+                            const url = new URL(raw);
+                            const tokenParam = url.searchParams.get('token');
+                            const codeParam = url.searchParams.get('code');
+
+                            if (tokenParam) {
+                                this.checkinToken = tokenParam;
+                                this.bookingCode = codeParam || '';
+                                this.verifyBooking();
+                                return;
+                            } else if (codeParam) {
+                                this.bookingCode = codeParam.toUpperCase();
+                                this.checkinToken = '';
+                                this.verifyBooking();
+                                return;
+                            }
+                        } catch (e) {
+                            console.warn('URL parsing error, fallback to raw string:', e);
+                        }
+                    }
+
+                    // 3. Jika kode booking MCC atau token murni
+                    if (raw.startsWith('MCC-') || (raw.length <= 30 && !raw.includes('/'))) {
+                        this.bookingCode = raw.toUpperCase();
                         this.checkinToken = '';
                     } else {
-                        this.checkinToken = decodedText.trim();
+                        this.checkinToken = raw;
                         this.bookingCode = '';
                     }
                     this.verifyBooking();
@@ -442,6 +703,9 @@
                     this.isEarlyArrival = false;
                     this.earlyWarningMessage = '';
                     this.confirmEarlyTolerance = false;
+                    this.ktpHolderName = '';
+                    this.picWhatsappNumber = '';
+                    this.notes = '';
                 },
 
                 async verifyBooking() {
@@ -478,6 +742,11 @@
                         this.isEarlyArrival = !!data.is_early;
                         this.earlyWarningMessage = data.warning_message || '';
                         this.confirmEarlyTolerance = !data.is_early;
+
+                        // Kosongkan nama & WhatsApp agar diisi sesuai fisik penyerah yang hadir di meja depan
+                        this.ktpHolderName = '';
+                        this.picWhatsappNumber = '';
+
                         this.stopCamera();
                     } catch (err) {
                         this.errorMessage = 'Terjadi gangguan jaringan dengan server: ' + err.message;
@@ -495,7 +764,10 @@
                         _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                         booking_code: this.verifiedBooking.booking_code,
                         checkin_token: this.checkinToken || null,
-                        confirm_early: this.confirmEarlyTolerance
+                        confirm_early: this.confirmEarlyTolerance,
+                        ktp_holder_name: this.ktpHolderName ? this.ktpHolderName.trim() : '',
+                        pic_whatsapp_number: this.picWhatsappNumber ? this.picWhatsappNumber.trim() : '',
+                        notes: this.notes ? this.notes.trim() : ''
                     };
 
                     try {
@@ -512,14 +784,21 @@
                         const data = await response.json();
 
                         if (!response.ok || !data.success) {
-                            this.errorMessage = data.errors?.early_warning?.[0] || data.errors?.checkin?.[0] || data.message || 'Gagal mengaktifkan check-in.';
+                            this.errorMessage = data.errors?.ktp_holder_name?.[0] || 
+                                                 data.errors?.pic_whatsapp_number?.[0] || 
+                                                 data.errors?.early_warning?.[0] || 
+                                                 data.errors?.checkin?.[0] || 
+                                                 data.message || 'Gagal mengaktifkan check-in.';
                             return;
                         }
 
-                        this.successMessage = data.message || 'Check-in berhasil diaktifkan!';
+                        this.successMessage = data.message || 'Check-in dan penitipan KTP fisik berhasil dicatat!';
                         this.verifiedBooking = null;
                         this.bookingCode = '';
                         this.checkinToken = '';
+                        this.ktpHolderName = '';
+                        this.picWhatsappNumber = '';
+                        this.notes = '';
                     } catch (err) {
                         this.errorMessage = 'Terjadi kesalahan sistem saat memproses check-in: ' + err.message;
                     } finally {

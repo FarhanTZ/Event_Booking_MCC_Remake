@@ -407,9 +407,12 @@ class FrontOfficeManifestTest extends TestCase
             ],
         ]);
 
-        // 2. Process Check-in
+        // 2. Process Check-in with KTP physical guarantee (FR-FO-03)
         $processResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
             'checkin_token' => 'secure_qr_token_1234567890abcdef',
+            'ktp_holder_name' => 'Budi Santoso',
+            'pic_whatsapp_number' => '081234567890',
+            'notes' => 'KTP dititipkan langsung',
         ]);
         $processResponse->assertOk();
         $processResponse->assertJson(['success' => true]);
@@ -417,8 +420,19 @@ class FrontOfficeManifestTest extends TestCase
         // Database assertion
         $booking->refresh();
         $this->assertEquals(BookingStatus::CHECKED_IN, $booking->status);
+        $this->assertEquals('pending', $booking->clearance_status);
         $this->assertNotNull($booking->checked_in_at);
         $this->assertEquals($this->frontOfficeUser->id, $booking->checked_in_by);
+
+        // Assert KTP Vault Log record created (FR-FO-03)
+        $this->assertDatabaseHas('ktp_vault_logs', [
+            'booking_id' => $booking->id,
+            'ktp_holder_name' => 'Budi Santoso',
+            'pic_whatsapp_number' => '081234567890',
+            'received_by_fo' => $this->frontOfficeUser->id,
+            'nik_number' => null,
+            'ktp_photo_scan_url' => null,
+        ]);
     }
 
     public function test_checkin_validation_via_manual_code_succeeds(): void
@@ -458,11 +472,20 @@ class FrontOfficeManifestTest extends TestCase
 
         $processResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
             'booking_code' => 'MCC-MANUAL-001',
+            'ktp_holder_name' => 'Agus Hartono',
+            'pic_whatsapp_number' => '08111222333',
         ]);
         $processResponse->assertOk();
 
         $booking->refresh();
         $this->assertEquals(BookingStatus::CHECKED_IN, $booking->status);
+        $this->assertEquals('pending', $booking->clearance_status);
+
+        $this->assertDatabaseHas('ktp_vault_logs', [
+            'booking_id' => $booking->id,
+            'ktp_holder_name' => 'Agus Hartono',
+            'pic_whatsapp_number' => '08111222333',
+        ]);
     }
 
     public function test_checkin_is_rejected_if_event_date_is_not_today(): void
@@ -499,6 +522,8 @@ class FrontOfficeManifestTest extends TestCase
 
         $response = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
             'booking_code' => 'MCC-FUTURE-NOTTODAY',
+            'ktp_holder_name' => 'Joko',
+            'pic_whatsapp_number' => '081234567890',
         ]);
 
         $response->assertStatus(422);
@@ -557,6 +582,8 @@ class FrontOfficeManifestTest extends TestCase
         $unconfirmedResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
             'booking_code' => 'MCC-EARLY-ARRIVAL',
             'confirm_early' => false,
+            'ktp_holder_name' => 'Doni',
+            'pic_whatsapp_number' => '081234567890',
         ]);
         $unconfirmedResponse->assertStatus(422);
         $unconfirmedResponse->assertJsonValidationErrors(['early_warning']);
@@ -565,10 +592,84 @@ class FrontOfficeManifestTest extends TestCase
         $confirmedResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
             'booking_code' => 'MCC-EARLY-ARRIVAL',
             'confirm_early' => true,
+            'ktp_holder_name' => 'Doni',
+            'pic_whatsapp_number' => '081234567890',
         ]);
         $confirmedResponse->assertOk();
 
         $bookingEarly->refresh();
         $this->assertEquals(BookingStatus::CHECKED_IN, $bookingEarly->status);
+        $this->assertEquals('pending', $bookingEarly->clearance_status);
+    }
+
+    public function test_ktp_guarantee_recording_validates_required_fields_without_asking_for_nik_or_photo(): void
+    {
+        $today = Carbon::today();
+        $startTime = $today->copy()->setTime(10, 0);
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-KTP-TEST-99',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CONFIRMED,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Pameran Ekraf Malang',
+            'event_category' => 'Komunitas',
+            'estimated_participants' => 100,
+            'event_description' => 'Pameran produk lokal.',
+            'pic_name_snapshot' => 'Hendra Setiawan',
+            'pic_phone_snapshot' => '081987654321',
+            'institution_name_snapshot' => 'Asosiasi Ekraf',
+            'proposal_file_url' => '/storage/proposals/test_ktp.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor2->id,
+            'event_start_at' => $startTime,
+            'event_end_at' => $startTime->copy()->addHours(5),
+            'operational_range' => "[{$startTime->toIso8601String()}, {$startTime->copy()->addHours(5)->addMinutes(30)->toIso8601String()})",
+            'is_active' => true,
+        ]);
+
+        // 1. Missing mandatory fields should trigger validation error
+        $invalidResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'booking_code' => 'MCC-KTP-TEST-99',
+            'ktp_holder_name' => '',
+            'pic_whatsapp_number' => '',
+        ]);
+
+        $invalidResponse->assertStatus(422);
+        $invalidResponse->assertJsonValidationErrors(['ktp_holder_name', 'pic_whatsapp_number']);
+
+        // 2. Submit valid physical KTP info
+        $validResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'booking_code' => 'MCC-KTP-TEST-99',
+            'ktp_holder_name' => 'Hendra Setiawan',
+            'pic_whatsapp_number' => '081987654321',
+            'notes' => 'KTP Asli diserahkan oleh ketua panitia',
+        ]);
+
+        $validResponse->assertOk();
+        $validResponse->assertJson(['success' => true]);
+
+        // 3. Assert database state
+        $booking->refresh();
+        $this->assertEquals(BookingStatus::CHECKED_IN, $booking->status);
+        $this->assertEquals('pending', $booking->clearance_status);
+
+        $this->assertDatabaseHas('ktp_vault_logs', [
+            'booking_id' => $booking->id,
+            'ktp_holder_name' => 'Hendra Setiawan',
+            'pic_whatsapp_number' => '081987654321',
+            'received_by_fo' => $this->frontOfficeUser->id,
+            'nik_number' => null,
+            'ktp_photo_scan_url' => null,
+            'notes' => 'KTP Asli diserahkan oleh ketua panitia',
+        ]);
     }
 }
+

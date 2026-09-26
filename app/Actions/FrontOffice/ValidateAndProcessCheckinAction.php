@@ -5,8 +5,11 @@ namespace App\Actions\FrontOffice;
 use App\DataTransferObjects\FrontOffice\ValidateCheckinData;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\KtpVaultLog;
 use App\Services\SecurityAuditLogger;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ValidateAndProcessCheckinAction
@@ -79,7 +82,7 @@ class ValidateAndProcessCheckinAction
     }
 
     /**
-     * Process and commit check-in execution into database.
+     * Process and commit check-in execution into database (FR-FO-02 & FR-FO-03).
      *
      * @param ValidateCheckinData $dto
      * @return Booking
@@ -90,7 +93,7 @@ class ValidateAndProcessCheckinAction
         $inspection = $this->inspect($dto);
         $booking = $inspection['booking'];
 
-        // Jika datang lebih awal (>60 menit) dan belum mengonfirmasi peringatan toleransi awal
+        // 1. Validasi konfirmasi toleransi kedatangan awal jika >60 menit
         if ($inspection['is_early'] && ! $dto->isEarlyToleranceConfirmed) {
             throw ValidationException::withMessages([
                 'early_warning' => "Sesi acara baru dimulai pada {$inspection['earliest_slot']->event_start_at->format('H:i')} WIB ({$inspection['minutes_until_start']} menit lagi). Check-in lebih awal dari batas toleransi 60 menit membutuhkan konfirmasi khusus resepsionis.",
@@ -99,24 +102,50 @@ class ValidateAndProcessCheckinAction
             ]);
         }
 
-        // Commit update status to CHECKED_IN
-        $booking->update([
-            'status' => BookingStatus::CHECKED_IN,
-            'checked_in_at' => Carbon::now(),
-            'checked_in_by' => $dto->officerId,
-        ]);
+        // 2. Validasi kelengkapan KTP Jaminan Fisik (FR-FO-03: Nama KTP & WhatsApp Hari-H)
+        if (empty($dto->ktpHolderName) || empty($dto->picWhatsappNumber)) {
+            throw ValidationException::withMessages([
+                'ktp_holder_name' => empty($dto->ktpHolderName) ? ['Nama pemilik KTP fisik penyerah wajib diisi.'] : [],
+                'pic_whatsapp_number' => empty($dto->picWhatsappNumber) ? ['Nomor WhatsApp PIC lapangan hari-H wajib diisi.'] : [],
+            ]);
+        }
 
-        \Illuminate\Support\Facades\Log::channel('single')->info("Security Audit [FRONT_OFFICE_CHECKIN]: Booking {$booking->booking_code} validated by officer {$dto->officerId}.", [
-            'booking_id' => $booking->id,
-            'booking_code' => $booking->booking_code,
-            'officer_id' => $dto->officerId,
-            'method' => $dto->checkinToken ? 'qr_scanner' : 'manual_input',
-            'checked_in_at' => Carbon::now()->toIso8601String(),
-            'is_early' => $inspection['is_early'],
-            'minutes_until_start' => $inspection['minutes_until_start'],
-        ]);
+        return DB::transaction(function () use ($booking, $dto, $inspection) {
+            $now = Carbon::now();
 
-        return $booking->fresh(['user', 'eventDetail', 'slots.room']);
+            // A. Update Status Booking menjadi Checked-In dan set clearance_status = 'pending'
+            $booking->update([
+                'status' => BookingStatus::CHECKED_IN,
+                'clearance_status' => 'pending',
+                'checked_in_at' => $now,
+                'checked_in_by' => $dto->officerId,
+            ]);
+
+            // B. Simpan Catatan Jaminan Fisik KTP (FR-FO-03) ke ktp_vault_logs
+            KtpVaultLog::create([
+                'booking_id' => $booking->id,
+                'ktp_holder_name' => $dto->ktpHolderName,
+                'pic_whatsapp_number' => $dto->picWhatsappNumber,
+                'storage_drawer_number' => null, // Tidak menggunakan nomor laci
+                'nik_number' => null, // Tanpa data NIK digital
+                'ktp_photo_scan_url' => null, // Tanpa foto KTP digital
+                'received_by_fo' => $dto->officerId,
+                'retained_at' => $now,
+                'notes' => $dto->notes,
+            ]);
+
+            Log::channel('single')->info("Security Audit [FRONT_OFFICE_CHECKIN]: Booking {$booking->booking_code} checked-in with physical KTP vault deposit.", [
+                'booking_id' => $booking->id,
+                'booking_code' => $booking->booking_code,
+                'officer_id' => $dto->officerId,
+                'ktp_holder' => $dto->ktpHolderName,
+                'pic_whatsapp' => $dto->picWhatsappNumber,
+                'checked_in_at' => $now->toIso8601String(),
+                'is_early' => $inspection['is_early'],
+            ]);
+
+            return $booking->fresh(['user', 'eventDetail', 'slots.room', 'latestKtpVaultLog']);
+        });
     }
 
     /**
@@ -130,25 +159,75 @@ class ValidateAndProcessCheckinAction
     {
         $query = Booking::query()->with(['user', 'eventDetail', 'slots.room']);
 
-        if ($dto->checkinToken) {
-            $booking = $query->where('checkin_token', $dto->checkinToken)->first();
-            if (! $booking) {
-                throw ValidationException::withMessages([
-                    'checkin' => 'QR Code E-Pass tidak valid atau tidak dikenali dalam sistem MCC.',
-                ]);
+        $token = $dto->checkinToken ? trim($dto->checkinToken) : null;
+        $code = $dto->bookingCode ? trim($dto->bookingCode) : null;
+
+        // 1. Jika QR code menyimpan format JSON terstruktur (dari EPassService::buildQrPayload)
+        if ($token && (str_starts_with($token, '{') && str_ends_with($token, '}'))) {
+            try {
+                $decodedJson = json_decode($token, true);
+                if (is_array($decodedJson)) {
+                    if (! empty($decodedJson['token'])) {
+                        $token = $decodedJson['token'];
+                    }
+                    if (! empty($decodedJson['code'])) {
+                        $code = $decodedJson['code'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Abaikan jika bukan JSON valid
             }
-            return $booking;
         }
 
-        if ($dto->bookingCode) {
-            $code = strtoupper(trim($dto->bookingCode));
-            $booking = $query->where('booking_code', $code)->first();
-            if (! $booking) {
-                throw ValidationException::withMessages([
-                    'checkin' => "Kode Booking \"{$dto->bookingCode}\" tidak ditemukan dalam database.",
-                ]);
+        // 2. Jika QR code memuat URL (e.g. http://localhost:8000/verify?token=XYZ atau http://localhost:8000/checkin/MCC-2026-XXXX)
+        if ($token && (str_starts_with($token, 'http://') || str_starts_with($token, 'https://'))) {
+            $parsedUrl = parse_url($token);
+            if (! empty($parsedUrl['query'])) {
+                parse_str($parsedUrl['query'], $queryParams);
+                if (! empty($queryParams['token'])) {
+                    $token = $queryParams['token'];
+                }
+                if (! empty($queryParams['code'])) {
+                    $code = $queryParams['code'];
+                }
+            } else {
+                // Check if last path segment is booking_code (MCC-...)
+                $segments = explode('/', trim($parsedUrl['path'] ?? '', '/'));
+                $lastSegment = end($segments);
+                if ($lastSegment && str_starts_with(strtoupper($lastSegment), 'MCC-')) {
+                    $code = $lastSegment;
+                    $token = null;
+                }
             }
-            return $booking;
+        }
+
+        // 3. Pencarian via Token QR
+        if ($token && strlen($token) >= 30) {
+            $booking = $query->where('checkin_token', $token)->first();
+            if ($booking) {
+                return $booking;
+            }
+        }
+
+        // 4. Pencarian via Kode Booking (e.g. MCC-...)
+        $lookupCode = $code ?: ($token && str_starts_with(strtoupper($token), 'MCC-') ? $token : null);
+        if ($lookupCode) {
+            $cleanedCode = strtoupper(trim($lookupCode));
+            $booking = $query->where('booking_code', $cleanedCode)->first();
+            if ($booking) {
+                return $booking;
+            }
+
+            throw ValidationException::withMessages([
+                'checkin' => "Kode Booking \"{$cleanedCode}\" tidak ditemukan dalam database.",
+            ]);
+        }
+
+        // Jika ada token yang dicari tapi tidak cocok
+        if ($token) {
+            throw ValidationException::withMessages([
+                'checkin' => 'QR Code E-Pass tidak valid atau tidak dikenali dalam sistem MCC.',
+            ]);
         }
 
         throw ValidationException::withMessages([
