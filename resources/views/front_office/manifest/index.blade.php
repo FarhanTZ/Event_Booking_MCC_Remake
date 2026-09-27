@@ -89,12 +89,9 @@
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
                                 Manifes Acara Harian
                             </h1>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EEF2FF] text-[#001A72] border border-indigo-100">
-                                FR-FO-01
-                            </span>
                         </div>
                         <p class="text-xs text-slate-500 mt-0.5">
-                            Jadwal sesi permohonan aktif untuk hari berjalan (CURRENT_DATE: {{ $targetDate->translatedFormat('d F Y') }})
+                            Jadwal sesi permohonan aktif untuk hari ini ({{ $targetDate->translatedFormat('d F Y') }})
                         </p>
                     </div>
                 </div>

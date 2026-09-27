@@ -38,8 +38,8 @@
         </a>
 
         <a href="{{ route('front_office.manifest', array_merge(request()->except('status', 'page'), ['status' => 'checked_in'])) }}" 
-           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'checked_in' ? 'bg-teal-600 text-white shadow-xs' : 'bg-white text-teal-800 hover:bg-teal-50 border border-teal-200' }}">
-            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'checked_in' ? 'bg-white' : 'bg-teal-500' }}"></span>
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'checked_in' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'checked_in' ? 'bg-white' : 'bg-emerald-500' }} animate-pulse"></span>
             <span>Sedang Berlangsung ({{ $metrics['checked_in_slots'] }})</span>
         </a>
 
@@ -179,8 +179,8 @@
                                     <span>Menunggu Kedatangan</span>
                                 </span>
                             @elseif($booking->status === \App\Enums\BookingStatus::CHECKED_IN)
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-teal-50 text-teal-700 border border-teal-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                     <span>Sedang Berlangsung</span>
                                 </span>
                             @elseif($booking->status === \App\Enums\BookingStatus::COMPLETED)

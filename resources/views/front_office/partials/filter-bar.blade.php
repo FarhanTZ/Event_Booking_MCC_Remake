@@ -8,26 +8,26 @@
           class="space-y-3.5">
 
         <!-- Row 1: Search, Status Dropdown, Lantai & Tanggal Operasional -->
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
             
             <!-- 1. Text Search Input (Instant search: Booking Code, Event Name, PIC, Room) -->
             <div class="sm:col-span-4 relative">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </div>
                 <input type="text" 
                        name="q" 
                        value="{{ $currentSearch }}" 
                        @input.debounce.400ms="$refs.filterForm.submit()"
-                       placeholder="Cari Kode Booking, Acara, PIC, atau Ruangan..." 
-                       class="block w-full pl-10 pr-3 py-2.5 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] placeholder:text-slate-400">
+                       placeholder="Cari Kode Booking, Acara, PIC, Ruang..." 
+                       class="block w-full pl-9 pr-2.5 py-2 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] placeholder:text-slate-400">
             </div>
 
             <!-- 2. Status Dropdown Filter -->
             <div class="sm:col-span-3">
                 <select name="status" 
                         @change="$refs.filterForm.submit()"
-                        class="block w-full py-2.5 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] text-slate-800 font-medium">
+                        class="block w-full py-2 px-2.5 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] text-slate-800 font-medium">
                     <option value="all" {{ $currentStatus === 'all' ? 'selected' : '' }}>
                         Semua Status ({{ $metrics['total_slots_today'] }})
                     </option>
@@ -43,11 +43,11 @@
                 </select>
             </div>
 
-            <!-- 3. Filter Lantai Gedung -->
+            <!-- 3. Filter Lantai Gedung (Diberi porsi lebar yang cukup dan padding kompak agar teks tidak terpotong) -->
             <div class="sm:col-span-2">
                 <select name="floor_level" 
                         @change="$refs.filterForm.submit()"
-                        class="block w-full py-2.5 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] text-slate-700 font-medium">
+                        class="block w-full py-2 pl-2.5 pr-6 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] text-slate-700 font-medium cursor-pointer">
                     <option value="all" {{ $currentFloor === 'all' ? 'selected' : '' }}>Semua Lantai</option>
                     @for($f = 1; $f <= 8; $f++)
                         <option value="{{ $f }}" {{ $currentFloor == $f ? 'selected' : '' }}>
@@ -61,7 +61,7 @@
             <div class="sm:col-span-3">
                 <select name="room_id" 
                         @change="$refs.filterForm.submit()"
-                        class="block w-full py-2.5 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] text-slate-700 font-medium truncate">
+                        class="block w-full py-2 px-2.5 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] text-slate-700 font-medium truncate">
                     <option value="all" {{ $currentRoom === 'all' ? 'selected' : '' }}>Semua Ruangan</option>
                     @foreach($rooms as $r)
                         <option value="{{ $r->id }}" {{ $currentRoom == $r->id ? 'selected' : '' }}>
@@ -88,12 +88,12 @@
                     <a href="{{ route('front_office.manifest') }}" 
                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-brand bg-[#EEF2FF] text-[#001A72] hover:bg-indigo-100 font-bold text-xs transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                        <span>Kembali ke Hari Ini (Current Date)</span>
+                        <span>Kembali ke Hari Ini</span>
                     </a>
                 @else
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Hari Berjalan (CURRENT_DATE)</span>
+                        <span>Hari Berjalan</span>
                     </span>
                 @endif
             </div>

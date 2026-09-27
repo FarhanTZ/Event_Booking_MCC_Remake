@@ -111,7 +111,9 @@
                     <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                     <span>Semua Sesi Hari Ini</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold">{{ $metrics['total_slots_today'] }}</span>
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'all' ? 'bg-indigo-100 text-[#001A72]' : 'text-slate-600 bg-slate-100' }}">
+                    {{ $metrics['total_slots_today'] }}
+                </span>
             </a>
 
             <!-- Menunggu Kedatangan -->
@@ -121,19 +123,19 @@
                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                     <span>Menunggu Kedatangan</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded">
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'confirmed' ? 'bg-amber-100/80 text-amber-700' : 'text-slate-600 bg-slate-100' }}">
                     {{ $metrics['confirmed_slots'] }}
                 </span>
             </a>
 
             <!-- Sedang Berlangsung -->
             <a href="{{ route('front_office.manifest', ['status' => 'checked_in', 'date' => request('date')]) }}"
-               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'checked_in' ? 'bg-teal-50 text-teal-900 font-bold border border-teal-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
+               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'checked_in' ? 'bg-emerald-50 text-emerald-900 font-bold border border-emerald-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Sedang Berlangsung</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold text-teal-700 bg-teal-100/80 px-1.5 py-0.5 rounded">
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'checked_in' ? 'bg-emerald-100/80 text-emerald-800' : 'text-slate-600 bg-slate-100' }}">
                     {{ $metrics['checked_in_slots'] }}
                 </span>
             </a>
@@ -145,7 +147,7 @@
                     <span class="w-2 h-2 rounded-full {{ $currentStatus === 'completed' ? 'bg-slate-500' : 'bg-slate-400' }}"></span>
                     <span>Selesai Digunakan</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold {{ $currentStatus === 'completed' ? 'bg-slate-200 text-slate-700' : 'text-slate-600 bg-slate-100' }} px-1.5 py-0.5 rounded">
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'completed' ? 'bg-slate-200 text-slate-700' : 'text-slate-600 bg-slate-100' }}">
                     {{ $metrics['completed_slots'] }}
                 </span>
             </a>
