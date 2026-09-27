@@ -76,6 +76,15 @@
                     <span class="font-black text-slate-900 text-sm">{{ $metrics['total'] ?? 0 }}</span>
                 </div>
 
+                <!-- Perlu Buka Ruangan (FR-DO-02) -->
+                <div class="p-2.5 rounded-brand bg-amber-50 border border-amber-200 flex items-center justify-between text-xs">
+                    <span class="font-bold text-amber-800 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        Perlu Buka Ruangan
+                    </span>
+                    <span class="font-black text-amber-900 text-sm">{{ $metrics['needs_opening'] ?? 0 }}</span>
+                </div>
+
                 <!-- Checked-in -->
                 <div class="p-2.5 rounded-brand bg-teal-50 border border-teal-200 flex items-center justify-between text-xs">
                     <span class="font-bold text-teal-800 flex items-center gap-1.5">

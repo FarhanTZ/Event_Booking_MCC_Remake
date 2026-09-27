@@ -15,6 +15,33 @@
     $isCheckedIn = $task->isCheckedIn();
     $isConfirmed = $task->isConfirmed();
     $isCompleted = $task->isCompleted() || $task->isAbandoned();
+    $needsOpening = $task->needsRoomOpening();
+    $isRoomOpened = $task->isRoomOpened();
+    $roomFacilities = $room ? $room->facilities->map(fn($f) => [
+        'id' => $f->id,
+        'facility_name' => $f->facility_name,
+        'quantity' => $f->quantity,
+        'unit' => $f->unit,
+    ])->values()->toArray() : [];
+
+    $taskPayload = [
+        'bookingId' => $task->id,
+        'bookingCode' => $task->booking_code,
+        'statusLabel' => $task->status->label(),
+        'eventName' => $eventDetail?->event_name ?? 'Kegiatan Komunitas MCC',
+        'institutionName' => $eventDetail?->institution_name_snapshot ?? ($task->user?->institution_name ?? '-'),
+        'roomName' => $room ? $room->name : '-',
+        'floorLevel' => $room ? (string)$room->floor_level : '-',
+        'schedule' => $timing['schedule_formatted'],
+        'countdownText' => $timing['countdown_text'],
+        'picName' => $picName,
+        'picPhone' => $picPhone,
+        'storageDrawer' => $task->latestKtpVaultLog?->storage_drawer_number,
+        'whatsappUrl' => $whatsappUrl,
+        'equipmentItems' => $equipmentItems,
+        'facilities' => $roomFacilities,
+        'description' => $eventDetail?->event_description ?? '',
+    ];
 @endphp
 
 <div class="bg-white rounded-brand border border-slate-200 shadow-card hover:shadow-md transition-shadow duration-200 overflow-hidden"
@@ -68,8 +95,13 @@
         </div>
 
         <!-- Status Badge -->
-        <div class="shrink-0 text-right">
-            @if($isCheckedIn)
+        <div class="shrink-0 text-right space-y-1">
+            @if($needsOpening)
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span>
+                    <span>Perlu Dibuka</span>
+                </span>
+            @elseif($isCheckedIn)
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-teal-50 text-teal-800 border border-teal-300 shadow-2xs">
                     <span class="w-2 h-2 rounded-full bg-teal-500 animate-ping"></span>
                     <span>Checked-In</span>
@@ -87,8 +119,38 @@
                     {{ $task->status->label() }}
                 </span>
             @endif
+
+            @if($isRoomOpened)
+                <div class="text-[10px] text-emerald-700 font-bold flex items-center justify-end gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Pintu Terbuka pk {{ $task->room_opened_at->format('H:i') }}</span>
+                </div>
+            @endif
         </div>
     </div>
+
+    <!-- FR-DO-02: Action Banner if Room Needs Opening -->
+    @if($needsOpening)
+        <div class="p-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
+            <div class="flex items-center gap-2.5 text-xs">
+                <div class="w-8 h-8 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
+                </div>
+                <div>
+                    <span class="font-black block uppercase tracking-wide text-slate-950">Disposisi Check-In FO Selesai</span>
+                    <span class="text-slate-900 font-medium">Panitia telah check-in. Buka akses pintu ruangan dan lakukan pendampingan fasilitas.</span>
+                </div>
+            </div>
+
+            <button type="button"
+                    @click='$dispatch("open-room-opening", @json($taskPayload))'
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-950 hover:bg-slate-900 text-amber-300 hover:text-amber-200 rounded-brand font-black text-xs shadow-md transition active:scale-95 shrink-0 cursor-pointer"
+                    style="min-height: 44px;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
+                <span>Buka Akses Ruangan</span>
+            </button>
+        </div>
+    @endif
 
     <!-- Card Body: Time Schedule & Live Countdown Bar -->
     <div class="p-4 sm:p-5 space-y-4">
@@ -253,22 +315,7 @@
         </div>
 
         <button type="button" 
-                @click="openDetailModal({
-                    bookingCode: '{{ $task->booking_code }}',
-                    statusLabel: '{{ $task->status->label() }}',
-                    eventName: '{{ addslashes($eventDetail?->event_name ?? 'Acara') }}',
-                    institutionName: '{{ addslashes($eventDetail?->institution_name_snapshot ?? ($task->user?->institution_name ?? '-')) }}',
-                    roomName: '{{ addslashes($room ? $room->name : '-') }}',
-                    floorLevel: '{{ $room ? $room->floor_level : '-' }}',
-                    schedule: '{{ $timing['schedule_formatted'] }}',
-                    countdownText: '{{ addslashes($timing['countdown_text']) }}',
-                    picName: '{{ addslashes($picName) }}',
-                    picPhone: '{{ addslashes($picPhone) }}',
-                    storageDrawer: '{{ $task->latestKtpVaultLog?->storage_drawer_number }}',
-                    whatsappUrl: '{{ addslashes($whatsappUrl) }}',
-                    equipmentItems: {{ json_encode($equipmentItems) }},
-                    description: '{{ addslashes($eventDetail?->event_description ?? '') }}'
-                })"
+                @click='$dispatch("open-detail-modal", @json($taskPayload))'
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-white hover:bg-[#EEF2FF] text-[#001A72] border border-slate-200 hover:border-indigo-200 font-bold text-xs transition shadow-2xs cursor-pointer active:scale-95"
                 style="min-height: 36px;">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -276,3 +323,4 @@
         </button>
     </div>
 </div>
+

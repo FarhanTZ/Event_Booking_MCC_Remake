@@ -19,7 +19,7 @@ class DutyOfficerFilterRequest extends FormRequest
             'shift' => ['nullable', 'string', 'in:morning,evening,all'],
             'date' => ['nullable', 'date_format:Y-m-d'],
             'scope' => ['nullable', 'string', 'in:assigned,all'],
-            'status' => ['nullable', 'string', 'in:all,checked_in,upcoming,completed'],
+            'status' => ['nullable', 'string', 'in:all,needs_opening,checked_in,upcoming,completed'],
             'search' => ['nullable', 'string', 'max:100'],
         ];
     }

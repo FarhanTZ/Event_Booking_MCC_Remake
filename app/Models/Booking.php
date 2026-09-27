@@ -47,6 +47,10 @@ class Booking extends Model
         'checked_in_by',
         'duty_officer_id',
         'do_notified_at',
+        'room_opened_at',
+        'room_opened_by',
+        'room_open_notes',
+        'facility_checklist',
         'assigned_checkout_do_id',
         'checkout_duty_officer_id',
         'checkout_do_assigned_at',
@@ -66,6 +70,8 @@ class Booking extends Model
         'paid_at' => 'datetime',
         'checked_in_at' => 'datetime',
         'do_notified_at' => 'datetime',
+        'room_opened_at' => 'datetime',
+        'facility_checklist' => 'array',
         'checkout_do_assigned_at' => 'datetime',
         'checkout_initiated_at' => 'datetime',
         'checkout_do_notified_at' => 'datetime',
@@ -295,6 +301,27 @@ class Booking extends Model
     public function dutyOfficer()
     {
         return $this->belongsTo(User::class, 'duty_officer_id');
+    }
+
+    public function roomOpenedBy()
+    {
+        return $this->belongsTo(User::class, 'room_opened_by');
+    }
+
+    /**
+     * Determine if checked-in booking needs physical room opening & initial facility handover (FR-DO-02).
+     */
+    public function needsRoomOpening(): bool
+    {
+        return $this->isCheckedIn() && empty($this->room_opened_at);
+    }
+
+    /**
+     * Determine if physical room access has been opened by Duty Officer.
+     */
+    public function isRoomOpened(): bool
+    {
+        return ! empty($this->room_opened_at);
     }
 
     public function checkoutDutyOfficer()

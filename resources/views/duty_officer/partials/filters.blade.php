@@ -1,6 +1,6 @@
 <div class="space-y-3.5" x-data="{ advancedFilterOpen: false }">
     <!-- 1. KPI & Quick Status Metrics Bar (Touch-friendly horizontal scroll on mobile) -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
         <!-- Tab: Semua -->
         <a href="{{ request()->fullUrlWithQuery(['status' => 'all']) }}" 
            class="p-3 rounded-brand border transition shadow-card flex items-center justify-between {{ ($filter->status === 'all' || empty($filter->status)) ? 'bg-[#001A72] text-white border-[#001A72] ring-2 ring-[#001A72]/20' : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300' }}"
@@ -11,6 +11,24 @@
             </div>
             <div class="w-8 h-8 rounded-full flex items-center justify-center {{ ($filter->status === 'all' || empty($filter->status)) ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg>
+            </div>
+        </a>
+
+        <!-- Tab: Perlu Dibuka / Check-in Baru (FR-DO-02) -->
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'needs_opening']) }}" 
+           class="p-3 rounded-brand border transition shadow-card flex items-center justify-between {{ $filter->status === 'needs_opening' ? 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-500/40' : 'bg-white text-slate-800 border-slate-200 hover:border-amber-300' }}"
+           style="min-height: 52px;">
+            <div class="min-w-0">
+                <span class="block text-[11px] font-bold uppercase tracking-wider {{ $filter->status === 'needs_opening' ? 'text-amber-100' : 'text-amber-600 font-extrabold' }}">Perlu Buka</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xl font-black">{{ $metrics['needs_opening'] ?? 0 }}</span>
+                    @if(($metrics['needs_opening'] ?? 0) > 0)
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    @endif
+                </div>
+            </div>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center {{ $filter->status === 'needs_opening' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-700' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-6 6 7 7-4 4-7-7"/><path d="m3 21 6-6"/><path d="m15 9-6 6"/></svg>
             </div>
         </a>
 

@@ -45,6 +45,9 @@
                     <option value="all" {{ ($filter->status === 'all' || empty($filter->status)) ? 'selected' : '' }}>
                         Semua Status ({{ $metrics['total'] ?? 0 }})
                     </option>
+                    <option value="needs_opening" {{ $filter->status === 'needs_opening' ? 'selected' : '' }}>
+                        Perlu Dibuka / Check-in Baru ({{ $metrics['needs_opening'] ?? 0 }})
+                    </option>
                     <option value="checked_in" {{ $filter->status === 'checked_in' ? 'selected' : '' }}>
                         Sedang Berlangsung ({{ $metrics['checked_in'] ?? 0 }})
                     </option>

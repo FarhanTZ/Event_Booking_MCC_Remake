@@ -33,13 +33,14 @@ class GetDutyOfficerTasksAction
         $baseQuery = Booking::query()
             ->with([
                 'slots' => function ($query) {
-                    $query->with('room')->orderBy('event_start_at', 'asc');
+                    $query->with('room.facilities')->orderBy('event_start_at', 'asc');
                 },
                 'eventDetail',
                 'latestKtpVaultLog',
                 'user',
                 'dutyOfficer',
                 'checkoutDutyOfficer',
+                'roomOpenedBy',
             ])
             ->whereIn('status', [
                 BookingStatus::CONFIRMED->value,
@@ -121,6 +122,7 @@ class GetDutyOfficerTasksAction
 
         $metrics = [
             'total' => $allTasksForMetrics->count(),
+            'needs_opening' => $allTasksForMetrics->filter(fn ($b) => $b->needsRoomOpening())->count(),
             'checked_in' => $allTasksForMetrics->where('status', BookingStatus::CHECKED_IN)->count(),
             'upcoming' => $allTasksForMetrics->where('status', BookingStatus::CONFIRMED)->count(),
             'completed' => $allTasksForMetrics->filter(fn ($b) => in_array($b->status, [
@@ -131,7 +133,10 @@ class GetDutyOfficerTasksAction
         ];
 
         // 5. Status tab filter
-        if ($dto->status === 'checked_in') {
+        if ($dto->status === 'needs_opening') {
+            $baseQuery->where('status', BookingStatus::CHECKED_IN->value)
+                ->whereNull('room_opened_at');
+        } elseif ($dto->status === 'checked_in') {
             $baseQuery->where('status', BookingStatus::CHECKED_IN->value);
         } elseif ($dto->status === 'upcoming') {
             $baseQuery->where('status', BookingStatus::CONFIRMED->value);
@@ -143,8 +148,12 @@ class GetDutyOfficerTasksAction
             ]);
         }
 
-        // Execute query and order: Checked-in first, then earliest start time
+        // Execute query and order: Needs opening first, Checked-in second, then earliest start time
         $tasks = $baseQuery->get()->sort(function (Booking $a, Booking $b) {
+            // Priority 0: Needs room opening first
+            if ($a->needsRoomOpening() && ! $b->needsRoomOpening()) return -1;
+            if (! $a->needsRoomOpening() && $b->needsRoomOpening()) return 1;
+
             // Priority 1: CHECKED_IN status first
             if ($a->isCheckedIn() && ! $b->isCheckedIn()) return -1;
             if (! $a->isCheckedIn() && $b->isCheckedIn()) return 1;

@@ -46,7 +46,9 @@
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-[#001A72] selection:text-white"
-      x-data="dutyOfficerDashboard()">
+      x-data="dutyOfficerDashboard()"
+      @open-room-opening.window="openRoomOpeningModal($event.detail)"
+      @open-detail-modal.window="openDetailModal($event.detail)">
 
     <!-- Flash Messages Notification -->
     @if(session('success'))
@@ -182,6 +184,9 @@
     <!-- Modal Detail Operasional & Peralatan Mandiri Component -->
     @include('duty_officer.partials.modal-detail')
 
+    <!-- Modal Pendampingan Check-in & Pembukaan Akses Ruangan (FR-DO-02) -->
+    @include('duty_officer.partials.modal-room-opening')
+
     <!-- Alpine.js Store & Timing Handlers -->
     <script>
         function dutyOfficerDashboard() {
@@ -190,7 +195,10 @@
                 sidebarRight: true,
                 currentTimeString: '',
                 detailModalOpen: false,
+                openingModalOpen: false,
+                openingActionUrl: '',
                 activeTask: {
+                    bookingId: null,
                     bookingCode: '',
                     statusLabel: '',
                     eventName: '',
@@ -204,6 +212,7 @@
                     storageDrawer: null,
                     whatsappUrl: '',
                     equipmentItems: [],
+                    facilities: [],
                     description: ''
                 },
 
@@ -231,6 +240,12 @@
                 openDetailModal(data) {
                     this.activeTask = data;
                     this.detailModalOpen = true;
+                },
+
+                openRoomOpeningModal(data) {
+                    this.activeTask = data;
+                    this.openingActionUrl = '/duty-officer/bookings/' + data.bookingId + '/confirm-opening';
+                    this.openingModalOpen = true;
                 }
             };
         }

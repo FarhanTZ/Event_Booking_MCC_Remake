@@ -21,6 +21,9 @@ class BookingSlot extends Model
         'do_notified_at',
         'do_notified_by',
         'do_notified_channel',
+        'room_opened_at',
+        'room_opened_by',
+        'room_open_notes',
         'assigned_checkout_do_id',
         'checkout_duty_officer_id',
         'checkout_do_assigned_at',
@@ -42,6 +45,7 @@ class BookingSlot extends Model
         'event_end_at' => 'datetime',
         'duty_officer_assigned_at' => 'datetime',
         'do_notified_at' => 'datetime',
+        'room_opened_at' => 'datetime',
         'checkout_do_assigned_at' => 'datetime',
         'checkout_initiated_at' => 'datetime',
         'checkout_do_notified_at' => 'datetime',
@@ -56,6 +60,11 @@ class BookingSlot extends Model
     public function room()
     {
         return $this->belongsTo(Room::class, 'room_id');
+    }
+
+    public function roomOpenedBy()
+    {
+        return $this->belongsTo(User::class, 'room_opened_by');
     }
 
     public function dutyOfficer()

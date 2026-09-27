@@ -118,4 +118,5 @@ Route::middleware(['auth', 'role:duty_officer,super_admin'])
     ->name('duty_officer.')
     ->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/bookings/{booking}/confirm-opening', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'confirmRoomOpening'])->name('confirm_opening');
     });
