@@ -82,11 +82,13 @@ class GetDailyManifestQuery
             })
             ->with([
                 'room',
+                'dutyOfficer',
                 'booking.user',
                 'booking.eventDetail',
                 'booking.confirmedBy',
+                'booking.dutyOfficer',
                 'booking.slots' => function ($sq) {
-                    $sq->orderBy('event_start_at', 'asc')->with('room');
+                    $sq->orderBy('event_start_at', 'asc')->with(['room', 'dutyOfficer']);
                 },
             ]);
 
@@ -143,5 +145,18 @@ class GetDailyManifestQuery
         return $query->orderBy('event_start_at', 'asc')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    /**
+     * Get active Duty Officers list for room assignment disposition (FR-FO-04).
+     *
+     * @return Collection<\App\Models\User>
+     */
+    public function getActiveDutyOfficers(): Collection
+    {
+        return \App\Models\User::query()
+            ->where('role', \App\Enums\UserRole::DUTY_OFFICER)
+            ->orderBy('full_name', 'asc')
+            ->get();
     }
 }

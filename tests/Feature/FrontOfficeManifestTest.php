@@ -648,6 +648,7 @@ class FrontOfficeManifestTest extends TestCase
         // 2. Submit valid physical KTP info
         $validResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
             'booking_code' => 'MCC-KTP-TEST-99',
+            'confirm_early' => true,
             'ktp_holder_name' => 'Hendra Setiawan',
             'pic_whatsapp_number' => '081987654321',
             'notes' => 'KTP Asli diserahkan oleh ketua panitia',
@@ -670,6 +671,209 @@ class FrontOfficeManifestTest extends TestCase
             'ktp_photo_scan_url' => null,
             'notes' => 'KTP Asli diserahkan oleh ketua panitia',
         ]);
+    }
+
+    public function test_duty_officer_assignment_successfully_dispatches_do_to_booking_and_slot(): void
+    {
+        $dutyOfficer = User::create([
+            'full_name' => 'Bambang Sudiro, S.T.',
+            'email' => 'do.test@mcc.id',
+            'password_hash' => bcrypt('password'),
+            'role' => UserRole::DUTY_OFFICER,
+            'account_type' => AccountType::INSTANSI,
+            'phone_number' => '081234567899',
+            'institution_name' => 'Divisi Operasional MCC',
+            'address' => 'Gedung MCC Lantai 2',
+            'category' => 'Lembaga Pemerintah',
+            'city' => 'Kota Malang',
+            'district' => 'Blimbing',
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-DO-TEST-01',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CHECKED_IN,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Workshop Desain Grafis',
+            'event_category' => 'Komunitas',
+            'estimated_participants' => 30,
+            'event_description' => 'Pelatihan grafis.',
+            'pic_name_snapshot' => 'Budi Utomo',
+            'pic_phone_snapshot' => '081234567890',
+            'institution_name_snapshot' => 'Komunitas Grafis',
+            'proposal_file_url' => '/storage/proposals/test_do.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        $slot = BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor2->id,
+            'event_start_at' => now(),
+            'event_end_at' => now()->addHours(3),
+            'operational_range' => "[".now()->toIso8601String().", ".now()->addHours(3)->addMinutes(30)->toIso8601String().")",
+            'is_active' => true,
+        ]);
+
+        // 1. Validation test: Invalid DO role or non-existent user
+        $invalidResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.assign_duty_officer'), [
+            'booking_id' => $booking->id,
+            'slot_id' => $slot->id,
+            'duty_officer_id' => $this->publicUser->id, // Public user is not a duty officer
+        ]);
+        $invalidResponse->assertStatus(422);
+        $invalidResponse->assertJsonValidationErrors(['duty_officer_id']);
+
+        // 2. Success dispatch
+        $validResponse = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.assign_duty_officer'), [
+            'booking_id' => $booking->id,
+            'slot_id' => $slot->id,
+            'duty_officer_id' => $dutyOfficer->id,
+            'notes' => 'Tolong koordinasikan sound system mic wireless dan proyektor HDMI.',
+        ]);
+
+        $validResponse->assertOk();
+        $validResponse->assertJson([
+            'success' => true,
+            'duty_officer' => [
+                'id' => $dutyOfficer->id,
+                'name' => 'Bambang Sudiro, S.T.',
+            ],
+        ]);
+
+        // 3. Database assertions
+        $booking->refresh();
+        $slot->refresh();
+
+        $this->assertEquals($dutyOfficer->id, $booking->duty_officer_id);
+        $this->assertEquals($dutyOfficer->id, $slot->duty_officer_id);
+        $this->assertEquals($this->frontOfficeUser->id, $slot->duty_officer_assigned_by);
+        $this->assertEquals('Tolong koordinasikan sound system mic wireless dan proyektor HDMI.', $slot->duty_officer_notes);
+        $this->assertNotNull($slot->duty_officer_assigned_at);
+    }
+
+    public function test_duty_officer_whatsapp_dispatch_generates_valid_message_and_records_dispatch_status(): void
+    {
+        $dutyOfficer = User::create([
+            'full_name' => 'Bambang Sudiro, S.T.',
+            'email' => 'do.notify@mcc.id',
+            'password_hash' => bcrypt('password'),
+            'role' => UserRole::DUTY_OFFICER,
+            'account_type' => AccountType::INSTANSI,
+            'phone_number' => '081234567899',
+            'institution_name' => 'Divisi Operasional MCC',
+            'address' => 'Gedung MCC Lantai 2',
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-NOTIFY-01',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CHECKED_IN,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+            'duty_officer_id' => $dutyOfficer->id,
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Workshop Desain Grafis',
+            'event_category' => 'Komunitas',
+            'estimated_participants' => 30,
+            'event_description' => 'Pelatihan grafis.',
+            'pic_name_snapshot' => 'Budi Utomo',
+            'pic_phone_snapshot' => '081234567890',
+            'institution_name_snapshot' => 'Komunitas Grafis',
+            'proposal_file_url' => '/storage/proposals/test_do.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        $slot = BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor2->id,
+            'duty_officer_id' => $dutyOfficer->id,
+            'event_start_at' => Carbon::today()->setTime(10, 0),
+            'event_end_at' => Carbon::today()->setTime(13, 0),
+            'operational_range' => "[".Carbon::today()->setTime(10, 0)->toIso8601String().", ".Carbon::today()->setTime(13, 30)->toIso8601String().")",
+            'is_active' => true,
+        ]);
+
+        // Kirim request notifikasi tugas ke DO
+        $response = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.notify_duty_officer'), [
+            'booking_id' => $booking->id,
+            'slot_id' => $slot->id,
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'duty_officer' => [
+                'id' => $dutyOfficer->id,
+                'name' => 'Bambang Sudiro, S.T.',
+                'phone' => '081234567899',
+            ],
+        ]);
+
+        $messageText = $response->json('message_text');
+        $this->assertStringContainsString('Halo Bambang Sudiro, S.T.', $messageText);
+        $this->assertStringContainsString('Workshop Desain Grafis', $messageText);
+        $this->assertStringContainsString('Studio Podcast Lantai 2 - Lantai 2', $messageText);
+        $this->assertStringContainsString('CHECK-IN', $messageText);
+        $this->assertStringContainsString('PIC: Budi Utomo (081234567890)', $messageText);
+        $this->assertStringContainsString('Jadwal: 10:00 - 13:00 WIB', $messageText);
+        $this->assertStringContainsString('Mohon lakukan pendampingan pembukaan ruangan dan bersiap untuk inspeksi fisik saat acara berakhir.', $messageText);
+
+        $whatsappUrl = $response->json('whatsapp_url');
+        $this->assertStringContainsString('https://api.whatsapp.com/send?phone=6281234567899', $whatsappUrl);
+
+        // Database assertions
+        $booking->refresh();
+        $slot->refresh();
+
+        $this->assertNotNull($booking->do_notified_at);
+        $this->assertNotNull($slot->do_notified_at);
+        $this->assertEquals($this->frontOfficeUser->id, $slot->do_notified_by);
+        $this->assertEquals('whatsapp_web', $slot->do_notified_channel);
+    }
+
+    public function test_duty_officer_notification_fails_if_no_do_assigned(): void
+    {
+        $booking = Booking::create([
+            'booking_code' => 'MCC-NO-DO-01',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CHECKED_IN,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+            'duty_officer_id' => null,
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Acara Tanpa DO',
+            'event_category' => 'Komunitas',
+            'estimated_participants' => 10,
+            'event_description' => 'Deskripsi.',
+            'pic_name_snapshot' => 'Budi',
+            'pic_phone_snapshot' => '081234567890',
+            'institution_name_snapshot' => 'Komunitas',
+            'proposal_file_url' => '/storage/proposals/test.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        $slot = BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor2->id,
+            'duty_officer_id' => null,
+            'event_start_at' => Carbon::today()->setTime(10, 0),
+            'event_end_at' => Carbon::today()->setTime(13, 0),
+            'operational_range' => "[".Carbon::today()->setTime(10, 0)->toIso8601String().", ".Carbon::today()->setTime(13, 30)->toIso8601String().")",
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.notify_duty_officer'), [
+            'booking_id' => $booking->id,
+            'slot_id' => $slot->id,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['duty_officer']);
     }
 }
 

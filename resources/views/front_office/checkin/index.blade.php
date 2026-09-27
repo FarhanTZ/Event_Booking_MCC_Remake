@@ -789,7 +789,15 @@
                             return;
                         }
 
-                        this.successMessage = data.message || 'Check-in dan penitipan KTP fisik berhasil dicatat!';
+                        // FR-FO-04: Segera setelah check-in sukses, buka modal Disposisi DO
+                        const savedBooking = data.booking;
+                        this.successMessage = data.message || 'Check-in dan jaminan KTP berhasil dicatat!';
+                        this.verifiedBooking = null;
+                        this.bookingCode = '';
+                        this.checkinToken = '';
+                        this.ktpHolderName = '';
+                        this.picWhatsappNumber = '';
+                        this.successMessage = data.message || 'Check-in dan jaminan KTP berhasil dicatat! Status sesi telah aktif.';
                         this.verifiedBooking = null;
                         this.bookingCode = '';
                         this.checkinToken = '';

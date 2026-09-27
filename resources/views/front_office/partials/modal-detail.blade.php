@@ -81,6 +81,115 @@
                     </div>
                 </div>
 
+                <!-- Penanggung Jawab Pengawas Ruangan (FR-FO-04 Duty Officer & FR-FO-05 WhatsApp Dispatch) -->
+                <!-- Hanya aktif dan muncul setelah pemohon/acara berstatus Checked-In / Selesai -->
+                <template x-if="activeSlot.status_value === 'checked_in' || activeSlot.status_value === 'completed'">
+                    <div class="border rounded-brand p-4 space-y-3"
+                         :class="activeSlot.duty_officer_name ? 'bg-emerald-50/60 border-emerald-200' : 'bg-amber-50/60 border-amber-200'">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs font-bold"
+                                 :class="activeSlot.duty_officer_name ? 'text-emerald-900' : 'text-amber-900'">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+                                <span>Pengawas Ruangan (Duty Officer)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <template x-if="activeSlot.duty_officer_name && activeSlot.do_notified_at">
+                                    <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Tugas Terkirim ke WA</span>
+                                    </span>
+                                </template>
+                                <template x-if="activeSlot.duty_officer_name && !activeSlot.do_notified_at">
+                                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                        Belum Di-WhatsApp
+                                    </span>
+                                </template>
+                                <template x-if="!activeSlot.duty_officer_name">
+                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                        Belum Disposisi
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <template x-if="activeSlot.duty_officer_name">
+                            <div class="space-y-2.5 pt-1">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-slate-500 text-[11px] block">Petugas Lapangan:</span>
+                                        <span class="font-extrabold text-slate-900 text-sm" x-text="activeSlot.duty_officer_name"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-500 text-[11px] block">Kontak DO:</span>
+                                        <span class="font-bold text-[#001A72] font-mono" x-text="activeSlot.duty_officer_phone || '-'"></span>
+                                    </div>
+                                    <template x-if="activeSlot.duty_officer_notes">
+                                        <div class="sm:col-span-2 pt-1 border-t border-emerald-200/60">
+                                            <span class="text-slate-500 text-[10px] block">Catatan Disposisi:</span>
+                                            <span class="text-slate-700 italic text-[11px]" x-text="activeSlot.duty_officer_notes"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- FR-FO-05 Action WhatsApp Quick Dispatch -->
+                                <div class="pt-2 border-t border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="text-[11px]">
+                                        <template x-if="activeSlot.do_notified_at">
+                                            <span class="text-emerald-700 font-medium">
+                                                Terkirim: <span class="font-bold font-mono" x-text="activeSlot.do_notified_at"></span>
+                                            </span>
+                                        </template>
+                                        <template x-if="!activeSlot.do_notified_at">
+                                            <span class="text-slate-500">
+                                                Kirim ringkasan sesi &amp; kontak PIC ke WA DO.
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <button type="button"
+                                            @click="notifyDutyOfficer(activeSlot.booking_id, activeSlot.id)"
+                                            :disabled="isDispatching"
+                                            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50">
+                                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.276-.1-.476-.15-.677.15-.2.301-.777.98-1.002 1.23-.226.25-.451.276-.752.126-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.63-.927-2.233-.244-.587-.492-.508-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.507 0 1.479 1.078 2.908 1.228 3.109.15.2 2.122 3.24 5.141 4.544.718.31 1.279.496 1.716.635.722.23 1.379.197 1.9.12.58-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.276-.201-.577-.351z"/></svg>
+                                        <span x-text="activeSlot.do_notified_at ? 'Kirim Ulang Tugas (WA)' : 'Kirim Tugas ke DO (WhatsApp)'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="!activeSlot.duty_officer_name">
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-xs text-amber-800">Belum ada Duty Officer yang ditugaskan ke sesi ruangan ini.</span>
+                                <button type="button" 
+                                        @click="closeModal(); openDutyOfficerModal({
+                                            id: activeSlot.booking_id,
+                                            booking_code: activeSlot.booking_code,
+                                            event_name: activeSlot.event_name,
+                                            room_name: activeSlot.room_name,
+                                            floor_level: activeSlot.floor_level,
+                                            slot_id: activeSlot.id,
+                                            event_start_at: activeSlot.slot_start,
+                                            status_label: activeSlot.status_label
+                                        })"
+                                        class="px-2.5 py-1 rounded bg-[#001A72] text-white text-xs font-bold hover:bg-[#001250] transition cursor-pointer">
+                                    Disposisi DO
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Informasi jika sesi belum check-in -->
+                <template x-if="activeSlot.status_value !== 'checked_in' && activeSlot.status_value !== 'completed'">
+                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-brand flex items-start gap-2.5 text-xs text-slate-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                        <div class="leading-relaxed">
+                            <span class="font-bold text-slate-800 block">Disposisi Pengawas Ruangan (DO):</span>
+                            <span>Fitur penugasan Duty Officer akan aktif setelah pemohon tiba dan menyelesaikan proses validasi check-in di Front Office.</span>
+                        </div>
+                    </div>
+                </template>
+
                 <!-- Detail Penanggung Jawab & Kontak -->
                 <div class="border border-slate-200 rounded-brand p-4 space-y-3">
                     <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">

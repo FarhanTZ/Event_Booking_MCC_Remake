@@ -51,12 +51,60 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // 3. Duty Officer / Inspeksi Ruangan
+        // 3. Duty Officer / Inspeksi Ruangan Tim MCC
         User::firstOrCreate(
             ['email' => 'dutyofficer@mcc.id'],
             [
-                'full_name' => 'Duty Officer Patroli MCC',
+                'full_name' => 'Bambang Sudiro, S.T.',
                 'phone_number' => '+6281234567892',
+                'password_hash' => $defaultPassword,
+                'role' => UserRole::DUTY_OFFICER,
+                'account_type' => AccountType::INSTANSI,
+                'institution_name' => 'Divisi Operasional & Inspeksi Gedung MCC',
+                'address' => 'Gedung MCC Lantai 2, Kota Malang',
+                'category' => 'Lembaga Pemerintah',
+                'city' => 'Kota Malang',
+                'district' => 'Blimbing',
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'do.hendra@mcc.id'],
+            [
+                'full_name' => 'Hendra Kurniawan',
+                'phone_number' => '+6281234567893',
+                'password_hash' => $defaultPassword,
+                'role' => UserRole::DUTY_OFFICER,
+                'account_type' => AccountType::INSTANSI,
+                'institution_name' => 'Divisi Operasional & Inspeksi Gedung MCC',
+                'address' => 'Gedung MCC Lantai 4, Kota Malang',
+                'category' => 'Lembaga Pemerintah',
+                'city' => 'Kota Malang',
+                'district' => 'Blimbing',
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'do.rizky@mcc.id'],
+            [
+                'full_name' => 'Rizky Pratama',
+                'phone_number' => '+6281234567894',
+                'password_hash' => $defaultPassword,
+                'role' => UserRole::DUTY_OFFICER,
+                'account_type' => AccountType::INSTANSI,
+                'institution_name' => 'Divisi Operasional & Inspeksi Gedung MCC',
+                'address' => 'Gedung MCC Lantai 7, Kota Malang',
+                'category' => 'Lembaga Pemerintah',
+                'city' => 'Kota Malang',
+                'district' => 'Blimbing',
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'do.patroli@mcc.id'],
+            [
+                'full_name' => 'Ahmad Faisol',
+                'phone_number' => '+6281234567895',
                 'password_hash' => $defaultPassword,
                 'role' => UserRole::DUTY_OFFICER,
                 'account_type' => AccountType::INSTANSI,

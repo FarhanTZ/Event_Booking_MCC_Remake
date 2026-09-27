@@ -45,6 +45,8 @@ class Booking extends Model
         'checkin_token',
         'checked_in_at',
         'checked_in_by',
+        'duty_officer_id',
+        'do_notified_at',
         'completed_at',
         'completed_by',
         'revision_deadline',
@@ -55,6 +57,7 @@ class Booking extends Model
         'status' => \App\Enums\BookingStatus::class,
         'paid_at' => 'datetime',
         'checked_in_at' => 'datetime',
+        'do_notified_at' => 'datetime',
         'completed_at' => 'datetime',
         'revision_deadline' => 'datetime',
         'nominal_amount' => 'decimal:2',
@@ -185,6 +188,11 @@ class Booking extends Model
     public function approvals()
     {
         return $this->hasMany(BookingApproval::class, 'booking_id');
+    }
+
+    public function dutyOfficer()
+    {
+        return $this->belongsTo(User::class, 'duty_officer_id');
     }
 
     public function ktpVaultLogs()

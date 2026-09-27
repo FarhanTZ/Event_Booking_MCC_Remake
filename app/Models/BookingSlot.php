@@ -14,6 +14,13 @@ class BookingSlot extends Model
     protected $fillable = [
         'booking_id',
         'room_id',
+        'duty_officer_id',
+        'duty_officer_assigned_at',
+        'duty_officer_assigned_by',
+        'duty_officer_notes',
+        'do_notified_at',
+        'do_notified_by',
+        'do_notified_channel',
         'event_start_at',
         'event_end_at',
         'operational_range',
@@ -23,6 +30,8 @@ class BookingSlot extends Model
     protected $casts = [
         'event_start_at' => 'datetime',
         'event_end_at' => 'datetime',
+        'duty_officer_assigned_at' => 'datetime',
+        'do_notified_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 
@@ -34,5 +43,15 @@ class BookingSlot extends Model
     public function room()
     {
         return $this->belongsTo(Room::class, 'room_id');
+    }
+
+    public function dutyOfficer()
+    {
+        return $this->belongsTo(User::class, 'duty_officer_id');
+    }
+
+    public function dutyOfficerAssignedBy()
+    {
+        return $this->belongsTo(User::class, 'duty_officer_assigned_by');
     }
 }
