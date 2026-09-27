@@ -281,4 +281,113 @@ class ManifestController extends Controller
 
         return redirect()->route('front_office.manifest')->with('success', $message);
     }
+
+    /**
+     * Mark event as abandoned by committee who left without checking out (FR-FO-08).
+     */
+    public function markAbandoned(\App\Http\Requests\FrontOffice\MarkAbandonedRequest $request, \App\Actions\FrontOffice\MarkBookingAbandonedAction $action): JsonResponse|RedirectResponse
+    {
+        $dto = $request->toDTO((string) $request->user()->id);
+        $result = $action->execute($dto);
+
+        $statusLabel = $result['new_status']->label();
+        $message = "Protokol panitia pulang tanpa lapor berhasil diproses. Status acara berubah menjadi '{$statusLabel}'. KTP fisik diamankan ke kotak arsip {$result['unclaimed_box_id']}.";
+
+        if ($result['user_suspended']) {
+            $message .= " Akun pemohon otomatis dibekukan karena terdapat insiden pada ruangan.";
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'booking' => $result['booking'],
+                'user_suspended' => $result['user_suspended'],
+                'unclaimed_box_id' => $result['unclaimed_box_id'],
+                'ktp_holder_name' => $result['ktp_holder_name'],
+            ]);
+        }
+
+        return redirect()->route('front_office.manifest')->with('success', $message);
+    }
+
+    /**
+     * Display the Unclaimed KTP Inventory log book (FR-FO-09).
+     */
+    public function unclaimedKtpIndex(Request $request, \App\Queries\FrontOffice\GetUnclaimedKtpLogsQuery $query, \App\Queries\FrontOffice\GetDailyManifestQuery $manifestQuery): View
+    {
+        $metrics = $query->getMetrics();
+        $unclaimedLogs = $query->getUnclaimedKtpLogs($request);
+        $manifestMetrics = $manifestQuery->getMetrics();
+
+        return view('front_office.unclaimed_ktp.index', [
+            'metrics' => $metrics,
+            'manifestMetrics' => $manifestMetrics,
+            'unclaimedLogs' => $unclaimedLogs,
+            'currentStatus' => $request->query('status', 'all'),
+            'currentSearch' => $request->query('q', ''),
+        ]);
+    }
+
+    /**
+     * Process late retrieval handover of unclaimed KTP card (FR-FO-09).
+     */
+    public function handoverUnclaimedKtp(\App\Http\Requests\FrontOffice\HandoverUnclaimedKtpRequest $request, \App\Actions\FrontOffice\HandoverUnclaimedKtpAction $action): JsonResponse|RedirectResponse
+    {
+        $dto = $request->toDTO((string) $request->user()->id);
+        $result = $action->execute($dto);
+
+        $message = "Serah-terima KTP tertinggal berhasil dicatat! Fisik KTP telah diserahkan kepada {$result['retrieved_by']}.";
+        if ($result['was_unsuspended']) {
+            $message .= " Pembekuan akun user pemohon telah dibuka kembali.";
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'ktp_log' => $result['ktp_log'],
+                'was_unsuspended' => $result['was_unsuspended'],
+            ]);
+        }
+
+        return redirect()->route('front_office.unclaimed_ktp')->with('success', $message);
+    }
+
+    /**
+     * Generate instant WhatsApp URL to remind overdue PIC to checkout & retrieve KTP (FR-FO-08).
+     */
+    public function notifyOverduePic(Request $request, Booking $booking, \App\Services\FrontOffice\DutyOfficerNotificationService $service): JsonResponse|RedirectResponse
+    {
+        $booking->load(['user', 'eventDetail', 'latestKtpVaultLog', 'slots.room']);
+        $slotId = $request->query('slot_id');
+        $slot = $slotId ? $booking->slots->firstWhere('id', (int) $slotId) : $booking->slots->sortByDesc('event_end_at')->first();
+
+        $phone = $booking->latestKtpVaultLog?->pic_whatsapp_number 
+            ?? ($booking->eventDetail?->pic_phone_snapshot ?? ($booking->user->phone_number ?? ''));
+
+        if (empty($phone) || $phone === '-') {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nomor WhatsApp PIC tidak ditemukan pada data booking ini.',
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Nomor WhatsApp PIC tidak ditemukan.');
+        }
+
+        $messageText = $service->generateOverduePicWhatsAppMessage($booking, $slot);
+        $whatsappUrl = $service->generateWhatsAppUrl($phone, $messageText);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'whatsapp_url' => $whatsappUrl,
+                'message' => $messageText,
+                'phone' => $phone,
+            ]);
+        }
+
+        return redirect()->away($whatsappUrl);
+    }
 }

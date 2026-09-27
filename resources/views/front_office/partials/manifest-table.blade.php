@@ -75,6 +75,9 @@
                         $endCarbon = \Carbon\Carbon::parse($slot->event_end_at);
                         $durationHours = round($startCarbon->diffInMinutes($endCarbon) / 60, 1);
                         
+                        // FR-FO-08: Deteksi Overdue jika toleransi 30 menit pasca-acara terlampaui saat masih checked_in
+                        $isOverdue = $booking->isCheckedIn() && \Carbon\Carbon::now()->greaterThan($endCarbon->copy()->addMinutes(30));
+                        
                         // Siapkan payload JSON yang bersih untuk modal detail
                         $slotPayload = [
                             'id' => $slot->id,
@@ -89,6 +92,7 @@
                             'status_value' => $booking->status->value,
                             'status_label' => $booking->status->label(),
                             'status_badge' => $booking->status->badgeClasses(),
+                            'is_overdue' => $isOverdue,
                             'event_name' => $eventDetail->event_name ?? 'Acara MCC',
                             'event_category' => $eventDetail->event_category ?? '-',
                             'ekraf_subsector' => $eventDetail->ekraf_subsector ?? '-',
@@ -114,6 +118,7 @@
                             'clearance_status' => $booking->clearance_status ?? 'pending',
                             'ktp_holder_name' => $booking->latestKtpVaultLog?->ktp_holder_name ?? ($eventDetail->pic_name_snapshot ?? ($booking->user->full_name ?? 'Panitia')),
                             'storage_drawer_number' => $booking->latestKtpVaultLog?->storage_drawer_number ?? null,
+                            'unclaimed_box_id' => $booking->latestKtpVaultLog?->unclaimed_box_id ?? null,
                             'ktp_returned_at' => $booking->latestKtpVaultLog?->returned_at ? $booking->latestKtpVaultLog->returned_at->translatedFormat('d M Y, H:i') . ' WIB' : null,
                             'incident' => $booking->latestIncident ? [
                                 'category' => $booking->latestIncident->category,
@@ -141,7 +146,7 @@
                             })->values()->all(),
                         ];
                     @endphp
-                    <tr class="hover:bg-slate-50/80 transition group">
+                    <tr class="hover:bg-slate-50/80 transition group {{ $isOverdue ? 'bg-rose-50/40 border-l-4 border-l-rose-500' : '' }}">
                         
                         <!-- 1. Waktu Sesi (Jam Mulai - Jam Selesai & Durasi) -->
                         <td class="px-5 py-4 whitespace-nowrap">
@@ -197,11 +202,30 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                                 <span>{{ $eventDetail->pic_phone_snapshot ?? ($booking->user->phone_number ?? '-') }}</span>
                             </div>
+                            @if($isOverdue)
+                                <div class="mt-1">
+                                    <a href="{{ route('front_office.overdue.notify_pic', $booking->id) }}" 
+                                       target="_blank"
+                                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition"
+                                       title="Kirim peringatan checkout ke WhatsApp PIC">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                        <span>Hubungi PIC via WA</span>
+                                    </a>
+                                </div>
+                            @endif
                         </td>
 
                         <!-- 5. Status Sesi -->
                         <td class="px-5 py-4 text-center whitespace-nowrap">
-                            @if($booking->status === \App\Enums\BookingStatus::CONFIRMED)
+                            @if($isOverdue)
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping"></span>
+                                        <span>Lewat Waktu (>30m)</span>
+                                    </span>
+                                    <span class="text-[9px] text-rose-600 font-bold">Overdue Notice</span>
+                                </div>
+                            @elseif($booking->status === \App\Enums\BookingStatus::CONFIRMED)
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                     <span>Menunggu Kedatangan</span>
@@ -215,6 +239,16 @@
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                                     <span>Selesai Digunakan</span>
+                                </span>
+                            @elseif($booking->status === \App\Enums\BookingStatus::ABANDONED_CLEAN)
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                    <span>Ditinggal (Bersih)</span>
+                                </span>
+                            @elseif($booking->status === \App\Enums\BookingStatus::ABANDONED_INCIDENT)
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-rose-100 text-rose-800 border border-rose-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                                    <span>Ditinggal (Bermasalah)</span>
                                 </span>
                             @else
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1 {{ $booking->status->badgeClasses() }}">

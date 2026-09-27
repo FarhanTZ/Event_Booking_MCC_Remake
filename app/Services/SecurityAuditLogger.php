@@ -63,4 +63,28 @@ class SecurityAuditLogger
             'timestamp' => now()->toIso8601String(),
         ]);
     }
+
+    /**
+     * Log general security & domain action event.
+     */
+    public static function logAction(
+        string $action,
+        string $description,
+        ?string $userId = null,
+        ?string $modelType = null,
+        ?string $modelId = null,
+        array $metadata = []
+    ): void {
+        Log::channel('single')->info("Security Audit [{$action}]: {$description}", [
+            'action' => $action,
+            'description' => $description,
+            'user_id' => $userId ?? (auth()->check() ? auth()->id() : null),
+            'model_type' => $modelType,
+            'model_id' => $modelId,
+            'metadata' => $metadata,
+            'ip_address' => request()?->ip(),
+            'user_agent' => request()?->userAgent(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
 }

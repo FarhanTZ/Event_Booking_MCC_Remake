@@ -166,6 +166,51 @@ class Booking extends Model
         return $this->status === \App\Enums\BookingStatus::COMPLETED;
     }
 
+    public function isAbandoned(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::ABANDONED_CLEAN
+            || $this->status === \App\Enums\BookingStatus::ABANDONED_INCIDENT;
+    }
+
+    public function isAbandonedClean(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::ABANDONED_CLEAN;
+    }
+
+    public function isAbandonedIncident(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::ABANDONED_INCIDENT;
+    }
+
+    /**
+     * Determine if session is overdue for checkout (> 30 minutes after event end while still checked-in) (FR-FO-08).
+     */
+    public function isOverdueForCheckout(?\Carbon\Carbon $currentTime = null): bool
+    {
+        if (! $this->isCheckedIn()) {
+            return false;
+        }
+
+        $now = $currentTime ?? \Carbon\Carbon::now();
+        $latestSlot = $this->slots->sortByDesc('event_end_at')->first();
+
+        if (! $latestSlot || ! $latestSlot->event_end_at) {
+            return false;
+        }
+
+        $toleranceTime = \Carbon\Carbon::parse($latestSlot->event_end_at)->addMinutes(30);
+
+        return $now->greaterThan($toleranceTime);
+    }
+
+    /**
+     * Determine if booking can be marked as abandoned by Front Office (FR-FO-08).
+     */
+    public function canMarkAbandoned(): bool
+    {
+        return $this->isCheckedIn();
+    }
+
     /**
      * Determine if Front Office can initiate checkout inspection (FR-FO-06).
      * Allowed when booking is Checked-In (ongoing) or Completed (re-dispatch/re-inspection).

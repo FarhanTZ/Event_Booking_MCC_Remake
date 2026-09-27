@@ -86,10 +86,10 @@
                 </div>
                 <div class="mt-2 flex items-baseline justify-between">
                     <span class="text-2xl font-black text-slate-900 font-mono tracking-tight">
-                        {{ $metrics['total_slots_today'] }}
+                        {{ $metrics['total_slots_today'] ?? 0 }}
                     </span>
                     <span class="text-[10px] font-bold text-slate-500">
-                        {{ $metrics['active_rooms_count'] }} Ruangan Aktif
+                        {{ $metrics['active_rooms_count'] ?? 0 }} Ruangan Aktif
                     </span>
                 </div>
             </div>
@@ -104,7 +104,7 @@
                 </div>
                 <div class="mt-2 flex items-baseline justify-between">
                     <span class="text-2xl font-black text-emerald-600 font-mono tracking-tight">
-                        {{ $metrics['confirmed_slots'] }}
+                        {{ $metrics['confirmed_slots'] ?? 0 }}
                     </span>
                     <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                         Siap Validasi
@@ -122,7 +122,7 @@
                 </div>
                 <div class="mt-2 flex items-baseline justify-between">
                     <span class="text-2xl font-black text-teal-600 font-mono tracking-tight">
-                        {{ $metrics['checked_in_slots'] }}
+                        {{ $metrics['checked_in_slots'] ?? 0 }}
                     </span>
                     <span class="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
                         Gedung Terpakai
@@ -140,7 +140,7 @@
                 </div>
                 <div class="mt-2 flex items-baseline justify-between">
                     <span class="text-2xl font-black text-slate-700 font-mono tracking-tight">
-                        {{ $metrics['completed_slots'] }}
+                        {{ $metrics['completed_slots'] ?? 0 }}
                     </span>
                     <span class="text-[10px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
                         Inspeksi DO

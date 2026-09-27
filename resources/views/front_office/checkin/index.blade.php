@@ -321,33 +321,6 @@
                                            class="block w-full px-3.5 py-2.5 text-xs font-mono font-bold rounded-xl border border-slate-300 bg-white focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72]/20 transition placeholder:font-normal placeholder:text-slate-400">
                                 </div>
                             </div>
-
-                            <!-- Input 3: Pilih Duty Officer (Opsional Saat Check-In) -->
-                            <div>
-                                <label class="block text-xs font-bold text-slate-800 mb-1">
-                                    3. Disposisi Duty Officer (DO) Pengawas Ruangan <span class="text-slate-400 font-normal">(Opsional)</span>
-                                </label>
-                                <select x-model="checkinDutyOfficerId" 
-                                        class="block w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-300 bg-white focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72]/20 transition text-slate-800">
-                                    <option value="">-- Pilih Duty Officer (Bisa ditentukan nanti) --</option>
-                                    @if(isset($dutyOfficers))
-                                        @foreach($dutyOfficers as $do)
-                                            <option value="{{ $do->id }}">{{ $do->name }} ({{ $do->phone ?? 'Tanpa No. WA' }})</option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                            </div>
-
-                            <!-- Input 4: Catatan Tambahan (Opsional) -->
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
-                                    Catatan Tambahan Meja Depan (Opsional)
-                                </label>
-                                <input type="text" 
-                                       x-model="notes" 
-                                       placeholder="Misal: Diserahkan oleh wakil panitia" 
-                                       class="block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:border-[#001A72] focus:ring-1 focus:ring-[#001A72]/20 transition placeholder:text-slate-400">
-                            </div>
                         </div>
 
                         <div class="p-2.5 bg-white/80 rounded-xl border border-indigo-100 flex items-center gap-2 text-[11px] text-slate-600 font-medium">
@@ -381,9 +354,6 @@
         </div>
     </main>
 
-    <!-- Modal Disposisi Pengawas Ruangan (FR-FO-04) -->
-    @include('front_office.partials.modal-duty-officer')
-
     <!-- Alpine.js Store & Logic -->
     <script>
         function checkinValidator(initialCode = '') {
@@ -406,28 +376,6 @@
                 ktpHolderName: '',
                 picWhatsappNumber: '',
                 notes: '',
-                checkinDutyOfficerId: '',
-
-                // FR-FO-04 & FR-FO-05 Duty Officer Assignment & WhatsApp Quick Dispatch State
-                showDutyOfficerModal: false,
-                isSubmittingDO: false,
-                isDispatching: false,
-                sendWhatsAppDispatch: true,
-                doAssignmentError: '',
-                selectedDutyOfficerId: '',
-                dutyOfficerNotes: '',
-                doTargetBooking: {
-                    id: '',
-                    booking_code: '',
-                    event_name: '',
-                    room_name: '',
-                    floor_level: 1,
-                    slot_id: null,
-                    event_start_at: '',
-                    status_label: 'Aktif (Checked-In)',
-                    initial_do_id: '',
-                    duty_officer_id: ''
-                },
 
                 init() {
                     if (this.bookingCode) {
@@ -836,11 +784,6 @@
 
                         const savedBooking = data.booking;
                         this.successMessage = data.message || 'Check-in dan jaminan KTP berhasil dicatat! Status sesi telah aktif.';
-                        
-                        // Jika saat check-in DO belum dipilih, otomatis tawarkan modal DO
-                        if (savedBooking && !this.checkinDutyOfficerId) {
-                            this.openDutyOfficerModal(savedBooking);
-                        }
 
                         this.verifiedBooking = null;
                         this.bookingCode = '';
@@ -848,108 +791,10 @@
                         this.ktpHolderName = '';
                         this.picWhatsappNumber = '';
                         this.notes = '';
-                        this.checkinDutyOfficerId = '';
                     } catch (err) {
                         this.errorMessage = 'Terjadi kesalahan sistem saat memproses check-in: ' + err.message;
                     } finally {
                         this.isSubmitting = false;
-                    }
-                },
-
-                // Modal DO Handlers
-                openDutyOfficerModal(bookingData) {
-                    this.doTargetBooking = {
-                        id: bookingData.id,
-                        booking_code: bookingData.booking_code,
-                        event_name: bookingData.event_name,
-                        room_name: bookingData.room_name,
-                        floor_level: bookingData.floor_level || 1,
-                        slot_id: bookingData.slot_id || null,
-                        event_start_at: bookingData.event_start_at || '-',
-                        status_label: bookingData.status_label || 'Aktif (Checked-In)',
-                        initial_do_id: bookingData.duty_officer_id || '',
-                        duty_officer_id: bookingData.duty_officer_id || ''
-                    };
-
-                    this.selectedDutyOfficerId = bookingData.duty_officer_id ? String(bookingData.duty_officer_id) : '';
-                    this.dutyOfficerNotes = bookingData.duty_officer_notes || '';
-                    this.sendWhatsAppDispatch = true;
-                    this.doAssignmentError = '';
-                    this.isSubmittingDO = false;
-                    this.showDutyOfficerModal = true;
-                },
-
-                closeDutyOfficerModal() {
-                    this.showDutyOfficerModal = false;
-                    this.doAssignmentError = '';
-                },
-
-                skipDutyOfficerAssignment() {
-                    this.closeDutyOfficerModal();
-                },
-
-                async submitDutyOfficerAssignment() {
-                    if (!this.selectedDutyOfficerId || !this.doTargetBooking.id) return;
-                    this.isSubmittingDO = true;
-                    this.doAssignmentError = '';
-
-                    const payload = {
-                        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                        booking_id: this.doTargetBooking.id,
-                        slot_id: this.doTargetBooking.slot_id || null,
-                        duty_officer_id: this.selectedDutyOfficerId,
-                        notes: this.dutyOfficerNotes || null
-                    };
-
-                    try {
-                        const response = await fetch('{{ route('front_office.assign_duty_officer') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': payload._token
-                            },
-                            body: JSON.stringify(payload)
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok || !data.success) {
-                            const errMessage = data.errors?.duty_officer_id?.[0] || data.message || 'Gagal menyimpan disposisi Duty Officer.';
-                            this.doAssignmentError = errMessage;
-                            this.isSubmittingDO = false;
-                            return;
-                        }
-
-                        if (this.sendWhatsAppDispatch) {
-                            try {
-                                const notifyPayload = {
-                                    _token: payload._token,
-                                    booking_id: this.doTargetBooking.id,
-                                    slot_id: this.doTargetBooking.slot_id || null
-                                };
-                                const notifyRes = await fetch('{{ route('front_office.notify_duty_officer') }}', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json',
-                                        'X-CSRF-TOKEN': payload._token
-                                    },
-                                    body: JSON.stringify(notifyPayload)
-                                });
-                                const notifyData = await notifyRes.json();
-                                if (notifyData.success && notifyData.whatsapp_url) {
-                                    window.open(notifyData.whatsapp_url, '_blank');
-                                }
-                            } catch (notifyErr) {
-                                console.warn('Dispatch notification warning:', notifyErr);
-                            }
-                        }
-
-                        this.closeDutyOfficerModal();
-                    } catch (e) {
-                        this.doAssignmentError = 'Terjadi kesalahan komunikasi dengan server: ' + e.message;
-                        this.isSubmittingDO = false;
                     }
                 }
             }

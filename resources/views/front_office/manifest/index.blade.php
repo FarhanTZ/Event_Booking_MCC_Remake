@@ -140,6 +140,9 @@
     <!-- Modal Inisiasi Checkout & Pemilihan Ulang DO Shift Berjalan (FR-FO-06) -->
     @include('front_office.partials.modal-checkout-do')
 
+    <!-- Modal Protokol Panitia Pulang Tanpa Lapor (FR-FO-08) -->
+    @include('front_office.partials.modal-abandoned')
+
     <!-- Alpine.js Store & Handlers -->
     <script>
         function frontOfficeManifest() {
@@ -163,6 +166,22 @@
                 ktpHolderName: '',
                 picWhatsappNumber: '',
                 checkinDutyOfficerId: '',
+
+                // FR-FO-08 Abandoned Protocol State
+                showAbandonedModal: false,
+                isSubmittingAbandoned: false,
+                abandonedError: '',
+                unclaimedBoxId: '',
+                abandonedNotes: '',
+                abandonedTargetBooking: {
+                    id: '',
+                    booking_code: '',
+                    event_name: '',
+                    ktp_holder_name: '',
+                    storage_drawer_number: '',
+                    clearance_status: 'pending',
+                    slot_id: null
+                },
 
                 // FR-FO-04 & FR-FO-05 Duty Officer Assignment & WhatsApp Quick Dispatch State
                 showDutyOfficerModal: false,
@@ -745,6 +764,77 @@
                     } catch (e) {
                         alert('Terjadi kesalahan komunikasi dengan server: ' + e.message);
                         this.isSubmittingReleaseKtp = false;
+                    }
+                },
+
+                // FR-FO-08 Protokol Panitia Pulang Tanpa Lapor Handlers
+                openAbandonedModal(slotData) {
+                    this.abandonedTargetBooking = {
+                        id: slotData.booking_id || slotData.id,
+                        booking_code: slotData.booking_code,
+                        event_name: slotData.event_name,
+                        ktp_holder_name: slotData.ktp_holder_name || '',
+                        storage_drawer_number: slotData.storage_drawer_number || '',
+                        clearance_status: slotData.clearance_status || 'pending',
+                        slot_id: slotData.id || null
+                    };
+
+                    this.unclaimedBoxId = slotData.unclaimed_box_id || '';
+                    this.abandonedNotes = '';
+                    this.abandonedError = '';
+                    this.isSubmittingAbandoned = false;
+                    this.showAbandonedModal = true;
+                },
+
+                closeAbandonedModal() {
+                    this.showAbandonedModal = false;
+                    this.abandonedError = '';
+                },
+
+                async submitMarkAbandoned() {
+                    if (!this.unclaimedBoxId) {
+                        this.abandonedError = 'Nomor kotak arsip (Unclaimed Box ID) wajib diisi.';
+                        return;
+                    }
+
+                    this.isSubmittingAbandoned = true;
+                    this.abandonedError = '';
+
+                    const payload = {
+                        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        booking_id: this.abandonedTargetBooking.id,
+                        slot_id: this.abandonedTargetBooking.slot_id || null,
+                        unclaimed_box_id: this.unclaimedBoxId,
+                        notes: this.abandonedNotes || null
+                    };
+
+                    try {
+                        const response = await fetch('{{ route('front_office.abandoned.mark') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': payload._token
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            const errMessage = data.errors?.unclaimed_box_id?.[0] || data.message || 'Gagal menandai user pulang tanpa lapor.';
+                            this.abandonedError = errMessage;
+                            this.isSubmittingAbandoned = false;
+                            return;
+                        }
+
+                        alert(data.message || 'Protokol panitia pulang tanpa lapor berhasil diproses.');
+                        this.closeAbandonedModal();
+                        if (this.showModal) this.closeModal();
+                        window.location.reload();
+                    } catch (e) {
+                        this.abandonedError = 'Terjadi kesalahan komunikasi dengan server: ' + e.message;
+                        this.isSubmittingAbandoned = false;
                     }
                 }
             }

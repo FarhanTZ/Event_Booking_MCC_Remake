@@ -59,6 +59,31 @@ class DutyOfficerNotificationService
     }
 
     /**
+     * Generate structured WhatsApp reminder message text for Overdue PIC (FR-FO-08).
+     *
+     * Format:
+     * "Halo [Nama PIC], sesi acara [Nama Event] di [Nama Ruangan - Lantai X] telah berakhir pada [Jam Selesai] WIB. Mohon segera menuju ke meja Front Office (Lantai 1) untuk menyelesaikan inspeksi checkout ruangan dan pengambilan kembali fisik KTP Anda. Terima kasih - Front Office MCC"
+     */
+    public function generateOverduePicWhatsAppMessage(Booking $booking, ?BookingSlot $slot = null): string
+    {
+        $targetSlot = $slot ?? $booking->slots->sortByDesc('event_end_at')->first();
+        $room = $targetSlot?->room;
+        $eventDetail = $booking->eventDetail;
+
+        $eventName = $eventDetail?->event_name ?? 'Acara MCC';
+        $roomName = $room ? "{$room->name} - Lantai {$room->floor_level}" : 'Ruangan Gedung MCC';
+        
+        $picName = $booking->latestKtpVaultLog?->ktp_holder_name 
+                    ?? ($eventDetail?->pic_name_snapshot ?? ($booking->user->full_name ?? 'Panitia'));
+
+        $endTime = $targetSlot?->event_end_at ? $targetSlot->event_end_at->format('H:i') : '-';
+
+        $message = "Halo {$picName}, sesi acara {$eventName} di {$roomName} telah berakhir pada {$endTime} WIB. Mohon segera menuju ke meja Front Office (Lantai 1) untuk menyelesaikan inspeksi checkout ruangan dan pengambilan kembali fisik KTP Anda. Terima kasih - Front Office MCC";
+
+        return $message;
+    }
+
+    /**
      * Generate Click-to-Chat WhatsApp URL (wa.me) with sanitized phone number and encoded message.
      */
     public function generateWhatsAppUrl(string $phoneNumber, string $message): string

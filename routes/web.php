@@ -102,4 +102,8 @@ Route::middleware(['auth', 'role:front_office,super_admin'])
         Route::post('/checkout/initiate-do', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'initiateCheckout'])->name('checkout.initiate_do');
         Route::post('/checkout/notify-do', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'notifyCheckoutDutyOfficer'])->name('checkout.notify_do');
         Route::post('/checkout/release-ktp', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'releaseKtp'])->name('checkout.release_ktp');
+        Route::post('/abandoned/mark', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'markAbandoned'])->name('abandoned.mark');
+        Route::get('/unclaimed-ktp', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'unclaimedKtpIndex'])->name('unclaimed_ktp');
+        Route::post('/unclaimed-ktp/handover', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'handoverUnclaimedKtp'])->name('unclaimed_ktp.handover');
+        Route::get('/overdue/notify-pic/{booking}', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'notifyOverduePic'])->name('overdue.notify_pic');
     });

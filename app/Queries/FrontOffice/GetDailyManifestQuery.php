@@ -24,7 +24,7 @@ class GetDailyManifestQuery
         $startOfDay = $date->copy()->startOfDay();
         $endOfDay = $date->copy()->endOfDay();
 
-        // Mengambil seluruh slot aktif hari ini yang booking induknya valid (confirmed, checked_in, completed)
+        // Mengambil seluruh slot aktif hari ini yang booking induknya valid (confirmed, checked_in, completed, abandoned)
         $todaySlots = BookingSlot::query()
             ->where('is_active', true)
             ->whereBetween('event_start_at', [$startOfDay, $endOfDay])
@@ -33,6 +33,8 @@ class GetDailyManifestQuery
                     BookingStatus::CONFIRMED,
                     BookingStatus::CHECKED_IN,
                     BookingStatus::COMPLETED,
+                    BookingStatus::ABANDONED_CLEAN,
+                    BookingStatus::ABANDONED_INCIDENT,
                 ]);
             })
             ->with(['booking', 'room'])
@@ -41,7 +43,11 @@ class GetDailyManifestQuery
         $totalSlotsToday = $todaySlots->count();
         $confirmedCount = $todaySlots->where('booking.status', BookingStatus::CONFIRMED)->count();
         $checkedInCount = $todaySlots->where('booking.status', BookingStatus::CHECKED_IN)->count();
-        $completedCount = $todaySlots->where('booking.status', BookingStatus::COMPLETED)->count();
+        $completedCount = $todaySlots->filter(fn($s) => in_array($s->booking->status, [
+            BookingStatus::COMPLETED,
+            BookingStatus::ABANDONED_CLEAN,
+            BookingStatus::ABANDONED_INCIDENT,
+        ], true))->count();
 
         // Total ruangan unik yang aktif digunakan hari ini
         $activeRoomsCount = $todaySlots->pluck('room_id')->unique()->count();
@@ -78,6 +84,8 @@ class GetDailyManifestQuery
                     BookingStatus::CONFIRMED,
                     BookingStatus::CHECKED_IN,
                     BookingStatus::COMPLETED,
+                    BookingStatus::ABANDONED_CLEAN,
+                    BookingStatus::ABANDONED_INCIDENT,
                 ]);
             })
             ->with([
@@ -96,12 +104,29 @@ class GetDailyManifestQuery
                 },
             ]);
 
-        // 1. Status Filter (Confirmed, Checked-In, Completed)
+        // 1. Status Filter (Confirmed, Checked-In, Completed, Abandoned)
         $status = $request->query('status');
-        if ($status && in_array($status, ['confirmed', 'checked_in', 'completed'], true)) {
-            $query->whereHas('booking', function ($bq) use ($status) {
-                $bq->where('status', $status);
-            });
+        if ($status) {
+            if ($status === 'completed') {
+                $query->whereHas('booking', function ($bq) {
+                    $bq->whereIn('status', [
+                        BookingStatus::COMPLETED,
+                        BookingStatus::ABANDONED_CLEAN,
+                        BookingStatus::ABANDONED_INCIDENT,
+                    ]);
+                });
+            } elseif ($status === 'abandoned') {
+                $query->whereHas('booking', function ($bq) {
+                    $bq->whereIn('status', [
+                        BookingStatus::ABANDONED_CLEAN,
+                        BookingStatus::ABANDONED_INCIDENT,
+                    ]);
+                });
+            } elseif (in_array($status, ['confirmed', 'checked_in', 'abandoned_clean', 'abandoned_incident'], true)) {
+                $query->whereHas('booking', function ($bq) use ($status) {
+                    $bq->where('status', $status);
+                });
+            }
         }
 
         // 2. Instant Search Filter (Kode Booking, Nama Acara, Ruangan/Lantai, PIC, Lembaga)

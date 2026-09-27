@@ -61,6 +61,25 @@
                     </div>
                 </div>
 
+                <!-- Overdue Warning Banner (FR-FO-08) -->
+                <template x-if="activeSlot.is_overdue">
+                    <div class="bg-rose-50 border border-rose-300 rounded-brand p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5 text-xs text-rose-900 font-bold">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div>
+                                <span class="block text-rose-950 font-extrabold">Peringatan: Melewati Batas Toleransi (>30 Menit)</span>
+                                <span class="text-[11px] text-rose-800 font-normal">Panitia belum melapor checkout ke FO. Hubungi PIC via WhatsApp atau tandai pulang tanpa lapor.</span>
+                            </div>
+                        </div>
+                        <a :href="'/front-office/overdue/notify-pic/' + activeSlot.booking_id + '?slot_id=' + activeSlot.id"
+                           target="_blank"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            <span>Hubungi PIC</span>
+                        </a>
+                    </div>
+                </template>
+
                 <!-- Informasi Sesi Hari Ini -->
                 <div class="bg-[#EEF2FF] border border-indigo-100 rounded-brand p-4 space-y-2">
                     <div class="flex items-center gap-2 text-xs font-bold text-[#001A72]">
@@ -618,12 +637,23 @@
                     </template>
                 </div>
 
-                <div class="flex items-center gap-2 justify-end">
+                <div class="flex flex-wrap items-center gap-2 justify-end">
                     <button type="button"
                             @click="closeModal()"
                             class="px-4 py-2 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
                         Tutup
                     </button>
+
+                    <!-- Tombol Protokol Panitia Pulang Tanpa Lapor (FR-FO-08) -->
+                    <template x-if="activeSlot.status_value === 'checked_in'">
+                        <button type="button"
+                                @click="openAbandonedModal(activeSlot)"
+                                class="px-3 py-2 rounded-brand bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+                                title="Tandai acara ditinggal dan pindahkan KTP ke kotak arsip tertinggal">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            <span>Tandai Pulang Tanpa Lapor</span>
+                        </button>
+                    </template>
 
                     <!-- Tombol Check-Out Selesai & Serahkan KTP (FR-FO-07) -->
                     <template x-if="activeSlot.status_value === 'checked_in'">

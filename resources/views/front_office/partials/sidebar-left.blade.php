@@ -62,7 +62,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('front_office.manifest') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
                     <span>Manifes Acara Hari Ini</span>
                 </div>
-                @if($metrics['total_slots_today'] > 0)
+                @if(!empty($metrics['total_slots_today']) && $metrics['total_slots_today'] > 0)
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ request()->routeIs('front_office.manifest') ? 'bg-white text-[#001A72]' : 'bg-slate-100 text-slate-700' }} shadow-2xs">
                         {{ $metrics['total_slots_today'] }}
                     </span>
@@ -78,6 +78,18 @@
                     <span>Validasi Check-In</span>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-400 group-hover:text-[#001A72] group-hover:translate-x-0.5 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+            </a>
+
+            <!-- Buku Inventaris KTP Tertinggal (FR-FO-09) -->
+            <a href="{{ route('front_office.unclaimed_ktp') }}" 
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('front_office.unclaimed_ktp') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
+                <div class="flex items-center gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('front_office.unclaimed_ktp') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                    <span>Inventaris KTP Tertinggal</span>
+                </div>
+                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                    Vault
+                </span>
             </a>
 
             <!-- Kalender Slot Gedung -->
@@ -96,61 +108,63 @@
         </div>
 
         <!-- 4. Section: Filter Cepat Status Manifes Hari Ini -->
+        @if(isset($metrics['total_slots_today']))
         <div class="space-y-1 pt-2 border-t border-slate-100">
             <div class="flex items-center justify-between px-2.5 mb-1.5">
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                     Status Sesi Hari Ini
                 </span>
-                <span class="text-[10px] font-mono text-slate-400 font-bold">Total: {{ $metrics['total_slots_today'] }}</span>
+                <span class="text-[10px] font-mono text-slate-400 font-bold">Total: {{ $metrics['total_slots_today'] ?? 0 }}</span>
             </div>
 
             <!-- Semua Sesi Hari Ini -->
             <a href="{{ route('front_office.manifest', ['status' => 'all', 'date' => request('date')]) }}"
-               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'all' ? 'bg-[#EEF2FF] text-[#001A72] font-bold border border-indigo-100 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
+               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ ($currentStatus ?? 'all') === 'all' ? 'bg-[#EEF2FF] text-[#001A72] font-bold border border-indigo-100 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                     <span>Semua Sesi Hari Ini</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'all' ? 'bg-indigo-100 text-[#001A72]' : 'text-slate-600 bg-slate-100' }}">
-                    {{ $metrics['total_slots_today'] }}
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ ($currentStatus ?? 'all') === 'all' ? 'bg-indigo-100 text-[#001A72]' : 'text-slate-600 bg-slate-100' }}">
+                    {{ $metrics['total_slots_today'] ?? 0 }}
                 </span>
             </a>
 
             <!-- Menunggu Kedatangan -->
             <a href="{{ route('front_office.manifest', ['status' => 'confirmed', 'date' => request('date')]) }}"
-               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'confirmed' ? 'bg-amber-50 text-amber-900 font-bold border border-amber-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
+               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ ($currentStatus ?? '') === 'confirmed' ? 'bg-amber-50 text-amber-900 font-bold border border-amber-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                     <span>Menunggu Kedatangan</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'confirmed' ? 'bg-amber-100/80 text-amber-700' : 'text-slate-600 bg-slate-100' }}">
-                    {{ $metrics['confirmed_slots'] }}
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ ($currentStatus ?? '') === 'confirmed' ? 'bg-amber-100/80 text-amber-700' : 'text-slate-600 bg-slate-100' }}">
+                    {{ $metrics['confirmed_slots'] ?? 0 }}
                 </span>
             </a>
 
             <!-- Sedang Berlangsung -->
             <a href="{{ route('front_office.manifest', ['status' => 'checked_in', 'date' => request('date')]) }}"
-               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'checked_in' ? 'bg-emerald-50 text-emerald-900 font-bold border border-emerald-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
+               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ ($currentStatus ?? '') === 'checked_in' ? 'bg-emerald-50 text-emerald-900 font-bold border border-emerald-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Sedang Berlangsung</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'checked_in' ? 'bg-emerald-100/80 text-emerald-800' : 'text-slate-600 bg-slate-100' }}">
-                    {{ $metrics['checked_in_slots'] }}
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ ($currentStatus ?? '') === 'checked_in' ? 'bg-emerald-100/80 text-emerald-800' : 'text-slate-600 bg-slate-100' }}">
+                    {{ $metrics['checked_in_slots'] ?? 0 }}
                 </span>
             </a>
 
             <!-- Selesai Digunakan -->
             <a href="{{ route('front_office.manifest', ['status' => 'completed', 'date' => request('date')]) }}"
-               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'completed' ? 'bg-slate-100 text-slate-800 font-bold border border-slate-300 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
+               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ ($currentStatus ?? '') === 'completed' ? 'bg-slate-100 text-slate-800 font-bold border border-slate-300 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full {{ $currentStatus === 'completed' ? 'bg-slate-500' : 'bg-slate-400' }}"></span>
+                    <span class="w-2 h-2 rounded-full {{ ($currentStatus ?? '') === 'completed' ? 'bg-slate-500' : 'bg-slate-400' }}"></span>
                     <span>Selesai Digunakan</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ $currentStatus === 'completed' ? 'bg-slate-200 text-slate-700' : 'text-slate-600 bg-slate-100' }}">
-                    {{ $metrics['completed_slots'] }}
+                <span class="text-[11px] font-mono font-bold min-w-[24px] text-center px-1.5 py-0.5 rounded {{ ($currentStatus ?? '') === 'completed' ? 'bg-slate-200 text-slate-700' : 'text-slate-600 bg-slate-100' }}">
+                    {{ $metrics['completed_slots'] ?? 0 }}
                 </span>
             </a>
         </div>
+        @endif
     </div>
 </aside>
