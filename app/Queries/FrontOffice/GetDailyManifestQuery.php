@@ -89,6 +89,8 @@ class GetDailyManifestQuery
                 'booking.confirmedBy',
                 'booking.dutyOfficer',
                 'booking.checkoutDutyOfficer',
+                'booking.latestKtpVaultLog',
+                'booking.latestIncident.photos',
                 'booking.slots' => function ($sq) {
                     $sq->orderBy('event_start_at', 'asc')->with(['room', 'dutyOfficer', 'checkoutDutyOfficer']);
                 },

@@ -250,4 +250,35 @@ class ManifestController extends Controller
 
         return redirect()->away($result['whatsapp_url']);
     }
+
+    /**
+     * Process physical KTP release to applicant based on Duty Officer clearance signal (FR-FO-07).
+     */
+    public function releaseKtp(\App\Http\Requests\FrontOffice\ReleaseKtpRequest $request, \App\Actions\FrontOffice\ProcessReleaseKtpAction $action): JsonResponse|RedirectResponse
+    {
+        $dto = new \App\DataTransferObjects\FrontOffice\ReleaseKtpData(
+            bookingId: (string) $request->input('booking_id'),
+            slotId: $request->filled('slot_id') ? (int) $request->input('slot_id') : null,
+            releasedById: (string) $request->user()->id,
+            notes: $request->input('notes')
+        );
+
+        $result = $action->execute($dto);
+
+        $holderName = $result['ktp_holder_name'] ?? 'Penanggung Jawab';
+        $drawer = $result['storage_drawer_number'] ? " di laci {$result['storage_drawer_number']}" : '';
+        $message = "Check-out selesai! KTP fisik {$holderName}{$drawer} telah berhasil diserahkan kembali ke panitia.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'booking' => $result['booking'],
+                'ktp_holder_name' => $result['ktp_holder_name'],
+                'storage_drawer_number' => $result['storage_drawer_number'],
+            ]);
+        }
+
+        return redirect()->route('front_office.manifest')->with('success', $message);
+    }
 }

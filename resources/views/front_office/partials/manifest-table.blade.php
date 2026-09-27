@@ -111,6 +111,22 @@
                             'checkout_do_phone' => $slot->checkoutDutyOfficer->phone_number ?? ($booking->checkoutDutyOfficer->phone_number ?? null),
                             'checkout_do_notes' => $slot->checkout_do_notes ?? ($booking->checkout_do_notes ?? null),
                             'checkout_do_notified_at' => $slot->checkout_do_notified_at ? $slot->checkout_do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : ($booking->checkout_do_notified_at ? $booking->checkout_do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : null),
+                            'clearance_status' => $booking->clearance_status ?? 'pending',
+                            'ktp_holder_name' => $booking->latestKtpVaultLog?->ktp_holder_name ?? ($eventDetail->pic_name_snapshot ?? ($booking->user->full_name ?? 'Panitia')),
+                            'storage_drawer_number' => $booking->latestKtpVaultLog?->storage_drawer_number ?? null,
+                            'ktp_returned_at' => $booking->latestKtpVaultLog?->returned_at ? $booking->latestKtpVaultLog->returned_at->translatedFormat('d M Y, H:i') . ' WIB' : null,
+                            'incident' => $booking->latestIncident ? [
+                                'category' => $booking->latestIncident->category,
+                                'item_name' => $booking->latestIncident->item_name,
+                                'description' => $booking->latestIncident->description,
+                                'is_resolved' => $booking->latestIncident->is_resolved,
+                                'resolution_notes' => $booking->latestIncident->resolution_notes,
+                                'reported_by' => $booking->latestIncident->reportedByDo->full_name ?? 'Duty Officer',
+                                'photos' => $booking->latestIncident->photos->map(fn($p) => [
+                                    'url' => $p->photo_url,
+                                    'caption' => $p->caption,
+                                ])->values()->all(),
+                            ] : null,
                             'all_slots' => $booking->slots->map(function ($s) {
                                 return [
                                     'id' => $s->id,

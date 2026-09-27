@@ -239,8 +239,16 @@
                     checkout_do_phone: '',
                     checkout_do_notes: '',
                     checkout_do_notified_at: null,
+                    clearance_status: 'pending',
+                    ktp_holder_name: '',
+                    storage_drawer_number: null,
+                    ktp_returned_at: null,
+                    incident: null,
                     all_slots: []
                 },
+
+                // FR-FO-07 Release KTP State
+                isSubmittingReleaseKtp: false,
 
                 toggleLeft() {
                     this.sidebarLeft = !this.sidebarLeft;
@@ -689,6 +697,54 @@
                         alert('Terjadi kesalahan komunikasi dengan server: ' + e.message);
                     } finally {
                         this.isDispatchingCheckoutDO = false;
+                    }
+                },
+
+                // FR-FO-07 Pemrosesan Pelepasan KTP Berdasarkan Sinyal Clearance DO
+                async submitReleaseKtp() {
+                    if (!this.activeSlot || !this.activeSlot.booking_id) return;
+
+                    const holderName = this.activeSlot.ktp_holder_name || 'Penanggung Jawab';
+                    const drawerInfo = this.activeSlot.storage_drawer_number ? ` di laci ${this.activeSlot.storage_drawer_number}` : '';
+                    
+                    if (!confirm(`Konfirmasi penyerahan KTP fisik kepada ${holderName}${drawerInfo} dan tandai acara Selesai (Completed)?`)) {
+                        return;
+                    }
+
+                    this.isSubmittingReleaseKtp = true;
+
+                    const payload = {
+                        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        booking_id: this.activeSlot.booking_id,
+                        slot_id: this.activeSlot.id || null
+                    };
+
+                    try {
+                        const response = await fetch('{{ route('front_office.checkout.release_ktp') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': payload._token
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            const errMessage = data.errors?.clearance?.[0] || data.message || 'Gagal memproses pelepasan KTP.';
+                            alert(errMessage);
+                            this.isSubmittingReleaseKtp = false;
+                            return;
+                        }
+
+                        alert(data.message || 'Check-Out selesai! KTP fisik telah diserahkan kembali ke panitia.');
+                        this.closeModal();
+                        window.location.reload();
+                    } catch (e) {
+                        alert('Terjadi kesalahan komunikasi dengan server: ' + e.message);
+                        this.isSubmittingReleaseKtp = false;
                     }
                 }
             }

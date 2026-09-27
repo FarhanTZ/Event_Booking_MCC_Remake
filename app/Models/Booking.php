@@ -183,6 +183,35 @@ class Booking extends Model
         return ! empty($this->assigned_checkout_do_id) || ! empty($this->checkout_duty_officer_id);
     }
 
+    public function isCleared(): bool
+    {
+        return $this->clearance_status === 'cleared';
+    }
+
+    public function hasIncident(): bool
+    {
+        return $this->clearance_status === 'incident_detected';
+    }
+
+    public function isIncidentResolved(): bool
+    {
+        return $this->clearance_status === 'resolved';
+    }
+
+    public function isClearancePending(): bool
+    {
+        return $this->clearance_status === 'pending' || empty($this->clearance_status);
+    }
+
+    /**
+     * Determine if physical KTP can be released to applicant (FR-FO-07).
+     * Allowed only when clearance is 'cleared' (green) or 'resolved' (blue), and booking is checked-in.
+     */
+    public function canReleaseKtp(): bool
+    {
+        return $this->isCheckedIn() && ($this->isCleared() || $this->isIncidentResolved());
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -243,5 +272,15 @@ class Booking extends Model
     public function latestKtpVaultLog()
     {
         return $this->hasOne(KtpVaultLog::class, 'booking_id')->latestOfMany('id');
+    }
+
+    public function incidents()
+    {
+        return $this->hasMany(RoomIncident::class, 'booking_id');
+    }
+
+    public function latestIncident()
+    {
+        return $this->hasOne(RoomIncident::class, 'booking_id')->latestOfMany('id');
     }
 }
