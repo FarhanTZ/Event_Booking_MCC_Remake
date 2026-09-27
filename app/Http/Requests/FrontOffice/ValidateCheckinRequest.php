@@ -25,6 +25,17 @@ class ValidateCheckinRequest extends FormRequest
             'ktp_holder_name' => $isProcess ? ['required', 'string', 'min:3', 'max:150'] : ['nullable', 'string', 'max:150'],
             'pic_whatsapp_number' => $isProcess ? ['required', 'string', 'min:9', 'max:25'] : ['nullable', 'string', 'max:25'],
             'notes' => ['nullable', 'string', 'max:500'],
+
+            // Disposisi / Ganti DO Langsung saat Check-In
+            'duty_officer_id' => [
+                'nullable',
+                'string',
+                'uuid',
+                \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) {
+                    $query->where('role', \App\Enums\UserRole::DUTY_OFFICER->value);
+                }),
+            ],
+            'duty_officer_notes' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -35,6 +46,8 @@ class ValidateCheckinRequest extends FormRequest
             'pic_whatsapp_number' => 'Nomor WhatsApp PIC Hari-H',
             'booking_code' => 'Kode Booking',
             'checkin_token' => 'Token QR Code',
+            'duty_officer_id' => 'Petugas Pengawas Ruangan (Duty Officer)',
+            'duty_officer_notes' => 'Catatan Disposisi DO',
         ];
     }
 

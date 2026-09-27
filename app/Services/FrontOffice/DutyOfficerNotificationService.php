@@ -38,6 +38,27 @@ class DutyOfficerNotificationService
     }
 
     /**
+     * Generate structured WhatsApp checkout inspection task message text for Duty Officer (FR-FO-06).
+     *
+     * Format:
+     * "Halo [Nama DO], acara [Nama Event] di [Nama Ruangan - Lantai X] telah selesai dan panitia mengajukan checkout. Mohon segera inspeksi fisik ruangan (kebersihan & inventaris fasilitas) serta input sinyal clearance di sistem."
+     */
+    public function generateCheckoutWhatsAppMessage(Booking $booking, User $dutyOfficer, ?BookingSlot $slot = null): string
+    {
+        $targetSlot = $slot ?? $booking->slots->sortBy('event_start_at')->first();
+        $room = $targetSlot?->room;
+        $eventDetail = $booking->eventDetail;
+
+        $doName = $dutyOfficer->full_name;
+        $eventName = $eventDetail?->event_name ?? 'Acara MCC';
+        $roomName = $room ? "{$room->name} - Lantai {$room->floor_level}" : 'Ruangan Gedung MCC';
+
+        $message = "Halo {$doName}, acara {$eventName} di {$roomName} telah selesai dan panitia mengajukan checkout. Mohon segera inspeksi fisik ruangan (kebersihan & inventaris fasilitas) serta input sinyal clearance di sistem.";
+
+        return $message;
+    }
+
+    /**
      * Generate Click-to-Chat WhatsApp URL (wa.me) with sanitized phone number and encoded message.
      */
     public function generateWhatsAppUrl(string $phoneNumber, string $message): string

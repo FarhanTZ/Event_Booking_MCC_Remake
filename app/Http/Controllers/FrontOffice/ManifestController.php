@@ -188,4 +188,66 @@ class ManifestController extends Controller
 
         return redirect()->away($result['whatsapp_url']);
     }
+
+    /**
+     * Initiate checkout inspection and assign active shift Duty Officer (FR-FO-06).
+     */
+    public function initiateCheckout(\App\Http\Requests\FrontOffice\InitiateCheckoutDutyOfficerRequest $request, \App\Actions\FrontOffice\InitiateCheckoutDutyOfficerAction $action): JsonResponse|RedirectResponse
+    {
+        $dto = $request->toDTO((string) $request->user()->id);
+        $result = $action->execute($dto);
+
+        $message = "Inisiasi checkout berhasil! {$result['duty_officer']->full_name} resmi ditugaskan untuk inspeksi ruangan {$result['booking']->booking_code}.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'duty_officer' => [
+                    'id' => $result['duty_officer']->id,
+                    'name' => $result['duty_officer']->full_name,
+                    'phone' => $result['duty_officer']->phone_number,
+                ],
+                'whatsapp_url' => $result['whatsapp_url'] ?? null,
+                'message_text' => $result['message'] ?? null,
+                'assigned_at' => $result['assigned_at']->translatedFormat('d M Y, H:i') . ' WIB',
+                'notified_at' => $result['notified_at'] ? $result['notified_at']->translatedFormat('d M Y, H:i') . ' WIB' : null,
+                'booking' => $result['booking'],
+            ]);
+        }
+
+        if (! empty($result['whatsapp_url']) && $dto->sendWhatsApp) {
+            return redirect()->away($result['whatsapp_url']);
+        }
+
+        return redirect()->route('front_office.manifest')->with('success', $message);
+    }
+
+    /**
+     * Send instant WhatsApp task message for checkout room inspection to Duty Officer (FR-FO-06).
+     */
+    public function notifyCheckoutDutyOfficer(\App\Http\Requests\FrontOffice\NotifyCheckoutDutyOfficerRequest $request, \App\Actions\FrontOffice\NotifyCheckoutDutyOfficerAction $action): JsonResponse|RedirectResponse
+    {
+        $dto = $request->toDTO((string) $request->user()->id);
+        $result = $action->execute($dto);
+
+        $message = "Tugas inspeksi checkout berhasil dikirimkan ke DO {$result['duty_officer']->full_name}.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'whatsapp_url' => $result['whatsapp_url'],
+                'message_text' => $result['message'],
+                'duty_officer' => [
+                    'id' => $result['duty_officer']->id,
+                    'name' => $result['duty_officer']->full_name,
+                    'phone' => $result['duty_officer']->phone_number,
+                ],
+                'notified_at' => $result['notified_at']->translatedFormat('d M Y, H:i') . ' WIB',
+            ]);
+        }
+
+        return redirect()->away($result['whatsapp_url']);
+    }
 }

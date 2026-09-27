@@ -83,12 +83,14 @@ class GetDailyManifestQuery
             ->with([
                 'room',
                 'dutyOfficer',
+                'checkoutDutyOfficer',
                 'booking.user',
                 'booking.eventDetail',
                 'booking.confirmedBy',
                 'booking.dutyOfficer',
+                'booking.checkoutDutyOfficer',
                 'booking.slots' => function ($sq) {
-                    $sq->orderBy('event_start_at', 'asc')->with(['room', 'dutyOfficer']);
+                    $sq->orderBy('event_start_at', 'asc')->with(['room', 'dutyOfficer', 'checkoutDutyOfficer']);
                 },
             ]);
 

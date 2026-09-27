@@ -131,7 +131,7 @@
                                     </template>
                                 </div>
 
-                                <!-- FR-FO-05 Action WhatsApp Quick Dispatch -->
+                                <!-- FR-FO-04 & FR-FO-05 Action Ganti DO & WhatsApp Quick Dispatch -->
                                 <div class="pt-2 border-t border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                     <div class="text-[11px]">
                                         <template x-if="activeSlot.do_notified_at">
@@ -146,13 +146,32 @@
                                         </template>
                                     </div>
 
-                                    <button type="button"
-                                            @click="notifyDutyOfficer(activeSlot.booking_id, activeSlot.id)"
-                                            :disabled="isDispatching"
-                                            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50">
-                                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.276-.1-.476-.15-.677.15-.2.301-.777.98-1.002 1.23-.226.25-.451.276-.752.126-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.63-.927-2.233-.244-.587-.492-.508-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.507 0 1.479 1.078 2.908 1.228 3.109.15.2 2.122 3.24 5.141 4.544.718.31 1.279.496 1.716.635.722.23 1.379.197 1.9.12.58-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.276-.201-.577-.351z"/></svg>
-                                        <span x-text="activeSlot.do_notified_at ? 'Kirim Ulang Tugas (WA)' : 'Kirim Tugas ke DO (WhatsApp)'"></span>
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" 
+                                                @click="closeModal(); openDutyOfficerModal({
+                                                    id: activeSlot.booking_id,
+                                                    booking_code: activeSlot.booking_code,
+                                                    event_name: activeSlot.event_name,
+                                                    room_name: activeSlot.room_name,
+                                                    floor_level: activeSlot.floor_level,
+                                                    slot_id: activeSlot.id,
+                                                    event_start_at: activeSlot.slot_start,
+                                                    status_label: activeSlot.status_label,
+                                                    duty_officer_id: activeSlot.duty_officer_id,
+                                                    duty_officer_notes: activeSlot.duty_officer_notes
+                                                })"
+                                                class="px-2.5 py-1.5 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition cursor-pointer">
+                                            Ganti DO
+                                        </button>
+
+                                        <button type="button"
+                                                @click="notifyDutyOfficer(activeSlot.booking_id, activeSlot.id)"
+                                                :disabled="isDispatching"
+                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50">
+                                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.276-.1-.476-.15-.677.15-.2.301-.777.98-1.002 1.23-.226.25-.451.276-.752.126-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.63-.927-2.233-.244-.587-.492-.508-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.507 0 1.479 1.078 2.908 1.228 3.109.15.2 2.122 3.24 5.141 4.544.718.31 1.279.496 1.716.635.722.23 1.379.197 1.9.12.58-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.276-.201-.577-.351z"/></svg>
+                                            <span x-text="activeSlot.do_notified_at ? 'Kirim Ulang Tugas (WA)' : 'Kirim Tugas ke DO (WhatsApp)'"></span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -179,14 +198,125 @@
                     </div>
                 </template>
 
-                <!-- Informasi jika sesi belum check-in -->
-                <template x-if="activeSlot.status_value !== 'checked_in' && activeSlot.status_value !== 'completed'">
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-brand flex items-start gap-2.5 text-xs text-slate-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                        <div class="leading-relaxed">
-                            <span class="font-bold text-slate-800 block">Disposisi Pengawas Ruangan (DO):</span>
-                            <span>Fitur penugasan Duty Officer akan aktif setelah pemohon tiba dan menyelesaikan proses validasi check-in di Front Office.</span>
+                <!-- FR-FO-06 Inisiasi Checkout & Pemilihan Ulang DO Shift Berjalan -->
+                <!-- Muncul saat acara Checked-In / Selesai ketika panitia melapor checkout & ingin mengambil kembali KTP -->
+                <template x-if="activeSlot.status_value === 'checked_in' || activeSlot.status_value === 'completed'">
+                    <div class="border rounded-brand p-4 space-y-3"
+                         :class="activeSlot.checkout_do_name ? 'bg-indigo-50/70 border-indigo-200' : 'bg-amber-50/70 border-amber-200'">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs font-bold"
+                                 :class="activeSlot.checkout_do_name ? 'text-[#001A72]' : 'text-amber-900'">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                <span>Inspeksi Checkout (DO Shift Berjalan)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <template x-if="activeSlot.checkout_do_name && activeSlot.checkout_do_notified_at">
+                                    <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Tugas Checkout Terkirim ke WA</span>
+                                    </span>
+                                </template>
+                                <template x-if="activeSlot.checkout_do_name && !activeSlot.checkout_do_notified_at">
+                                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                        Belum Di-WhatsApp
+                                    </span>
+                                </template>
+                                <template x-if="!activeSlot.checkout_do_name">
+                                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                        Belum Diinisiasi
+                                    </span>
+                                </template>
+                            </div>
                         </div>
+
+                        <!-- Jika DO Checkout Sudah Ditetapkan -->
+                        <template x-if="activeSlot.checkout_do_name">
+                            <div class="space-y-2.5 pt-1">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-slate-500 text-[11px] block">DO Shift Berjalan:</span>
+                                        <span class="font-extrabold text-slate-900 text-sm" x-text="activeSlot.checkout_do_name"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-500 text-[11px] block">Kontak DO:</span>
+                                        <span class="font-bold text-[#001A72] font-mono" x-text="activeSlot.checkout_do_phone || '-'"></span>
+                                    </div>
+                                    <template x-if="activeSlot.checkout_do_notes">
+                                        <div class="sm:col-span-2 pt-1 border-t border-indigo-200/60">
+                                            <span class="text-slate-500 text-[10px] block">Catatan Inspeksi:</span>
+                                            <span class="text-slate-700 italic text-[11px]" x-text="activeSlot.checkout_do_notes"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Action Buttons: Kirim Tugas WhatsApp & Ganti DO Shift -->
+                                <div class="pt-2 border-t border-indigo-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="text-[11px]">
+                                        <template x-if="activeSlot.checkout_do_notified_at">
+                                            <span class="text-emerald-700 font-medium">
+                                                Terkirim: <span class="font-bold font-mono" x-text="activeSlot.checkout_do_notified_at"></span>
+                                            </span>
+                                        </template>
+                                        <template x-if="!activeSlot.checkout_do_notified_at">
+                                            <span class="text-slate-500">
+                                                Kirim tugas inspeksi fisik &amp; sinyal clearance ke WA DO.
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <button type="button"
+                                                @click="closeModal(); openCheckoutDoModal({
+                                                    id: activeSlot.booking_id,
+                                                    booking_code: activeSlot.booking_code,
+                                                    event_name: activeSlot.event_name,
+                                                    room_name: activeSlot.room_name,
+                                                    floor_level: activeSlot.floor_level,
+                                                    slot_id: activeSlot.id,
+                                                    initial_do_id: activeSlot.duty_officer_id,
+                                                    initial_do_name: activeSlot.duty_officer_name,
+                                                    current_checkout_do_id: activeSlot.checkout_do_id
+                                                })"
+                                                class="px-2.5 py-1.5 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition cursor-pointer">
+                                            Ganti DO
+                                        </button>
+
+                                        <button type="button"
+                                                @click="notifyCheckoutDutyOfficer(activeSlot.booking_id, activeSlot.id)"
+                                                :disabled="isDispatchingCheckoutDO"
+                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50">
+                                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.276-.1-.476-.15-.677.15-.2.301-.777.98-1.002 1.23-.226.25-.451.276-.752.126-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.63-.927-2.233-.244-.587-.492-.508-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.507 0 1.479 1.078 2.908 1.228 3.109.15.2 2.122 3.24 5.141 4.544.718.31 1.279.496 1.716.635.722.23 1.379.197 1.9.12.58-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.276-.201-.577-.351z"/></svg>
+                                            <span x-text="activeSlot.checkout_do_notified_at ? 'Kirim Ulang Tugas (WA)' : 'Kirim Tugas Inspeksi Ruangan (WhatsApp)'"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Jika DO Checkout Belum Ditetapkan -->
+                        <template x-if="!activeSlot.checkout_do_name">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                                <span class="text-xs text-amber-900 leading-relaxed">
+                                    Panitia melapor acara selesai &amp; ingin mengambil KTP? Panggil DO aktif pada shift jam ini untuk inspeksi ruangan.
+                                </span>
+                                <button type="button" 
+                                        @click="closeModal(); openCheckoutDoModal({
+                                            id: activeSlot.booking_id,
+                                            booking_code: activeSlot.booking_code,
+                                            event_name: activeSlot.event_name,
+                                            room_name: activeSlot.room_name,
+                                            floor_level: activeSlot.floor_level,
+                                            slot_id: activeSlot.id,
+                                            initial_do_id: activeSlot.duty_officer_id,
+                                            initial_do_name: activeSlot.duty_officer_name,
+                                            current_checkout_do_id: null
+                                        })"
+                                        class="px-3.5 py-1.5 rounded-brand bg-[#001A72] text-white text-xs font-bold hover:bg-[#001250] transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                    <span>Panggil DO Inspeksi Checkout</span>
+                                </button>
+                            </div>
+                        </template>
                     </div>
                 </template>
 

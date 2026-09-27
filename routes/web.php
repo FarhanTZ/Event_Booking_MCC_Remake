@@ -99,4 +99,6 @@ Route::middleware(['auth', 'role:front_office,super_admin'])
         Route::post('/checkin/process', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'processCheckin'])->name('checkin.process');
         Route::post('/duty-officer/assign', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'assignDutyOfficer'])->name('assign_duty_officer');
         Route::post('/duty-officer/notify', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'notifyDutyOfficer'])->name('notify_duty_officer');
+        Route::post('/checkout/initiate-do', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'initiateCheckout'])->name('checkout.initiate_do');
+        Route::post('/checkout/notify-do', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'notifyCheckoutDutyOfficer'])->name('checkout.notify_do');
     });

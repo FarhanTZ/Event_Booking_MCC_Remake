@@ -47,6 +47,14 @@ class Booking extends Model
         'checked_in_by',
         'duty_officer_id',
         'do_notified_at',
+        'assigned_checkout_do_id',
+        'checkout_duty_officer_id',
+        'checkout_do_assigned_at',
+        'checkout_initiated_at',
+        'checkout_do_assigned_by',
+        'checkout_initiated_by',
+        'checkout_do_notes',
+        'checkout_do_notified_at',
         'completed_at',
         'completed_by',
         'revision_deadline',
@@ -58,6 +66,9 @@ class Booking extends Model
         'paid_at' => 'datetime',
         'checked_in_at' => 'datetime',
         'do_notified_at' => 'datetime',
+        'checkout_do_assigned_at' => 'datetime',
+        'checkout_initiated_at' => 'datetime',
+        'checkout_do_notified_at' => 'datetime',
         'completed_at' => 'datetime',
         'revision_deadline' => 'datetime',
         'nominal_amount' => 'decimal:2',
@@ -155,6 +166,23 @@ class Booking extends Model
         return $this->status === \App\Enums\BookingStatus::COMPLETED;
     }
 
+    /**
+     * Determine if Front Office can initiate checkout inspection (FR-FO-06).
+     * Allowed when booking is Checked-In (ongoing) or Completed (re-dispatch/re-inspection).
+     */
+    public function canInitiateCheckout(): bool
+    {
+        return $this->isCheckedIn() || $this->isCompleted();
+    }
+
+    /**
+     * Check if checkout duty officer has been assigned.
+     */
+    public function hasCheckoutDutyOfficer(): bool
+    {
+        return ! empty($this->assigned_checkout_do_id) || ! empty($this->checkout_duty_officer_id);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -193,6 +221,18 @@ class Booking extends Model
     public function dutyOfficer()
     {
         return $this->belongsTo(User::class, 'duty_officer_id');
+    }
+
+    public function checkoutDutyOfficer()
+    {
+        return $this->belongsTo(User::class, 'assigned_checkout_do_id')
+            ?? $this->belongsTo(User::class, 'checkout_duty_officer_id');
+    }
+
+    public function checkoutDoAssignedBy()
+    {
+        return $this->belongsTo(User::class, 'checkout_do_assigned_by')
+            ?? $this->belongsTo(User::class, 'checkout_initiated_by');
     }
 
     public function ktpVaultLogs()
