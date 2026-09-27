@@ -875,5 +875,156 @@ class FrontOfficeManifestTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['duty_officer']);
     }
+
+    public function test_checkin_with_direct_duty_officer_assignment(): void
+    {
+        $dutyOfficer = User::create([
+            'full_name' => 'Hendro Setiawan',
+            'email' => 'hendro.do@mcc.id',
+            'phone_number' => '081298765432',
+            'password_hash' => Hash::make('Password123!'),
+            'role' => UserRole::DUTY_OFFICER,
+            'account_type' => AccountType::KOMUNITAS,
+            'institution_name' => 'DO MCC',
+            'address' => 'Malang',
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-2026-CHECKIN-DO',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CONFIRMED,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Workshop UI/UX',
+            'event_category' => 'Workshop',
+            'estimated_participants' => 30,
+            'event_description' => 'Workshop desain interaktif.',
+            'pic_name_snapshot' => 'Budi',
+            'pic_phone_snapshot' => '081234567890',
+            'institution_name_snapshot' => 'Komunitas Sinema',
+            'proposal_file_url' => '/storage/test.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        $slot = BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor2->id,
+            'event_start_at' => Carbon::today()->setTime(14, 0),
+            'event_end_at' => Carbon::today()->setTime(17, 0),
+            'operational_range' => "[".Carbon::today()->setTime(14, 0)->toIso8601String().", ".Carbon::today()->setTime(17, 30)->toIso8601String().")",
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.checkin.process'), [
+            'booking_code' => $booking->booking_code,
+            'ktp_holder_name' => 'Ahmad Jaminan KTP',
+            'pic_whatsapp_number' => '081234567899',
+            'duty_officer_id' => $dutyOfficer->id,
+            'confirm_early' => true,
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+        ]);
+
+        $booking->refresh();
+        $slot->refresh();
+
+        $this->assertEquals(BookingStatus::CHECKED_IN, $booking->status);
+        $this->assertEquals($dutyOfficer->id, $booking->duty_officer_id);
+        $this->assertEquals($dutyOfficer->id, $slot->duty_officer_id);
+
+        $this->assertDatabaseHas('ktp_vault_logs', [
+            'booking_id' => $booking->id,
+            'ktp_holder_name' => 'Ahmad Jaminan KTP',
+            'pic_whatsapp_number' => '081234567899',
+            'received_by_fo' => $this->frontOfficeUser->id,
+        ]);
+    }
+
+    public function test_reassign_duty_officer_after_checkin(): void
+    {
+        $firstDo = User::create([
+            'full_name' => 'First DO',
+            'email' => 'first.do@mcc.id',
+            'phone_number' => '081111111111',
+            'password_hash' => Hash::make('Password123!'),
+            'role' => UserRole::DUTY_OFFICER,
+            'account_type' => AccountType::KOMUNITAS,
+            'institution_name' => 'DO MCC',
+            'address' => 'Malang',
+        ]);
+
+        $replacementDo = User::create([
+            'full_name' => 'Replacement DO',
+            'email' => 'replacement.do@mcc.id',
+            'phone_number' => '082222222222',
+            'password_hash' => Hash::make('Password123!'),
+            'role' => UserRole::DUTY_OFFICER,
+            'account_type' => AccountType::KOMUNITAS,
+            'institution_name' => 'DO MCC',
+            'address' => 'Malang',
+        ]);
+
+        $booking = Booking::create([
+            'booking_code' => 'MCC-2026-REASSIGN-DO',
+            'user_id' => $this->publicUser->id,
+            'status' => BookingStatus::CHECKED_IN,
+            'pricing_scheme' => 'subsidy',
+            'nominal_amount' => 0,
+            'duty_officer_id' => $firstDo->id,
+            'ktp_holder_name' => 'Budi Santoso',
+            'pic_whatsapp_number' => '081234567890',
+            'checked_in_at' => now(),
+        ]);
+        EventDetail::create([
+            'booking_id' => $booking->id,
+            'event_name' => 'Acara Reassign DO',
+            'event_category' => 'Workshop',
+            'estimated_participants' => 20,
+            'event_description' => 'Deskripsi.',
+            'pic_name_snapshot' => 'Budi',
+            'pic_phone_snapshot' => '081234567890',
+            'institution_name_snapshot' => 'Komunitas',
+            'proposal_file_url' => '/storage/test.pdf',
+            'tos_agreed_at' => now(),
+        ]);
+        $slot = BookingSlot::create([
+            'booking_id' => $booking->id,
+            'room_id' => $this->roomFloor2->id,
+            'duty_officer_id' => $firstDo->id,
+            'event_start_at' => Carbon::today()->setTime(10, 0),
+            'event_end_at' => Carbon::today()->setTime(13, 0),
+            'operational_range' => "[".Carbon::today()->setTime(10, 0)->toIso8601String().", ".Carbon::today()->setTime(13, 30)->toIso8601String().")",
+            'is_active' => true,
+        ]);
+
+        // Front Office assigns replacement DO (Ganti DO)
+        $response = $this->actingAs($this->frontOfficeUser)->postJson(route('front_office.assign_duty_officer'), [
+            'booking_id' => $booking->id,
+            'slot_id' => $slot->id,
+            'duty_officer_id' => $replacementDo->id,
+            'notes' => 'Ganti shift Duty Officer',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'duty_officer' => [
+                'id' => $replacementDo->id,
+                'name' => 'Replacement DO',
+            ],
+        ]);
+
+        $booking->refresh();
+        $slot->refresh();
+
+        $this->assertEquals($replacementDo->id, $booking->duty_officer_id);
+        $this->assertEquals($replacementDo->id, $slot->duty_officer_id);
+        $this->assertEquals('Ganti shift Duty Officer', $slot->duty_officer_notes);
+    }
 }
 

@@ -13,7 +13,9 @@ readonly class ValidateCheckinData
         public bool $isEarlyToleranceConfirmed = false,
         public ?string $ktpHolderName = null,
         public ?string $picWhatsappNumber = null,
-        public ?string $notes = null
+        public ?string $notes = null,
+        public ?string $dutyOfficerId = null,
+        public ?string $dutyOfficerNotes = null
     ) {}
 
     public static function fromRequest(Request $request, string $officerId): self
@@ -25,7 +27,9 @@ readonly class ValidateCheckinData
             isEarlyToleranceConfirmed: (bool) $request->boolean('confirm_early', false),
             ktpHolderName: $request->filled('ktp_holder_name') ? trim((string) $request->input('ktp_holder_name')) : null,
             picWhatsappNumber: $request->filled('pic_whatsapp_number') ? trim((string) $request->input('pic_whatsapp_number')) : null,
-            notes: $request->filled('notes') ? trim((string) $request->input('notes')) : null
+            notes: $request->filled('notes') ? trim((string) $request->input('notes')) : null,
+            dutyOfficerId: $request->filled('duty_officer_id') ? trim((string) $request->input('duty_officer_id')) : null,
+            dutyOfficerNotes: $request->filled('duty_officer_notes') ? trim((string) $request->input('duty_officer_notes')) : null
         );
     }
 }

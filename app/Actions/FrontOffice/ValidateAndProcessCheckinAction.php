@@ -5,6 +5,7 @@ namespace App\Actions\FrontOffice;
 use App\DataTransferObjects\FrontOffice\ValidateCheckinData;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\BookingSlot;
 use App\Models\KtpVaultLog;
 use App\Services\SecurityAuditLogger;
 use Carbon\Carbon;
@@ -114,12 +115,28 @@ class ValidateAndProcessCheckinAction
             $now = Carbon::now();
 
             // A. Update Status Booking menjadi Checked-In dan set clearance_status = 'pending'
-            $booking->update([
+            $bookingUpdateData = [
                 'status' => BookingStatus::CHECKED_IN,
                 'clearance_status' => 'pending',
                 'checked_in_at' => $now,
                 'checked_in_by' => $dto->officerId,
-            ]);
+            ];
+
+            if (! empty($dto->dutyOfficerId)) {
+                $bookingUpdateData['duty_officer_id'] = $dto->dutyOfficerId;
+            }
+
+            $booking->update($bookingUpdateData);
+
+            // Jika Duty Officer dipilih langsung saat check-in, simpan juga ke seluruh slot sesi
+            if (! empty($dto->dutyOfficerId)) {
+                BookingSlot::where('booking_id', $booking->id)->update([
+                    'duty_officer_id' => $dto->dutyOfficerId,
+                    'duty_officer_assigned_at' => $now,
+                    'duty_officer_assigned_by' => $dto->officerId,
+                    'duty_officer_notes' => $dto->dutyOfficerNotes,
+                ]);
+            }
 
             // B. Simpan Catatan Jaminan Fisik KTP (FR-FO-03) ke ktp_vault_logs
             KtpVaultLog::create([
@@ -140,11 +157,12 @@ class ValidateAndProcessCheckinAction
                 'officer_id' => $dto->officerId,
                 'ktp_holder' => $dto->ktpHolderName,
                 'pic_whatsapp' => $dto->picWhatsappNumber,
+                'duty_officer_id' => $dto->dutyOfficerId,
                 'checked_in_at' => $now->toIso8601String(),
                 'is_early' => $inspection['is_early'],
             ]);
 
-            return $booking->fresh(['user', 'eventDetail', 'slots.room', 'latestKtpVaultLog']);
+            return $booking->fresh(['user', 'eventDetail', 'slots.room', 'dutyOfficer', 'latestKtpVaultLog']);
         });
     }
 

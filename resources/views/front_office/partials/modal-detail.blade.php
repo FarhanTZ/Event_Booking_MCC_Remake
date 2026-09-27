@@ -131,7 +131,7 @@
                                     </template>
                                 </div>
 
-                                <!-- FR-FO-05 Action WhatsApp Quick Dispatch -->
+                                <!-- FR-FO-04 & FR-FO-05 Action Ganti DO & WhatsApp Quick Dispatch -->
                                 <div class="pt-2 border-t border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                     <div class="text-[11px]">
                                         <template x-if="activeSlot.do_notified_at">
@@ -146,13 +146,32 @@
                                         </template>
                                     </div>
 
-                                    <button type="button"
-                                            @click="notifyDutyOfficer(activeSlot.booking_id, activeSlot.id)"
-                                            :disabled="isDispatching"
-                                            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50">
-                                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.276-.1-.476-.15-.677.15-.2.301-.777.98-1.002 1.23-.226.25-.451.276-.752.126-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.63-.927-2.233-.244-.587-.492-.508-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.507 0 1.479 1.078 2.908 1.228 3.109.15.2 2.122 3.24 5.141 4.544.718.31 1.279.496 1.716.635.722.23 1.379.197 1.9.12.58-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.276-.201-.577-.351z"/></svg>
-                                        <span x-text="activeSlot.do_notified_at ? 'Kirim Ulang Tugas (WA)' : 'Kirim Tugas ke DO (WhatsApp)'"></span>
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" 
+                                                @click="closeModal(); openDutyOfficerModal({
+                                                    id: activeSlot.booking_id,
+                                                    booking_code: activeSlot.booking_code,
+                                                    event_name: activeSlot.event_name,
+                                                    room_name: activeSlot.room_name,
+                                                    floor_level: activeSlot.floor_level,
+                                                    slot_id: activeSlot.id,
+                                                    event_start_at: activeSlot.slot_start,
+                                                    status_label: activeSlot.status_label,
+                                                    duty_officer_id: activeSlot.duty_officer_id,
+                                                    duty_officer_notes: activeSlot.duty_officer_notes
+                                                })"
+                                                class="px-2.5 py-1.5 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition cursor-pointer">
+                                            Ganti DO
+                                        </button>
+
+                                        <button type="button"
+                                                @click="notifyDutyOfficer(activeSlot.booking_id, activeSlot.id)"
+                                                :disabled="isDispatching"
+                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50">
+                                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.276-.1-.476-.15-.677.15-.2.301-.777.98-1.002 1.23-.226.25-.451.276-.752.126-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.63-.927-2.233-.244-.587-.492-.508-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.507 0 1.479 1.078 2.908 1.228 3.109.15.2 2.122 3.24 5.141 4.544.718.31 1.279.496 1.716.635.722.23 1.379.197 1.9.12.58-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.276-.201-.577-.351z"/></svg>
+                                            <span x-text="activeSlot.do_notified_at ? 'Kirim Ulang Tugas (WA)' : 'Kirim Tugas ke DO (WhatsApp)'"></span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -179,14 +198,307 @@
                     </div>
                 </template>
 
-                <!-- Informasi jika sesi belum check-in -->
-                <template x-if="activeSlot.status_value !== 'checked_in' && activeSlot.status_value !== 'completed'">
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-brand flex items-start gap-2.5 text-xs text-slate-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                        <div class="leading-relaxed">
-                            <span class="font-bold text-slate-800 block">Disposisi Pengawas Ruangan (DO):</span>
-                            <span>Fitur penugasan Duty Officer akan aktif setelah pemohon tiba dan menyelesaikan proses validasi check-in di Front Office.</span>
+                <!-- FR-FO-06 Inisiasi Checkout & Pemilihan Ulang DO Shift Berjalan -->
+                <!-- Muncul saat acara Checked-In / Selesai ketika panitia melapor checkout & ingin mengambil kembali KTP -->
+                <template x-if="activeSlot.status_value === 'checked_in' || activeSlot.status_value === 'completed'">
+                    <div class="border rounded-brand p-4 space-y-3"
+                         :class="activeSlot.checkout_do_name ? 'bg-indigo-50/70 border-indigo-200' : 'bg-amber-50/70 border-amber-200'">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs font-bold"
+                                 :class="activeSlot.checkout_do_name ? 'text-[#001A72]' : 'text-amber-900'">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                <span>Inspeksi Checkout (DO Shift Berjalan)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <template x-if="activeSlot.checkout_do_name && activeSlot.checkout_do_notified_at">
+                                    <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Tugas Checkout Terkirim ke WA</span>
+                                    </span>
+                                </template>
+                                <template x-if="activeSlot.checkout_do_name && !activeSlot.checkout_do_notified_at">
+                                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                        Belum Di-WhatsApp
+                                    </span>
+                                </template>
+                                <template x-if="!activeSlot.checkout_do_name">
+                                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                        Belum Diinisiasi
+                                    </span>
+                                </template>
+                            </div>
                         </div>
+
+                        <!-- Jika DO Checkout Sudah Ditetapkan -->
+                        <template x-if="activeSlot.checkout_do_name">
+                            <div class="space-y-2.5 pt-1">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-slate-500 text-[11px] block">DO Shift Berjalan:</span>
+                                        <span class="font-extrabold text-slate-900 text-sm" x-text="activeSlot.checkout_do_name"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-500 text-[11px] block">Kontak DO:</span>
+                                        <span class="font-bold text-[#001A72] font-mono" x-text="activeSlot.checkout_do_phone || '-'"></span>
+                                    </div>
+                                    <template x-if="activeSlot.checkout_do_notes">
+                                        <div class="sm:col-span-2 pt-1 border-t border-indigo-200/60">
+                                            <span class="text-slate-500 text-[10px] block">Catatan Inspeksi:</span>
+                                            <span class="text-slate-700 italic text-[11px]" x-text="activeSlot.checkout_do_notes"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Action Buttons: Kirim Tugas WhatsApp & Ganti DO Shift -->
+                                <div class="pt-2 border-t border-indigo-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="text-[11px]">
+                                        <template x-if="activeSlot.checkout_do_notified_at">
+                                            <span class="text-emerald-700 font-medium">
+                                                Terkirim: <span class="font-bold font-mono" x-text="activeSlot.checkout_do_notified_at"></span>
+                                            </span>
+                                        </template>
+                                        <template x-if="!activeSlot.checkout_do_notified_at">
+                                            <span class="text-slate-500">
+                                                Kirim tugas inspeksi fisik &amp; sinyal clearance ke WA DO.
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <button type="button"
+                                                @click="closeModal(); openCheckoutDoModal({
+                                                    id: activeSlot.booking_id,
+                                                    booking_code: activeSlot.booking_code,
+                                                    event_name: activeSlot.event_name,
+                                                    room_name: activeSlot.room_name,
+                                                    floor_level: activeSlot.floor_level,
+                                                    slot_id: activeSlot.id,
+                                                    initial_do_id: activeSlot.duty_officer_id,
+                                                    initial_do_name: activeSlot.duty_officer_name,
+                                                    current_checkout_do_id: activeSlot.checkout_do_id
+                                                })"
+                                                class="px-2.5 py-1.5 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition cursor-pointer">
+                                            Ganti DO
+                                        </button>
+
+                                        <button type="button"
+                                                @click="notifyCheckoutDutyOfficer(activeSlot.booking_id, activeSlot.id)"
+                                                :disabled="isDispatchingCheckoutDO"
+                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50">
+                                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.276-.1-.476-.15-.677.15-.2.301-.777.98-1.002 1.23-.226.25-.451.276-.752.126-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.501-1.786-1.677-2.087-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.63-.927-2.233-.244-.587-.492-.508-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.507 0 1.479 1.078 2.908 1.228 3.109.15.2 2.122 3.24 5.141 4.544.718.31 1.279.496 1.716.635.722.23 1.379.197 1.9.12.58-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.276-.201-.577-.351z"/></svg>
+                                            <span x-text="activeSlot.checkout_do_notified_at ? 'Kirim Ulang Tugas (WA)' : 'Kirim Tugas Inspeksi Ruangan (WhatsApp)'"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Jika DO Checkout Belum Ditetapkan -->
+                        <template x-if="!activeSlot.checkout_do_name">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                                <span class="text-xs text-amber-900 leading-relaxed">
+                                    Panitia melapor acara selesai &amp; ingin mengambil KTP? Panggil DO aktif pada shift jam ini untuk inspeksi ruangan.
+                                </span>
+                                <button type="button" 
+                                        @click="closeModal(); openCheckoutDoModal({
+                                            id: activeSlot.booking_id,
+                                            booking_code: activeSlot.booking_code,
+                                            event_name: activeSlot.event_name,
+                                            room_name: activeSlot.room_name,
+                                            floor_level: activeSlot.floor_level,
+                                            slot_id: activeSlot.id,
+                                            initial_do_id: activeSlot.duty_officer_id,
+                                            initial_do_name: activeSlot.duty_officer_name,
+                                            current_checkout_do_id: null
+                                        })"
+                                        class="px-3.5 py-1.5 rounded-brand bg-[#001A72] text-white text-xs font-bold hover:bg-[#001250] transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                    <span>Panggil DO Inspeksi Checkout</span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- FR-FO-07 Status Kelayakan Fisik Ruangan (Clearance) & Pelepasan Jaminan KTP -->
+                <template x-if="activeSlot.status_value === 'checked_in' || activeSlot.status_value === 'completed'">
+                    <div class="border rounded-brand p-4 space-y-3"
+                         :class="{
+                             'bg-emerald-50/80 border-emerald-300': activeSlot.clearance_status === 'cleared',
+                             'bg-rose-50/90 border-rose-300': activeSlot.clearance_status === 'incident_detected',
+                             'bg-indigo-50/80 border-indigo-300': activeSlot.clearance_status === 'resolved',
+                             'bg-slate-50 border-slate-200': !activeSlot.clearance_status || activeSlot.clearance_status === 'pending'
+                         }">
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs font-bold">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" 
+                                     :class="{
+                                         'text-emerald-600': activeSlot.clearance_status === 'cleared',
+                                         'text-rose-600': activeSlot.clearance_status === 'incident_detected',
+                                         'text-indigo-600': activeSlot.clearance_status === 'resolved',
+                                         'text-slate-500': !activeSlot.clearance_status || activeSlot.clearance_status === 'pending'
+                                     }"
+                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <span class="text-slate-900 font-extrabold">Sinyal Kelayakan Fisik Ruangan (FR-FO-07)</span>
+                            </div>
+
+                            <!-- Badge Status Sinyal DO -->
+                            <div>
+                                <template x-if="activeSlot.clearance_status === 'cleared'">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white shadow-2xs flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Sinyal Aman (Cleared)</span>
+                                    </span>
+                                </template>
+
+                                <template x-if="activeSlot.clearance_status === 'incident_detected'">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-600 text-white shadow-2xs flex items-center gap-1 animate-pulse">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>Insiden Terdeteksi (KTP Ditahan)</span>
+                                    </span>
+                                </template>
+
+                                <template x-if="activeSlot.clearance_status === 'resolved'">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-600 text-white shadow-2xs flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                        <span>Insiden Selesai (Resolved)</span>
+                                    </span>
+                                </template>
+
+                                <template x-if="!activeSlot.clearance_status || activeSlot.clearance_status === 'pending'">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">
+                                        Menunggu Sinyal DO
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- KONDISI 1: SINYAL AMAN (HIJAU / CLEARED) -->
+                        <template x-if="activeSlot.clearance_status === 'cleared'">
+                            <div class="space-y-2.5">
+                                <div class="p-3 bg-white/90 border border-emerald-200 rounded-brand text-xs text-emerald-950 flex items-start gap-2.5 leading-relaxed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <div>
+                                        <span class="font-extrabold text-emerald-900 block text-xs">Ruangan Dinyatakan Bersih &amp; Fasilitas Lengkap</span>
+                                        <span>Duty Officer telah mengonfirmasi ruangan dalam kondisi baik. FO berwenang mengembalikan KTP fisik kepada panitia.</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-emerald-100/70 border border-emerald-300 rounded-brand flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="text-[10px] text-emerald-800 uppercase font-extrabold tracking-wider block">Instruksi Pengambilan KTP Fisik:</span>
+                                        <span class="font-extrabold text-emerald-950 text-sm">
+                                            Ambil KTP <span x-text="activeSlot.ktp_holder_name"></span>
+                                            <template x-if="activeSlot.storage_drawer_number">
+                                                <span> di <span class="text-[#001A72] font-black" x-text="'Laci ' + activeSlot.storage_drawer_number"></span></span>
+                                            </template>
+                                        </span>
+                                    </div>
+                                    <template x-if="activeSlot.status_value === 'completed'">
+                                        <span class="px-2 py-0.5 rounded bg-emerald-700 text-white text-[10px] font-bold">
+                                            KTP Telah Dikembalikan
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- KONDISI 2: SINYAL INSIDEN (MERAH / INCIDENT_DETECTED) -->
+                        <template x-if="activeSlot.clearance_status === 'incident_detected'">
+                            <div class="space-y-3">
+                                <div class="p-3.5 bg-rose-100/90 border border-rose-300 rounded-brand text-xs text-rose-950 space-y-2">
+                                    <div class="flex items-start gap-2 text-rose-900 font-extrabold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>PERINGATAN: Pelepasan KTP Diblokir! Tahan KTP Fisik di Meja FO</span>
+                                    </div>
+                                    <p class="text-[11px] text-rose-900 leading-relaxed">
+                                        Ditemukan kerusakan/kehilangan fasilitas atau ruangan kotor saat inspeksi DO. Jangan serahkan KTP fisik sampai panitia menyelesaikan ganti rugi/pembersihan.
+                                    </p>
+                                </div>
+
+                                <!-- Rincian Insiden, Catatan & Foto Bukti dari DO -->
+                                <template x-if="activeSlot.incident">
+                                    <div class="p-3.5 bg-white border border-rose-200 rounded-brand space-y-2.5 text-xs">
+                                        <div class="flex items-center justify-between border-b border-rose-100 pb-2">
+                                            <div>
+                                                <span class="text-[10px] text-slate-400 block font-bold uppercase">Kategori Insiden:</span>
+                                                <span class="font-extrabold text-rose-800 text-xs" x-text="activeSlot.incident.category + (activeSlot.incident.item_name ? ' (' + activeSlot.incident.item_name + ')' : '')"></span>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="text-[10px] text-slate-400 block">Dilaporkan Oleh DO:</span>
+                                                <span class="font-bold text-slate-800" x-text="activeSlot.incident.reported_by"></span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <span class="text-[10px] text-slate-400 block font-bold uppercase">Deskripsi Kerusakan / Temuan:</span>
+                                            <p class="text-slate-800 italic bg-rose-50/50 p-2 rounded border border-rose-100 mt-0.5 leading-relaxed" x-text="activeSlot.incident.description"></p>
+                                        </div>
+
+                                        <!-- Foto Bukti Kerusakan -->
+                                        <template x-if="activeSlot.incident.photos && activeSlot.incident.photos.length > 0">
+                                            <div class="pt-1">
+                                                <span class="text-[10px] text-slate-400 block font-bold uppercase mb-1.5">Foto Bukti Kerusakan dari DO:</span>
+                                                <div class="flex items-center gap-2 overflow-x-auto py-1">
+                                                    <template x-for="(photo, pIdx) in activeSlot.incident.photos" :key="pIdx">
+                                                        <a :href="photo.url" target="_blank" class="block shrink-0 group relative rounded-brand overflow-hidden border border-slate-200 hover:border-rose-400 transition shadow-2xs">
+                                                            <img :src="photo.url" :alt="photo.caption || 'Bukti Insiden'" class="w-16 h-16 object-cover group-hover:scale-105 transition">
+                                                            <span class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition"></span>
+                                                        </a>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- KONDISI 3: PENYELESAIAN SANKSI (SINYAL BIRU / RESOLVED) -->
+                        <template x-if="activeSlot.clearance_status === 'resolved'">
+                            <div class="space-y-2.5">
+                                <div class="p-3 bg-white/90 border border-indigo-200 rounded-brand text-xs text-indigo-950 flex items-start gap-2.5 leading-relaxed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    <div>
+                                        <span class="font-extrabold text-indigo-900 block text-xs">Insiden Telah Diselesaikan (Sanksi Beres)</span>
+                                        <span>DO telah melakukan inspeksi ulang dan menandai insiden beres. FO dapat menyerahkan KTP fisik kembali ke panitia.</span>
+                                        <template x-if="activeSlot.incident && activeSlot.incident.resolution_notes">
+                                            <p class="mt-1 text-[11px] text-slate-600 italic bg-indigo-50/60 p-1.5 rounded border border-indigo-100" x-text="'Catatan Penyelesaian: ' + activeSlot.incident.resolution_notes"></p>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-indigo-100/70 border border-indigo-300 rounded-brand flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="text-[10px] text-indigo-800 uppercase font-extrabold tracking-wider block">Instruksi Pengambilan KTP Fisik:</span>
+                                        <span class="font-extrabold text-indigo-950 text-sm">
+                                            Ambil KTP <span x-text="activeSlot.ktp_holder_name"></span>
+                                            <template x-if="activeSlot.storage_drawer_number">
+                                                <span> di <span class="text-[#001A72] font-black" x-text="'Laci ' + activeSlot.storage_drawer_number"></span></span>
+                                            </template>
+                                        </span>
+                                    </div>
+                                    <template x-if="activeSlot.status_value === 'completed'">
+                                        <span class="px-2 py-0.5 rounded bg-indigo-700 text-white text-[10px] font-bold">
+                                            KTP Telah Dikembalikan
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- KONDISI 4: SINYAL BELUM DIINPUT (PENDING) -->
+                        <template x-if="!activeSlot.clearance_status || activeSlot.clearance_status === 'pending'">
+                            <div class="p-3 bg-white/80 border border-slate-200 rounded-brand text-xs text-slate-600 flex items-start gap-2.5 leading-relaxed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <div>
+                                    <span class="font-bold text-slate-800 block text-xs">Menunggu Hasil Inspeksi Fisik dari Duty Officer</span>
+                                    <span>Tombol rilis KTP akan aktif otomatis setelah DO menginput sinyal kelayakan ruangan (Aman / Cleared).</span>
+                                </div>
+                            </div>
+                        </template>
+
                     </div>
                 </template>
 
@@ -289,13 +601,43 @@
 
             </div>
 
-            <!-- Modal Footer -->
-            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-end">
-                <button type="button"
-                        @click="closeModal()"
-                        class="px-4 py-2 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
-                    Tutup
-                </button>
+            <!-- Modal Footer (FR-FO-07 Action Release KTP) -->
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="text-xs text-slate-500">
+                    <template x-if="activeSlot.status_value === 'checked_in' && activeSlot.clearance_status === 'incident_detected'">
+                        <span class="text-rose-700 font-bold flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>KTP Terkunci: Selesaikan insiden dengan DO sebelum checkout.</span>
+                        </span>
+                    </template>
+                    <template x-if="activeSlot.status_value === 'checked_in' && (activeSlot.clearance_status === 'cleared' || activeSlot.clearance_status === 'resolved')">
+                        <span class="text-emerald-700 font-semibold flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Sinyal DO valid. Siap diserahkan kembali ke panitia.</span>
+                        </span>
+                    </template>
+                </div>
+
+                <div class="flex items-center gap-2 justify-end">
+                    <button type="button"
+                            @click="closeModal()"
+                            class="px-4 py-2 rounded-brand bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
+                        Tutup
+                    </button>
+
+                    <!-- Tombol Check-Out Selesai & Serahkan KTP (FR-FO-07) -->
+                    <template x-if="activeSlot.status_value === 'checked_in'">
+                        <button type="button"
+                                @click="submitReleaseKtp()"
+                                :disabled="isSubmittingReleaseKtp || (activeSlot.clearance_status !== 'cleared' && activeSlot.clearance_status !== 'resolved')"
+                                class="px-4 py-2 rounded-brand text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                :class="(activeSlot.clearance_status === 'cleared' || activeSlot.clearance_status === 'resolved') ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-300 text-slate-500'">
+                            <svg x-show="!isSubmittingReleaseKtp" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <svg x-show="isSubmittingReleaseKtp" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span x-text="isSubmittingReleaseKtp ? 'Memproses Check-Out...' : 'Check-Out Selesai & Serahkan KTP'"></span>
+                        </button>
+                    </template>
+                </div>
             </div>
 
         </div>

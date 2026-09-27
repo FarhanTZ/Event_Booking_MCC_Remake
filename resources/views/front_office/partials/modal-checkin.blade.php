@@ -234,6 +234,27 @@
                             </div>
                         </div>
 
+                        <!-- Disposisi / Ganti Staf Duty Officer (DO) Langsung -->
+                        <div class="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-brand space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-[11px] font-bold text-emerald-950">
+                                    Penugasan / Ganti Duty Officer (DO) Lapangan
+                                </label>
+                                <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-100/80 px-1.5 py-0.2 rounded">
+                                    Fleksibel / On-Duty
+                                </span>
+                            </div>
+                            <select x-model="checkinDutyOfficerId" 
+                                    class="block w-full py-2 px-3 text-xs rounded-brand border border-slate-300 bg-white shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] text-slate-800 font-medium">
+                                <option value="">-- Disposisikan nanti setelah check-in --</option>
+                                @foreach($dutyOfficers as $do)
+                                    <option value="{{ $do->id }}">
+                                        {{ $do->full_name }} • {{ $do->phone_number ?? '-' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <!-- Peringatan Toleransi Awal (>60 Menit Sebelum Acara) -->
                         <template x-if="isEarlyArrival">
                             <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-brand space-y-2">

@@ -106,12 +106,34 @@
                             'duty_officer_phone' => $slot->dutyOfficer->phone_number ?? ($booking->dutyOfficer->phone_number ?? null),
                             'duty_officer_notes' => $slot->duty_officer_notes ?? null,
                             'do_notified_at' => $slot->do_notified_at ? $slot->do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : ($booking->do_notified_at ? $booking->do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : null),
+                            'checkout_do_id' => $slot->assigned_checkout_do_id ?? ($slot->checkout_duty_officer_id ?? ($booking->assigned_checkout_do_id ?? $booking->checkout_duty_officer_id)),
+                            'checkout_do_name' => $slot->checkoutDutyOfficer->full_name ?? ($booking->checkoutDutyOfficer->full_name ?? null),
+                            'checkout_do_phone' => $slot->checkoutDutyOfficer->phone_number ?? ($booking->checkoutDutyOfficer->phone_number ?? null),
+                            'checkout_do_notes' => $slot->checkout_do_notes ?? ($booking->checkout_do_notes ?? null),
+                            'checkout_do_notified_at' => $slot->checkout_do_notified_at ? $slot->checkout_do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : ($booking->checkout_do_notified_at ? $booking->checkout_do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : null),
+                            'clearance_status' => $booking->clearance_status ?? 'pending',
+                            'ktp_holder_name' => $booking->latestKtpVaultLog?->ktp_holder_name ?? ($eventDetail->pic_name_snapshot ?? ($booking->user->full_name ?? 'Panitia')),
+                            'storage_drawer_number' => $booking->latestKtpVaultLog?->storage_drawer_number ?? null,
+                            'ktp_returned_at' => $booking->latestKtpVaultLog?->returned_at ? $booking->latestKtpVaultLog->returned_at->translatedFormat('d M Y, H:i') . ' WIB' : null,
+                            'incident' => $booking->latestIncident ? [
+                                'category' => $booking->latestIncident->category,
+                                'item_name' => $booking->latestIncident->item_name,
+                                'description' => $booking->latestIncident->description,
+                                'is_resolved' => $booking->latestIncident->is_resolved,
+                                'resolution_notes' => $booking->latestIncident->resolution_notes,
+                                'reported_by' => $booking->latestIncident->reportedByDo->full_name ?? 'Duty Officer',
+                                'photos' => $booking->latestIncident->photos->map(fn($p) => [
+                                    'url' => $p->photo_url,
+                                    'caption' => $p->caption,
+                                ])->values()->all(),
+                            ] : null,
                             'all_slots' => $booking->slots->map(function ($s) {
                                 return [
                                     'id' => $s->id,
                                     'room_name' => $s->room->name ?? 'Ruangan',
                                     'floor_level' => $s->room->floor_level ?? 1,
                                     'duty_officer_name' => $s->dutyOfficer->full_name ?? null,
+                                    'checkout_do_name' => $s->checkoutDutyOfficer->full_name ?? null,
                                     'start' => \Carbon\Carbon::parse($s->event_start_at)->translatedFormat('d M Y, H:i'),
                                     'end' => \Carbon\Carbon::parse($s->event_end_at)->translatedFormat('H:i') . ' WIB',
                                     'is_today' => \Carbon\Carbon::parse($s->event_start_at)->isToday(),
@@ -185,24 +207,10 @@
                                     <span>Menunggu Kedatangan</span>
                                 </span>
                             @elseif($booking->status === \App\Enums\BookingStatus::CHECKED_IN)
-                                <div class="space-y-1">
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span>Sedang Berlangsung</span>
-                                    </span>
-                                    @if($slot->dutyOfficer || $booking->dutyOfficer)
-                                        <div class="text-[10px] font-semibold text-slate-500 flex items-center justify-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                            <span class="truncate max-w-[120px]" title="{{ $slot->dutyOfficer->full_name ?? $booking->dutyOfficer->full_name }}">
-                                                DO: {{ explode(' ', ($slot->dutyOfficer->full_name ?? $booking->dutyOfficer->full_name))[0] }}
-                                            </span>
-                                        </div>
-                                    @else
-                                        <div class="text-[10px] font-bold text-amber-600 flex items-center justify-center gap-0.5">
-                                            <span>DO: Belum Disposisi</span>
-                                        </div>
-                                    @endif
-                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Sedang Berlangsung</span>
+                                </span>
                             @elseif($booking->status === \App\Enums\BookingStatus::COMPLETED)
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
