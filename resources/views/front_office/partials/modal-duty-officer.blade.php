@@ -115,6 +115,19 @@
                                   placeholder="Contoh: Koordinasikan AC tambahan & sound system mic wireless"
                                   class="block w-full p-2.5 text-xs rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] placeholder:text-slate-400"></textarea>
                     </div>
+
+                    <!-- FR-FO-05 WhatsApp Auto Dispatch Option -->
+                    <div class="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-brand">
+                        <label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" x-model="sendWhatsAppDispatch" class="rounded text-[#001A72] focus:ring-[#001A72] w-4 h-4 mt-0.5 shrink-0">
+                            <div class="text-xs">
+                                <span class="font-bold text-emerald-950 block">Kirim Notifikasi Tugas via WhatsApp (FR-FO-05)</span>
+                                <span class="text-[11px] text-emerald-800 leading-relaxed block mt-0.5">
+                                    Buka tautan pesan WhatsApp otomatis ke DO berisi ringkasan sesi, nama ruangan, dan kontak PIC lapangan.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
             </div>

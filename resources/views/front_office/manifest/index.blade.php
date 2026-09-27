@@ -160,9 +160,11 @@
                 ktpHolderName: '',
                 picWhatsappNumber: '',
 
-                // FR-FO-04 Duty Officer Assignment State
+                // FR-FO-04 & FR-FO-05 Duty Officer Assignment & WhatsApp Quick Dispatch State
                 showDutyOfficerModal: false,
                 isSubmittingDO: false,
+                isDispatching: false,
+                sendWhatsAppDispatch: true,
                 doAssignmentError: '',
                 selectedDutyOfficerId: '',
                 dutyOfficerNotes: '',
@@ -202,6 +204,11 @@
                     emergency_phone: '',
                     institution_name: '',
                     pricing_scheme: '',
+                    duty_officer_id: '',
+                    duty_officer_name: '',
+                    duty_officer_phone: '',
+                    duty_officer_notes: '',
+                    do_notified_at: null,
                     all_slots: []
                 },
 
@@ -390,7 +397,7 @@
                     }
                 },
 
-                // FR-FO-04 Modal Handlers & Dispatch Logic
+                // FR-FO-04 & FR-FO-05 Modal Handlers & Dispatch Logic
                 openDutyOfficerModal(bookingData) {
                     this.doTargetBooking = {
                         id: bookingData.id,
@@ -405,6 +412,7 @@
 
                     this.selectedDutyOfficerId = '';
                     this.dutyOfficerNotes = '';
+                    this.sendWhatsAppDispatch = true;
                     this.doAssignmentError = '';
                     this.isSubmittingDO = false;
                     this.showDutyOfficerModal = true;
@@ -453,12 +461,82 @@
                             return;
                         }
 
+                        // FR-FO-05: Jika dicentang untuk kirim notifikasi WhatsApp langsung
+                        if (this.sendWhatsAppDispatch) {
+                            try {
+                                const notifyPayload = {
+                                    _token: payload._token,
+                                    booking_id: this.doTargetBooking.id,
+                                    slot_id: this.doTargetBooking.slot_id || null
+                                };
+                                const notifyRes = await fetch('{{ route('front_office.notify_duty_officer') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': payload._token
+                                    },
+                                    body: JSON.stringify(notifyPayload)
+                                });
+                                const notifyData = await notifyRes.json();
+                                if (notifyData.success && notifyData.whatsapp_url) {
+                                    window.open(notifyData.whatsapp_url, '_blank');
+                                }
+                            } catch (notifyErr) {
+                                console.warn('Dispatch notification warning:', notifyErr);
+                            }
+                        }
+
                         // Berhasil disposisi -> tutup modal dan refresh halaman
                         this.closeDutyOfficerModal();
                         window.location.reload();
                     } catch (e) {
                         this.doAssignmentError = 'Terjadi kesalahan komunikasi dengan server: ' + e.message;
                         this.isSubmittingDO = false;
+                    }
+                },
+
+                // FR-FO-05 Quick Dispatch Action
+                async notifyDutyOfficer(bookingId, slotId = null) {
+                    if (!bookingId) return;
+                    this.isDispatching = true;
+
+                    const payload = {
+                        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        booking_id: bookingId,
+                        slot_id: slotId
+                    };
+
+                    try {
+                        const response = await fetch('{{ route('front_office.notify_duty_officer') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': payload._token
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            const errMessage = data.errors?.duty_officer?.[0] || data.errors?.phone_number?.[0] || data.message || 'Gagal menyiapkan notifikasi WhatsApp.';
+                            alert(errMessage);
+                            return;
+                        }
+
+                        if (this.activeSlot) {
+                            this.activeSlot.do_notified_at = data.notified_at || 'Baru saja';
+                        }
+
+                        if (data.whatsapp_url) {
+                            window.open(data.whatsapp_url, '_blank');
+                        }
+                    } catch (e) {
+                        alert('Terjadi kesalahan komunikasi dengan server: ' + e.message);
+                    } finally {
+                        this.isDispatching = false;
                     }
                 }
             }

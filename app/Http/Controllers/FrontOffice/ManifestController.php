@@ -160,4 +160,32 @@ class ManifestController extends Controller
 
         return redirect()->route('front_office.manifest')->with('success', $message);
     }
+
+    /**
+     * Send dispatch notification to Duty Officer via WhatsApp / Webhook (FR-FO-05).
+     */
+    public function notifyDutyOfficer(\App\Http\Requests\FrontOffice\NotifyDutyOfficerRequest $request, \App\Actions\FrontOffice\NotifyDutyOfficerAction $action): JsonResponse|RedirectResponse
+    {
+        $dto = $request->toDTO((string) $request->user()->id);
+        $result = $action->execute($dto);
+
+        $message = "Notifikasi tugas lapangan berhasil dicatat untuk DO {$result['duty_officer']->full_name}.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'whatsapp_url' => $result['whatsapp_url'],
+                'message_text' => $result['message'],
+                'duty_officer' => [
+                    'id' => $result['duty_officer']->id,
+                    'name' => $result['duty_officer']->full_name,
+                    'phone' => $result['duty_officer']->phone_number,
+                ],
+                'notified_at' => $result['notified_at']->translatedFormat('d M Y, H:i') . ' WIB',
+            ]);
+        }
+
+        return redirect()->away($result['whatsapp_url']);
+    }
 }

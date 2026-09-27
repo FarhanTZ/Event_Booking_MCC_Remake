@@ -18,6 +18,9 @@ class BookingSlot extends Model
         'duty_officer_assigned_at',
         'duty_officer_assigned_by',
         'duty_officer_notes',
+        'do_notified_at',
+        'do_notified_by',
+        'do_notified_channel',
         'event_start_at',
         'event_end_at',
         'operational_range',
@@ -28,6 +31,7 @@ class BookingSlot extends Model
         'event_start_at' => 'datetime',
         'event_end_at' => 'datetime',
         'duty_officer_assigned_at' => 'datetime',
+        'do_notified_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 

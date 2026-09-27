@@ -105,6 +105,7 @@
                             'duty_officer_name' => $slot->dutyOfficer->full_name ?? ($booking->dutyOfficer->full_name ?? null),
                             'duty_officer_phone' => $slot->dutyOfficer->phone_number ?? ($booking->dutyOfficer->phone_number ?? null),
                             'duty_officer_notes' => $slot->duty_officer_notes ?? null,
+                            'do_notified_at' => $slot->do_notified_at ? $slot->do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : ($booking->do_notified_at ? $booking->do_notified_at->translatedFormat('d M Y, H:i') . ' WIB' : null),
                             'all_slots' => $booking->slots->map(function ($s) {
                                 return [
                                     'id' => $s->id,

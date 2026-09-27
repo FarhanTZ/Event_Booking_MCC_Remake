@@ -391,9 +391,10 @@
                 picWhatsappNumber: '',
                 notes: '',
 
-                // FR-FO-04 Duty Officer Assignment State
+                // FR-FO-04 & FR-FO-05 Duty Officer Assignment & WhatsApp Quick Dispatch State
                 showDutyOfficerModal: false,
                 isSubmittingDO: false,
+                sendWhatsAppDispatch: true,
                 doAssignmentError: '',
                 selectedDutyOfficerId: '',
                 dutyOfficerNotes: '',
@@ -827,7 +828,7 @@
                     }
                 },
 
-                // FR-FO-04 Modal Handlers & Dispatch Logic
+                // FR-FO-04 & FR-FO-05 Modal Handlers & Dispatch Logic
                 openDutyOfficerModal(bookingData) {
                     this.doTargetBooking = {
                         id: bookingData.id,
@@ -842,6 +843,7 @@
 
                     this.selectedDutyOfficerId = '';
                     this.dutyOfficerNotes = '';
+                    this.sendWhatsAppDispatch = true;
                     this.doAssignmentError = '';
                     this.isSubmittingDO = false;
                     this.showDutyOfficerModal = true;
@@ -887,6 +889,32 @@
                             this.doAssignmentError = errMessage;
                             this.isSubmittingDO = false;
                             return;
+                        }
+
+                        // FR-FO-05: Jika dicentang untuk kirim notifikasi WhatsApp langsung
+                        if (this.sendWhatsAppDispatch) {
+                            try {
+                                const notifyPayload = {
+                                    _token: payload._token,
+                                    booking_id: this.doTargetBooking.id,
+                                    slot_id: this.doTargetBooking.slot_id || null
+                                };
+                                const notifyRes = await fetch('{{ route('front_office.notify_duty_officer') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': payload._token
+                                    },
+                                    body: JSON.stringify(notifyPayload)
+                                });
+                                const notifyData = await notifyRes.json();
+                                if (notifyData.success && notifyData.whatsapp_url) {
+                                    window.open(notifyData.whatsapp_url, '_blank');
+                                }
+                            } catch (notifyErr) {
+                                console.warn('Dispatch notification warning:', notifyErr);
+                            }
                         }
 
                         // Berhasil disposisi -> tutup modal dan perbarui alert sukses
