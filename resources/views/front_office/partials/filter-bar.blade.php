@@ -32,13 +32,13 @@
                         Semua Status ({{ $metrics['total_slots_today'] }})
                     </option>
                     <option value="confirmed" {{ $currentStatus === 'confirmed' ? 'selected' : '' }}>
-                        Confirmed / Siap Check-in ({{ $metrics['confirmed_slots'] }})
+                        Menunggu Kedatangan ({{ $metrics['confirmed_slots'] }})
                     </option>
                     <option value="checked_in" {{ $currentStatus === 'checked_in' ? 'selected' : '' }}>
-                        Checked-In / Berlangsung ({{ $metrics['checked_in_slots'] }})
+                        Sedang Berlangsung ({{ $metrics['checked_in_slots'] }})
                     </option>
                     <option value="completed" {{ $currentStatus === 'completed' ? 'selected' : '' }}>
-                        Completed / Selesai ({{ $metrics['completed_slots'] }})
+                        Selesai Digunakan ({{ $metrics['completed_slots'] }})
                     </option>
                 </select>
             </div>

@@ -77,10 +77,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('front_office.checkin') ? 'text-white' : 'text-emerald-600' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="10" height="10" x="7" y="7" rx="1"/></svg>
                     <span>Validasi Check-In</span>
                 </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded {{ request()->routeIs('front_office.checkin') ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800' }}">Tab Baru</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 group-hover:text-[#001A72] group-hover:translate-x-0.5 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-400 group-hover:text-[#001A72] group-hover:translate-x-0.5 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
             </a>
 
             <!-- Kalender Slot Gedung -->
@@ -117,36 +114,36 @@
                 <span class="text-[11px] font-mono font-bold">{{ $metrics['total_slots_today'] }}</span>
             </a>
 
-            <!-- Siap Check-in (Confirmed) -->
+            <!-- Menunggu Kedatangan -->
             <a href="{{ route('front_office.manifest', ['status' => 'confirmed', 'date' => request('date')]) }}"
-               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'confirmed' ? 'bg-emerald-50 text-emerald-900 font-bold border border-emerald-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
+               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'confirmed' ? 'bg-amber-50 text-amber-900 font-bold border border-amber-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Siap Check-In (Confirmed)</span>
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span>Menunggu Kedatangan</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">
+                <span class="text-[11px] font-mono font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded">
                     {{ $metrics['confirmed_slots'] }}
                 </span>
             </a>
 
-            <!-- Sedang Berlangsung (Checked-In) -->
+            <!-- Sedang Berlangsung -->
             <a href="{{ route('front_office.manifest', ['status' => 'checked_in', 'date' => request('date')]) }}"
                class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'checked_in' ? 'bg-teal-50 text-teal-900 font-bold border border-teal-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-teal-500"></span>
-                    <span>Aktif Digunakan (Checked-In)</span>
+                    <span>Sedang Berlangsung</span>
                 </div>
                 <span class="text-[11px] font-mono font-bold text-teal-700 bg-teal-100/80 px-1.5 py-0.5 rounded">
                     {{ $metrics['checked_in_slots'] }}
                 </span>
             </a>
 
-            <!-- Selesai (Completed) -->
+            <!-- Selesai Digunakan -->
             <a href="{{ route('front_office.manifest', ['status' => 'completed', 'date' => request('date')]) }}"
                class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'completed' ? 'bg-slate-100 text-slate-900 font-bold border border-slate-300 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-slate-500"></span>
-                    <span>Selesai (Completed)</span>
+                    <span>Selesai Digunakan</span>
                 </div>
                 <span class="text-[11px] font-mono font-bold text-slate-600">{{ $metrics['completed_slots'] }}</span>
             </a>

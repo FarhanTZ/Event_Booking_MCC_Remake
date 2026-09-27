@@ -137,14 +137,11 @@
                                 Kode Booking Tiket E-Pass:
                             </label>
                             <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-mono font-bold text-xs">
-                                    #
-                                </div>
                                 <input type="text" 
                                        x-model="manualBookingCode" 
                                        @keydown.enter.prevent="verifyBookingCheckin()"
                                        placeholder="Contoh: MCC-2026-X89B" 
-                                       class="block w-full pl-8 pr-3 py-2.5 text-xs uppercase font-mono font-bold rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] placeholder:normal-case placeholder:font-normal placeholder:text-slate-400">
+                                       class="block w-full px-3.5 py-2.5 text-xs uppercase font-mono font-bold rounded-brand border border-slate-300 shadow-2xs focus:border-[#001A72] focus:ring-[#001A72] placeholder:normal-case placeholder:font-normal placeholder:text-slate-400">
                             </div>
                             <p class="text-[11px] text-slate-500">
                                 Masukkan kode booking alfanumerik yang tertera pada proposal atau kartu digital E-Pass pemohon.

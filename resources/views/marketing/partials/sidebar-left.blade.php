@@ -76,19 +76,7 @@
                 <span>Manifes Acara Harian</span>
             </a>
 
-            <!-- Validasi Check-In (Opens New Tab) -->
-            <a href="{{ route('front_office.checkin') }}" 
-               target="_blank"
-               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs text-slate-700 hover:text-[#001A72] hover:bg-[#EEF2FF] bg-slate-50 border border-slate-200 transition group shadow-2xs">
-                <div class="flex items-center gap-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="10" height="10" x="7" y="7" rx="1"/></svg>
-                    <span>Validasi Check-In</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">Tab Baru</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 group-hover:text-[#001A72] group-hover:translate-x-0.5 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-                </div>
-            </a>
+
 
             <!-- Kalender Slot Jadwal -->
             <a href="/jadwal" 

@@ -193,14 +193,11 @@
                                 Kode Booking Pemohon
                             </label>
                             <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-mono font-bold text-sm">
-                                    #
-                                </div>
                                 <input type="text" 
                                        x-model="bookingCode" 
                                        @keydown.enter.prevent="verifyBooking()"
                                        placeholder="Contoh: MCC-2026-X89B" 
-                                       class="block w-full pl-8 pr-4 py-3 text-sm uppercase font-mono font-bold rounded-xl border border-slate-300 bg-slate-50/50 focus:bg-white focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72]/20 transition placeholder:normal-case placeholder:font-normal placeholder:text-slate-400">
+                                       class="block w-full px-4 py-3 text-sm uppercase font-mono font-bold rounded-xl border border-slate-300 bg-slate-50/50 focus:bg-white focus:border-[#001A72] focus:ring-2 focus:ring-[#001A72]/20 transition placeholder:normal-case placeholder:font-normal placeholder:text-slate-400">
                             </div>
                             <p class="text-[11px] text-slate-400">
                                 Masukkan 12-16 digit kode booking unik pada bukti registrasi.

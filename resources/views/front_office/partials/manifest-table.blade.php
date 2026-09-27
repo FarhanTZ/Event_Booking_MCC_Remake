@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <!-- Status Tabs Bar (FR-FO-01: Confirmed, Checked-In, Completed) -->
+    <!-- Status Tabs Bar (FR-FO-01: Menunggu Kedatangan, Sedang Berlangsung, Selesai Digunakan) -->
     <div class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200/80 flex items-center gap-2 overflow-x-auto custom-scrollbar">
         <a href="{{ route('front_office.manifest', array_merge(request()->except('status', 'page'), ['status' => 'all'])) }}" 
            class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap {{ $currentStatus === 'all' ? 'bg-[#001A72] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
@@ -32,9 +32,9 @@
         </a>
 
         <a href="{{ route('front_office.manifest', array_merge(request()->except('status', 'page'), ['status' => 'confirmed'])) }}" 
-           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'confirmed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-200' }}">
-            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'confirmed' ? 'bg-white' : 'bg-emerald-500' }}"></span>
-            <span>Siap Check-In ({{ $metrics['confirmed_slots'] }})</span>
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'confirmed' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-amber-800 hover:bg-amber-50 border border-amber-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'confirmed' ? 'bg-white' : 'bg-amber-500' }}"></span>
+            <span>Menunggu Kedatangan ({{ $metrics['confirmed_slots'] }})</span>
         </a>
 
         <a href="{{ route('front_office.manifest', array_merge(request()->except('status', 'page'), ['status' => 'checked_in'])) }}" 
@@ -46,7 +46,7 @@
         <a href="{{ route('front_office.manifest', array_merge(request()->except('status', 'page'), ['status' => 'completed'])) }}" 
            class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'completed' ? 'bg-slate-700 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}">
             <span class="w-2 h-2 rounded-full {{ $currentStatus === 'completed' ? 'bg-white' : 'bg-slate-500' }}"></span>
-            <span>Selesai ({{ $metrics['completed_slots'] }})</span>
+            <span>Selesai Digunakan ({{ $metrics['completed_slots'] }})</span>
         </a>
     </div>
 
@@ -117,20 +117,12 @@
                         
                         <!-- 1. Waktu Sesi (Jam Mulai - Jam Selesai & Durasi) -->
                         <td class="px-5 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-9 h-9 rounded-brand bg-[#EEF2FF] text-[#001A72] flex flex-col items-center justify-center font-mono font-bold leading-none shrink-0 border border-indigo-100">
-                                    <span class="text-[11px]">{{ $startCarbon->format('H:i') }}</span>
-                                    <span class="text-[9px] text-slate-500 font-normal">WIB</span>
-                                </div>
-                                <div>
-                                    <div class="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
-                                        <span>{{ $startCarbon->format('H:i') }} - {{ $endCarbon->format('H:i') }}</span>
-                                        <span class="text-slate-400 font-normal text-[10px]">({{ $durationHours }} jam)</span>
-                                    </div>
-                                    <div class="text-[10px] text-slate-500 font-semibold mt-0.5">
-                                        {{ $startCarbon->translatedFormat('l, d F Y') }}
-                                    </div>
-                                </div>
+                            <div class="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
+                                <span>{{ $startCarbon->format('H:i') }} - {{ $endCarbon->format('H:i') }}</span>
+                                <span class="text-slate-400 font-normal text-[10px]">({{ $durationHours }} jam)</span>
+                            </div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-0.5">
+                                {{ $startCarbon->translatedFormat('l, d F Y') }}
                             </div>
                         </td>
 
@@ -181,32 +173,34 @@
 
                         <!-- 5. Status Sesi -->
                         <td class="px-5 py-4 text-center whitespace-nowrap">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1 {{ $booking->status->badgeClasses() }}">
-                                @if($booking->status === \App\Enums\BookingStatus::CONFIRMED)
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                @elseif($booking->status === \App\Enums\BookingStatus::CHECKED_IN)
+                            @if($booking->status === \App\Enums\BookingStatus::CONFIRMED)
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <span>Menunggu Kedatangan</span>
+                                </span>
+                            @elseif($booking->status === \App\Enums\BookingStatus::CHECKED_IN)
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-teal-50 text-teal-700 border border-teal-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
-                                @endif
-                                <span>{{ $booking->status->label() }}</span>
-                            </span>
+                                    <span>Sedang Berlangsung</span>
+                                </span>
+                            @elseif($booking->status === \App\Enums\BookingStatus::COMPLETED)
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    <span>Selesai Digunakan</span>
+                                </span>
+                            @else
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1 {{ $booking->status->badgeClasses() }}">
+                                    <span>{{ $booking->status->label() }}</span>
+                                </span>
+                            @endif
                         </td>
 
                         <!-- 6. Aksi Resepsionis -->
                         <td class="px-5 py-4 text-center whitespace-nowrap">
-                            <div class="flex items-center justify-center gap-1.5">
-                                @if($booking->status === \App\Enums\BookingStatus::CONFIRMED)
-                                    <a href="{{ route('front_office.checkin', ['code' => $booking->booking_code]) }}"
-                                       target="_blank"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
-                                       title="Validasi Check-In Sesi Ini (Buka Tab Baru)">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                        <span>Check-In</span>
-                                    </a>
-                                @endif
-
+                            <div class="flex items-center justify-center">
                                 <button type="button"
                                         @click="openManifestModal({{ json_encode($slotPayload) }})"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-brand bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer border border-slate-200"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer border border-slate-200"
                                         title="Lihat Rincian Manifes">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                     <span>Detail</span>

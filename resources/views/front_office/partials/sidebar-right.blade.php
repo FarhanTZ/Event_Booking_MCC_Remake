@@ -97,7 +97,7 @@
             <!-- Kartu 2: Siap Check-In (Confirmed) -->
             <div class="bg-white rounded-brand border border-slate-200 p-3.5 shadow-card hover:border-emerald-300 transition group">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-600">Menunggu Check-In</span>
+                    <span class="text-xs font-bold text-slate-600">Menunggu Kedatangan</span>
                     <div class="w-8 h-8 rounded-brand bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs shadow-2xs group-hover:scale-105 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     </div>
