@@ -211,12 +211,12 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-14 text-center bg-white">
-                            <div class="max-w-sm mx-auto flex flex-col items-center justify-center space-y-3">
-                                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shadow-2xs">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <td colspan="6" class="px-6 py-20 sm:py-28 text-center bg-white">
+                            <div class="max-w-sm mx-auto flex flex-col items-center justify-center space-y-4">
+                                <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shadow-2xs">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                                 </div>
-                                <div class="space-y-1">
+                                <div class="space-y-1.5">
                                     <p class="text-sm font-bold text-slate-800">
                                         @if($currentStatus === 'completed')
                                             Belum ada sesi yang selesai digunakan hari ini
@@ -233,11 +233,13 @@
                                     </p>
                                 </div>
                                 @if($currentStatus !== 'all')
-                                    <a href="{{ route('front_office.manifest') }}" 
-                                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-2xs cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                        <span>Tampilkan Semua Sesi</span>
-                                    </a>
+                                    <div class="pt-2 pb-1">
+                                        <a href="{{ route('front_office.manifest') }}" 
+                                           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-xs hover:shadow cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            <span>Tampilkan Semua Sesi</span>
+                                        </a>
+                                    </div>
                                 @endif
                             </div>
                         </td>
