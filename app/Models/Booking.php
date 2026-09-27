@@ -142,6 +142,16 @@ class Booking extends Model
         ];
     }
 
+    public function isCheckedIn(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::CHECKED_IN;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === \App\Enums\BookingStatus::COMPLETED;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -150,6 +160,16 @@ class Booking extends Model
     public function confirmedBy()
     {
         return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    public function checkedInBy()
+    {
+        return $this->belongsTo(User::class, 'checked_in_by');
+    }
+
+    public function completedBy()
+    {
+        return $this->belongsTo(User::class, 'completed_by');
     }
 
     public function slots()
@@ -165,5 +185,15 @@ class Booking extends Model
     public function approvals()
     {
         return $this->hasMany(BookingApproval::class, 'booking_id');
+    }
+
+    public function ktpVaultLogs()
+    {
+        return $this->hasMany(KtpVaultLog::class, 'booking_id');
+    }
+
+    public function latestKtpVaultLog()
+    {
+        return $this->hasOne(KtpVaultLog::class, 'booking_id')->latestOfMany('id');
     }
 }
