@@ -386,11 +386,9 @@
                             return;
                         }
 
-                        // FR-FO-04: Segera setelah check-in sukses, tutup modal checkin & munculkan modal Disposisi DO
-                        const savedBooking = data.booking;
+                        // Check-in berhasil -> tutup modal dan muat ulang halaman manifes
                         this.closeCheckinModal();
-
-                        this.openDutyOfficerModal(savedBooking);
+                        window.location.reload();
                     } catch (e) {
                         this.checkinError = 'Terjadi kesalahan saat memproses check-in: ' + e.message;
                         this.isSubmittingCheckin = false;

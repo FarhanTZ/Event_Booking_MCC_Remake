@@ -365,9 +365,6 @@
         </div>
     </main>
 
-    <!-- Modal Disposisi Pengawas Ruangan Duty Officer Component (FR-FO-04) -->
-    @include('front_office.partials.modal-duty-officer')
-
     <!-- Alpine.js Store & Logic -->
     <script>
         function checkinValidator(initialCode = '') {
@@ -390,24 +387,6 @@
                 ktpHolderName: '',
                 picWhatsappNumber: '',
                 notes: '',
-
-                // FR-FO-04 & FR-FO-05 Duty Officer Assignment & WhatsApp Quick Dispatch State
-                showDutyOfficerModal: false,
-                isSubmittingDO: false,
-                sendWhatsAppDispatch: true,
-                doAssignmentError: '',
-                selectedDutyOfficerId: '',
-                dutyOfficerNotes: '',
-                doTargetBooking: {
-                    id: '',
-                    booking_code: '',
-                    event_name: '',
-                    room_name: '',
-                    floor_level: 1,
-                    slot_id: null,
-                    event_start_at: '',
-                    status_label: 'Aktif (Checked-In)'
-                },
 
                 init() {
                     if (this.bookingCode) {
@@ -818,111 +797,17 @@
                         this.checkinToken = '';
                         this.ktpHolderName = '';
                         this.picWhatsappNumber = '';
+                        this.successMessage = data.message || 'Check-in dan jaminan KTP berhasil dicatat! Status sesi telah aktif.';
+                        this.verifiedBooking = null;
+                        this.bookingCode = '';
+                        this.checkinToken = '';
+                        this.ktpHolderName = '';
+                        this.picWhatsappNumber = '';
                         this.notes = '';
-
-                        this.openDutyOfficerModal(savedBooking);
                     } catch (err) {
                         this.errorMessage = 'Terjadi kesalahan sistem saat memproses check-in: ' + err.message;
                     } finally {
                         this.isSubmitting = false;
-                    }
-                },
-
-                // FR-FO-04 & FR-FO-05 Modal Handlers & Dispatch Logic
-                openDutyOfficerModal(bookingData) {
-                    this.doTargetBooking = {
-                        id: bookingData.id,
-                        booking_code: bookingData.booking_code,
-                        event_name: bookingData.event_name,
-                        room_name: bookingData.room_name,
-                        floor_level: bookingData.floor_level || 1,
-                        slot_id: bookingData.slot_id || null,
-                        event_start_at: bookingData.event_start_at || '-',
-                        status_label: bookingData.status_label || 'Aktif (Checked-In)'
-                    };
-
-                    this.selectedDutyOfficerId = '';
-                    this.dutyOfficerNotes = '';
-                    this.sendWhatsAppDispatch = true;
-                    this.doAssignmentError = '';
-                    this.isSubmittingDO = false;
-                    this.showDutyOfficerModal = true;
-                },
-
-                closeDutyOfficerModal() {
-                    this.showDutyOfficerModal = false;
-                    this.doAssignmentError = '';
-                },
-
-                skipDutyOfficerAssignment() {
-                    this.closeDutyOfficerModal();
-                },
-
-                async submitDutyOfficerAssignment() {
-                    if (!this.selectedDutyOfficerId || !this.doTargetBooking.id) return;
-                    this.isSubmittingDO = true;
-                    this.doAssignmentError = '';
-
-                    const payload = {
-                        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                        booking_id: this.doTargetBooking.id,
-                        slot_id: this.doTargetBooking.slot_id || null,
-                        duty_officer_id: this.selectedDutyOfficerId,
-                        notes: this.dutyOfficerNotes || null
-                    };
-
-                    try {
-                        const response = await fetch('{{ route('front_office.assign_duty_officer') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': payload._token
-                            },
-                            body: JSON.stringify(payload)
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok || !data.success) {
-                            const errMessage = data.errors?.duty_officer_id?.[0] || data.message || 'Gagal menyimpan disposisi Duty Officer.';
-                            this.doAssignmentError = errMessage;
-                            this.isSubmittingDO = false;
-                            return;
-                        }
-
-                        // FR-FO-05: Jika dicentang untuk kirim notifikasi WhatsApp langsung
-                        if (this.sendWhatsAppDispatch) {
-                            try {
-                                const notifyPayload = {
-                                    _token: payload._token,
-                                    booking_id: this.doTargetBooking.id,
-                                    slot_id: this.doTargetBooking.slot_id || null
-                                };
-                                const notifyRes = await fetch('{{ route('front_office.notify_duty_officer') }}', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json',
-                                        'X-CSRF-TOKEN': payload._token
-                                    },
-                                    body: JSON.stringify(notifyPayload)
-                                });
-                                const notifyData = await notifyRes.json();
-                                if (notifyData.success && notifyData.whatsapp_url) {
-                                    window.open(notifyData.whatsapp_url, '_blank');
-                                }
-                            } catch (notifyErr) {
-                                console.warn('Dispatch notification warning:', notifyErr);
-                            }
-                        }
-
-                        // Berhasil disposisi -> tutup modal dan perbarui alert sukses
-                        this.closeDutyOfficerModal();
-                        this.successMessage = data.message || 'Disposisi Duty Officer berhasil disimpan!';
-                    } catch (e) {
-                        this.doAssignmentError = 'Terjadi kesalahan komunikasi dengan server: ' + e.message;
-                        this.isSubmittingDO = false;
                     }
                 }
             }
