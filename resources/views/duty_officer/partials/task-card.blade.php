@@ -1,0 +1,278 @@
+@php
+    $firstSlot = $task->slots->sortBy('event_start_at')->first();
+    $lastSlot = $task->slots->sortByDesc('event_end_at')->first();
+    $room = $firstSlot?->room;
+    $eventDetail = $task->eventDetail;
+    $timing = $task->getOperationalCountdownInfo();
+    $picName = $task->getPicName();
+    $picPhone = $task->getPicPhoneNumber();
+    $whatsappUrl = $task->getPicWhatsAppUrl(auth()->user()->full_name ?? 'Duty Officer');
+    $equipmentItems = $eventDetail?->equipment_brought_items ?? [];
+    $equipmentText = $eventDetail?->equipment_brought;
+
+    $startIso = $firstSlot?->event_start_at ? $firstSlot->event_start_at->toIso8601String() : null;
+    $endIso = $lastSlot?->event_end_at ? $lastSlot->event_end_at->toIso8601String() : null;
+    $isCheckedIn = $task->isCheckedIn();
+    $isConfirmed = $task->isConfirmed();
+    $isCompleted = $task->isCompleted() || $task->isAbandoned();
+@endphp
+
+<div class="bg-white rounded-brand border border-slate-200 shadow-card hover:shadow-md transition-shadow duration-200 overflow-hidden"
+     x-data="operationalCountdownCard({
+         startIso: '{{ $startIso }}',
+         endIso: '{{ $endIso }}',
+         statusCode: '{{ $task->status->value }}',
+         totalSeconds: {{ $timing['total_seconds'] }},
+         remainingSeconds: {{ $timing['remaining_seconds'] }},
+         elapsedSeconds: {{ $timing['elapsed_seconds'] }},
+         progressPercent: {{ $timing['progress_percent'] }},
+         initialCountdownText: '{{ addslashes($timing['countdown_text']) }}',
+         initialStatusState: '{{ $timing['status_state'] }}'
+     })"
+     x-init="initTimer()">
+
+    <!-- Card Header: Room, Floor & Operational Status Badge -->
+    <div class="p-4 sm:p-5 border-b border-slate-100 flex items-start justify-between gap-3 bg-slate-50/70">
+        <div class="min-w-0">
+            <!-- Room & Floor Badge -->
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-brand text-xs font-black bg-[#001A72] text-white shadow-2xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span>{{ $room ? $room->name : 'Ruangan MCC' }}</span>
+                </span>
+                
+                <span class="inline-flex items-center px-2 py-1 rounded-brand text-xs font-bold bg-white text-slate-700 border border-slate-200 shadow-2xs">
+                    Lantai {{ $room ? $room->floor_level : '-' }}
+                </span>
+
+                <span class="text-[11px] font-mono text-slate-400 font-semibold">
+                    #{{ $task->booking_code }}
+                </span>
+            </div>
+
+            <!-- Event Name -->
+            <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-snug">
+                {{ $eventDetail?->event_name ?? 'Kegiatan Komunitas MCC' }}
+            </h2>
+
+            <!-- Institution & Subsector Badge -->
+            <div class="flex items-center gap-2 mt-1 text-xs text-slate-600">
+                <span class="font-bold text-[#001A72] truncate max-w-[200px] sm:max-w-[300px]">
+                    {{ $eventDetail?->institution_name_snapshot ?? ($task->user?->institution_name ?? 'Komunitas') }}
+                </span>
+                @if($eventDetail?->ekraf_subsector)
+                    <span class="text-slate-300">•</span>
+                    <span class="text-slate-500 font-medium truncate">{{ $eventDetail->ekraf_subsector }}</span>
+                @endif
+            </div>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="shrink-0 text-right">
+            @if($isCheckedIn)
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-teal-50 text-teal-800 border border-teal-300 shadow-2xs">
+                    <span class="w-2 h-2 rounded-full bg-teal-500 animate-ping"></span>
+                    <span>Checked-In</span>
+                </span>
+            @elseif($isConfirmed)
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Disetujui
+                </span>
+            @elseif($task->isAbandoned())
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                    Ditinggal
+                </span>
+            @else
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ $task->status->badgeClasses() }}">
+                    {{ $task->status->label() }}
+                </span>
+            @endif
+        </div>
+    </div>
+
+    <!-- Card Body: Time Schedule & Live Countdown Bar -->
+    <div class="p-4 sm:p-5 space-y-4">
+        
+        <!-- Schedule & Countdown Widget -->
+        <div class="p-3.5 rounded-brand bg-slate-50 border border-slate-200 space-y-2.5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                <!-- Clock / Time Schedule -->
+                <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>{{ $timing['schedule_formatted'] }}</span>
+                    @if($firstSlot?->event_start_at)
+                        <span class="text-[11px] font-normal text-slate-500">
+                            ({{ $firstSlot->event_start_at->translatedFormat('d M Y') }})
+                        </span>
+                    @endif
+                </div>
+
+                <!-- Digital Countdown Counter Pill -->
+                <div class="inline-flex items-center gap-1.5 self-start sm:self-auto px-2.5 py-1 rounded-full text-xs font-mono font-black"
+                     :class="{
+                         'bg-teal-100 text-teal-900 border border-teal-300': statusState === 'active',
+                         'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse': statusState === 'ending_soon',
+                         'bg-rose-100 text-rose-900 border border-rose-300 font-black': statusState === 'overdue',
+                         'bg-slate-200 text-slate-700': statusState === 'ended' || statusState === 'upcoming'
+                     }">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                          :class="{
+                              'bg-teal-600 animate-pulse': statusState === 'active',
+                              'bg-amber-600 animate-ping': statusState === 'ending_soon',
+                              'bg-rose-600 animate-bounce': statusState === 'overdue',
+                              'bg-slate-400': statusState === 'ended' || statusState === 'upcoming'
+                          }"></span>
+                    <span x-text="countdownText">{{ $timing['countdown_text'] }}</span>
+                </div>
+            </div>
+
+            <!-- Interactive Progress Bar for Room Usage Countdown -->
+            <div class="space-y-1">
+                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div class="h-2.5 rounded-full transition-all duration-500"
+                         :style="`width: ${progressPercent}%`"
+                         :class="{
+                             'bg-emerald-500': progressPercent < 75 && statusState === 'active',
+                             'bg-amber-500': progressPercent >= 75 && statusState === 'active' || statusState === 'ending_soon',
+                             'bg-rose-600': statusState === 'overdue',
+                             'bg-slate-400': statusState === 'ended',
+                             'bg-indigo-300': statusState === 'upcoming'
+                         }">
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                    <span>Mulai: {{ $firstSlot?->event_start_at ? $firstSlot->event_start_at->format('H:i') : '00:00' }}</span>
+                    <span x-text="`${progressPercent}% terpakai`">{{ $timing['progress_percent'] }}% terpakai</span>
+                    <span>Selesai: {{ $lastSlot?->event_end_at ? $lastSlot->event_end_at->format('H:i') : '00:00' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PIC Info & Direct Click-to-WhatsApp Action -->
+        <div class="p-3.5 rounded-brand bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-full bg-indigo-50 text-[#001A72] border border-indigo-200 flex items-center justify-center shrink-0 font-bold text-sm">
+                    {{ strtoupper(substr($picName, 0, 1)) }}
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Penanggung Jawab Lapangan</span>
+                        @if($task->latestKtpVaultLog?->storage_drawer_number)
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200" title="Laci KTP di Front Office">
+                                Laci: {{ $task->latestKtpVaultLog->storage_drawer_number }}
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-sm font-black text-slate-900 truncate">
+                        {{ $picName }}
+                    </p>
+                    <p class="text-xs font-mono text-slate-500">
+                        {{ $picPhone }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Direct Click-to-WhatsApp CTA Button (Touch target min 44x44px) -->
+            @if(!empty($whatsappUrl))
+                <a href="{!! $whatsappUrl !!}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
+                   style="min-height: 44px;">
+                    <!-- WhatsApp Official Icon -->
+                    <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.42-.099.825zm-3.392-12.416c-5.514 0-10 4.486-10 10 0 1.761.459 3.417 1.264 4.864l-1.303 4.764 4.887-1.282c1.398.765 2.993 1.194 4.692 1.194 5.514 0 10-4.486 10-10s-4.486-10-10-10z"/>
+                    </svg>
+                    <span>Hubungi PIC via WA</span>
+                </a>
+            @else
+                <span class="text-xs text-slate-400 italic self-center">Nomor kontak tidak tersedia</span>
+            @endif
+        </div>
+
+        <!-- Rekapitulasi Peralatan Eksternal Mandiri (event_details.equipment_brought) -->
+        <div class="rounded-brand border border-slate-200 overflow-hidden" x-data="{ expanded: true }">
+            <div class="px-3.5 py-2.5 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between cursor-pointer select-none"
+                 @click="expanded = !expanded">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    <span class="text-xs font-bold text-slate-800">
+                        Rekapitulasi Peralatan Eksternal Mandiri
+                    </span>
+                    @if(!empty($equipmentItems))
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#EEF2FF] text-[#001A72] border border-indigo-100">
+                            {{ count($equipmentItems) }} item
+                        </span>
+                    @endif
+                </div>
+
+                <button type="button" class="text-slate-400 hover:text-slate-600 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transform transition-transform" :class="expanded ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+            </div>
+
+            <div x-show="expanded" x-collapse class="p-3.5 bg-white">
+                @if(!empty($equipmentItems))
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($equipmentItems as $item)
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 shadow-2xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#001A72]"></span>
+                                <span>{{ $item }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                @elseif(!empty($equipmentText))
+                    <p class="text-xs text-slate-700 whitespace-pre-line bg-slate-50 p-2.5 rounded-brand border border-slate-200">
+                        {{ $equipmentText }}
+                    </p>
+                @else
+                    <div class="flex items-center gap-2 text-xs text-slate-400 italic py-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        <span>Pemohon tidak membawa peralatan eksternal mandiri tambahan.</span>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Footer: Assignment Duty Officer Info & Detail Action -->
+    <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+        <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-semibold text-slate-600">Petugas Terdisposisi:</span>
+            @if($task->dutyOfficer)
+                <span class="font-bold text-[#001A72]">{{ $task->dutyOfficer->full_name }}</span>
+            @else
+                <span class="text-slate-400 italic">Belum terdisposisi check-in</span>
+            @endif
+
+            @if($task->checkoutDutyOfficer)
+                <span class="text-slate-300">•</span>
+                <span class="font-semibold text-slate-600">DO Checkout:</span>
+                <span class="font-bold text-[#001A72]">{{ $task->checkoutDutyOfficer->full_name }}</span>
+            @endif
+        </div>
+
+        <button type="button" 
+                @click="openDetailModal({
+                    bookingCode: '{{ $task->booking_code }}',
+                    statusLabel: '{{ $task->status->label() }}',
+                    eventName: '{{ addslashes($eventDetail?->event_name ?? 'Acara') }}',
+                    institutionName: '{{ addslashes($eventDetail?->institution_name_snapshot ?? ($task->user?->institution_name ?? '-')) }}',
+                    roomName: '{{ addslashes($room ? $room->name : '-') }}',
+                    floorLevel: '{{ $room ? $room->floor_level : '-' }}',
+                    schedule: '{{ $timing['schedule_formatted'] }}',
+                    countdownText: '{{ addslashes($timing['countdown_text']) }}',
+                    picName: '{{ addslashes($picName) }}',
+                    picPhone: '{{ addslashes($picPhone) }}',
+                    storageDrawer: '{{ $task->latestKtpVaultLog?->storage_drawer_number }}',
+                    whatsappUrl: '{{ addslashes($whatsappUrl) }}',
+                    equipmentItems: {{ json_encode($equipmentItems) }},
+                    description: '{{ addslashes($eventDetail?->event_description ?? '') }}'
+                })"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-white hover:bg-[#EEF2FF] text-[#001A72] border border-slate-200 hover:border-indigo-200 font-bold text-xs transition shadow-2xs cursor-pointer active:scale-95"
+                style="min-height: 36px;">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Detail Lengkap</span>
+        </button>
+    </div>
+</div>

@@ -107,3 +107,15 @@ Route::middleware(['auth', 'role:front_office,super_admin'])
         Route::post('/unclaimed-ktp/handover', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'handoverUnclaimedKtp'])->name('unclaimed_ktp.handover');
         Route::get('/overdue/notify-pic/{booking}', [\App\Http\Controllers\FrontOffice\ManifestController::class, 'notifyOverduePic'])->name('overdue.notify_pic');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Duty Officer Field Routes (Role: duty_officer, super_admin)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:duty_officer,super_admin'])
+    ->prefix('duty-officer')
+    ->name('duty_officer.')
+    ->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'index'])->name('dashboard');
+    });

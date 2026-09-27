@@ -55,7 +55,21 @@
                              x-transition:leave="transition ease-in duration-75"
                              x-transition:leave-start="transform opacity-100 scale-100"
                              x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-60 bg-white rounded-brand shadow-elevated border border-slate-200 py-2 z-50 text-slate-900">
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-elevated border border-slate-200 py-2 z-50 text-slate-900">
+                            @if(auth()->user()->isDutyOfficer() || auth()->user()->isSuperAdmin())
+                                <a href="{{ route('duty_officer.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#001A72] bg-[#EEF2FF] hover:bg-indigo-100">
+                                    <i data-lucide="clipboard-list" class="w-4 h-4 text-[#001A72]"></i>
+                                    <span>Dasbor Tugas Duty Officer</span>
+                                </a>
+                                <div class="border-t border-slate-100 my-1"></div>
+                            @endif
+                            @if(auth()->user()->isFrontOffice() || auth()->user()->isSuperAdmin())
+                                <a href="{{ route('front_office.manifest') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#001A72] bg-[#EEF2FF] hover:bg-indigo-100">
+                                    <i data-lucide="scan" class="w-4 h-4 text-[#001A72]"></i>
+                                    <span>Portal Front Office</span>
+                                </a>
+                                <div class="border-t border-slate-100 my-1"></div>
+                            @endif
                             @if(auth()->user()->isMarketing() || auth()->user()->isSuperAdmin())
                                 <a href="{{ route('marketing.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#001A72] bg-[#EEF2FF] hover:bg-indigo-100">
                                     <i data-lucide="shield-check" class="w-4 h-4 text-[#001A72]"></i>
@@ -112,6 +126,12 @@
         
         <div class="border-t border-slate-200 pt-3">
             @if(auth()->check())
+                @if(auth()->user()->isDutyOfficer() || auth()->user()->isSuperAdmin())
+                    <a href="{{ route('duty_officer.dashboard') }}" class="block px-3 py-2 rounded-brand text-base font-bold text-[#001A72] bg-[#EEF2FF] mb-1">Dasbor Tugas Duty Officer</a>
+                @endif
+                @if(auth()->user()->isFrontOffice() || auth()->user()->isSuperAdmin())
+                    <a href="{{ route('front_office.manifest') }}" class="block px-3 py-2 rounded-brand text-base font-bold text-[#001A72] bg-[#EEF2FF] mb-1">Portal Front Office</a>
+                @endif
                 @if(auth()->user()->isMarketing() || auth()->user()->isSuperAdmin())
                     <a href="{{ route('marketing.dashboard') }}" class="block px-3 py-2 rounded-brand text-base font-bold text-[#001A72] bg-[#EEF2FF] mb-1">Portal Kurasi Marketing</a>
                 @endif
