@@ -44,8 +44,8 @@
         </a>
 
         <a href="{{ route('front_office.manifest', array_merge(request()->except('status', 'page'), ['status' => 'completed'])) }}" 
-           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'completed' ? 'bg-slate-700 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}">
-            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'completed' ? 'bg-white' : 'bg-slate-500' }}"></span>
+           class="px-3 py-1.5 rounded-brand text-xs font-bold transition whitespace-nowrap inline-flex items-center gap-1.5 {{ $currentStatus === 'completed' ? 'bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs font-extrabold' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+            <span class="w-2 h-2 rounded-full {{ $currentStatus === 'completed' ? 'bg-slate-500' : 'bg-slate-400' }}"></span>
             <span>Selesai Digunakan ({{ $metrics['completed_slots'] }})</span>
         </a>
     </div>
@@ -211,17 +211,34 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-slate-400 bg-slate-50/50">
-                            <div class="flex flex-col items-center justify-center space-y-3">
-                                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                        <td colspan="6" class="px-6 py-14 text-center bg-white">
+                            <div class="max-w-sm mx-auto flex flex-col items-center justify-center space-y-3">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shadow-2xs">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                                 </div>
                                 <div class="space-y-1">
-                                    <p class="text-sm font-bold text-slate-700">Tidak ada sesi acara pada manifes hari ini</p>
-                                    <p class="text-xs text-slate-400 max-w-sm">
-                                        Tidak ditemukan jadwal permohonan berstatus Confirmed, Checked-In, atau Completed untuk kriteria pencarian dan tanggal ini.
+                                    <p class="text-sm font-bold text-slate-800">
+                                        @if($currentStatus === 'completed')
+                                            Belum ada sesi yang selesai digunakan hari ini
+                                        @elseif($currentStatus === 'checked_in')
+                                            Belum ada sesi yang sedang berlangsung saat ini
+                                        @elseif($currentStatus === 'confirmed')
+                                            Tidak ada sesi yang menunggu kedatangan
+                                        @else
+                                            Tidak ada sesi acara pada manifes hari ini
+                                        @endif
+                                    </p>
+                                    <p class="text-xs text-slate-500 leading-relaxed">
+                                        Tidak ditemukan jadwal permohonan untuk filter status yang dipilih.
                                     </p>
                                 </div>
+                                @if($currentStatus !== 'all')
+                                    <a href="{{ route('front_office.manifest') }}" 
+                                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-brand bg-[#001A72] hover:bg-[#001250] text-white text-xs font-bold transition shadow-2xs cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                        <span>Tampilkan Semua Sesi</span>
+                                    </a>
+                                @endif
                             </div>
                         </td>
                     </tr>

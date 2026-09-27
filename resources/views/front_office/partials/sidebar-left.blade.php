@@ -140,12 +140,14 @@
 
             <!-- Selesai Digunakan -->
             <a href="{{ route('front_office.manifest', ['status' => 'completed', 'date' => request('date')]) }}"
-               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'completed' ? 'bg-slate-100 text-slate-900 font-bold border border-slate-300 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
+               class="flex items-center justify-between px-3 py-2 rounded-brand text-xs font-semibold {{ $currentStatus === 'completed' ? 'bg-slate-200/80 text-slate-900 font-bold border border-slate-400 shadow-2xs' : 'text-slate-600 hover:bg-slate-50' }}">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                    <span class="w-2 h-2 rounded-full bg-slate-600"></span>
                     <span>Selesai Digunakan</span>
                 </div>
-                <span class="text-[11px] font-mono font-bold text-slate-600">{{ $metrics['completed_slots'] }}</span>
+                <span class="text-[11px] font-mono font-bold {{ $currentStatus === 'completed' ? 'bg-slate-300 text-slate-800' : 'text-slate-600 bg-slate-100' }} px-1.5 py-0.5 rounded">
+                    {{ $metrics['completed_slots'] }}
+                </span>
             </a>
         </div>
     </div>
