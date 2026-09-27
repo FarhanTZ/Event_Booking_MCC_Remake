@@ -201,6 +201,39 @@
                             </div>
                         </div>
 
+                        <!-- Form Serah Terima Jaminan Fisik KTP (FR-FO-03) -->
+                        <div class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-brand space-y-3">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                                <span class="font-bold text-xs text-[#001A72]">Pencatatan Jaminan Fisik KTP (FR-FO-03)</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Nama Pemilik KTP Fisik <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="ktpHolderName" 
+                                           placeholder="Nama penyerah KTP asli" 
+                                           class="block w-full px-3 py-2 text-xs rounded-brand border border-slate-300 bg-white font-semibold focus:border-[#001A72] focus:ring-[#001A72]">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        WhatsApp Hari-H <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="picWhatsappNumber" 
+                                           placeholder="Contoh: 081234567890" 
+                                           class="block w-full px-3 py-2 text-xs font-mono font-bold rounded-brand border border-slate-300 bg-white focus:border-[#001A72] focus:ring-[#001A72]">
+                                </div>
+                            </div>
+                            <div class="text-[10px] text-slate-500 flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <span>KTP fisik langsung disimpan aman oleh FO tanpa memindai foto / NIK digital.</span>
+                            </div>
+                        </div>
+
                         <!-- Peringatan Toleransi Awal (>60 Menit Sebelum Acara) -->
                         <template x-if="isEarlyArrival">
                             <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-brand space-y-2">
@@ -227,7 +260,7 @@
                             </button>
                             <button type="button" 
                                     @click="submitFinalCheckin()"
-                                    :disabled="isSubmittingCheckin || (isEarlyArrival && !confirmEarlyTolerance)"
+                                    :disabled="isSubmittingCheckin || !ktpHolderName || !picWhatsappNumber || (isEarlyArrival && !confirmEarlyTolerance)"
                                     class="flex-2 py-2.5 rounded-brand bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                                 <svg x-show="!isSubmittingCheckin" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                                 <svg x-show="isSubmittingCheckin" class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>

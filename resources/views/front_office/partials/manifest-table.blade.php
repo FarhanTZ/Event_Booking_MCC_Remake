@@ -101,11 +101,16 @@
                             'emergency_phone' => $eventDetail->pic_emergency_phone ?? '-',
                             'institution_name' => $eventDetail->institution_name_snapshot ?? ($booking->user->institution_name ?? '-'),
                             'pricing_scheme' => $booking->pricing_scheme === 'subsidy' ? 'Subsidi Pemkot (Gratis)' : 'Komersial / Retribusi',
+                            'duty_officer_id' => $slot->duty_officer_id ?? $booking->duty_officer_id,
+                            'duty_officer_name' => $slot->dutyOfficer->full_name ?? ($booking->dutyOfficer->full_name ?? null),
+                            'duty_officer_phone' => $slot->dutyOfficer->phone_number ?? ($booking->dutyOfficer->phone_number ?? null),
+                            'duty_officer_notes' => $slot->duty_officer_notes ?? null,
                             'all_slots' => $booking->slots->map(function ($s) {
                                 return [
                                     'id' => $s->id,
                                     'room_name' => $s->room->name ?? 'Ruangan',
                                     'floor_level' => $s->room->floor_level ?? 1,
+                                    'duty_officer_name' => $s->dutyOfficer->full_name ?? null,
                                     'start' => \Carbon\Carbon::parse($s->event_start_at)->translatedFormat('d M Y, H:i'),
                                     'end' => \Carbon\Carbon::parse($s->event_end_at)->translatedFormat('H:i') . ' WIB',
                                     'is_today' => \Carbon\Carbon::parse($s->event_start_at)->isToday(),
@@ -179,10 +184,24 @@
                                     <span>Menunggu Kedatangan</span>
                                 </span>
                             @elseif($booking->status === \App\Enums\BookingStatus::CHECKED_IN)
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span>Sedang Berlangsung</span>
-                                </span>
+                                <div class="space-y-1">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span>Sedang Berlangsung</span>
+                                    </span>
+                                    @if($slot->dutyOfficer || $booking->dutyOfficer)
+                                        <div class="text-[10px] font-semibold text-slate-500 flex items-center justify-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span class="truncate max-w-[120px]" title="{{ $slot->dutyOfficer->full_name ?? $booking->dutyOfficer->full_name }}">
+                                                DO: {{ explode(' ', ($slot->dutyOfficer->full_name ?? $booking->dutyOfficer->full_name))[0] }}
+                                            </span>
+                                        </div>
+                                    @else
+                                        <div class="text-[10px] font-bold text-amber-600 flex items-center justify-center gap-0.5">
+                                            <span>DO: Belum Disposisi</span>
+                                        </div>
+                                    @endif
+                                </div>
                             @elseif($booking->status === \App\Enums\BookingStatus::COMPLETED)
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-2xs inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>

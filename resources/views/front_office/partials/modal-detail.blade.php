@@ -81,6 +81,67 @@
                     </div>
                 </div>
 
+                <!-- Penanggung Jawab Pengawas Ruangan (FR-FO-04 Duty Officer) -->
+                <div class="border rounded-brand p-4 space-y-2"
+                     :class="activeSlot.duty_officer_name ? 'bg-emerald-50/60 border-emerald-200' : 'bg-amber-50/60 border-amber-200'">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-xs font-bold"
+                             :class="activeSlot.duty_officer_name ? 'text-emerald-900' : 'text-amber-900'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+                            <span>Pengawas Ruangan (Duty Officer)</span>
+                        </div>
+                        <template x-if="activeSlot.duty_officer_name">
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                                Sudah Disposisi
+                            </span>
+                        </template>
+                        <template x-if="!activeSlot.duty_officer_name">
+                            <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                Belum Disposisi
+                            </span>
+                        </template>
+                    </div>
+
+                    <template x-if="activeSlot.duty_officer_name">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                            <div>
+                                <span class="text-slate-500 text-[11px] block">Petugas Lapangan:</span>
+                                <span class="font-extrabold text-slate-900 text-sm" x-text="activeSlot.duty_officer_name"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 text-[11px] block">Kontak DO:</span>
+                                <span class="font-bold text-[#001A72] font-mono" x-text="activeSlot.duty_officer_phone || '-'"></span>
+                            </div>
+                            <template x-if="activeSlot.duty_officer_notes">
+                                <div class="sm:col-span-2 pt-1 border-t border-emerald-200/60">
+                                    <span class="text-slate-500 text-[10px] block">Catatan Disposisi:</span>
+                                    <span class="text-slate-700 italic text-[11px]" x-text="activeSlot.duty_officer_notes"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="!activeSlot.duty_officer_name">
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="text-xs text-amber-800">Belum ada Duty Officer yang ditugaskan ke sesi ruangan ini.</span>
+                            <button type="button" 
+                                    @click="closeModal(); openDutyOfficerModal({
+                                        id: activeSlot.booking_id,
+                                        booking_code: activeSlot.booking_code,
+                                        event_name: activeSlot.event_name,
+                                        room_name: activeSlot.room_name,
+                                        floor_level: activeSlot.floor_level,
+                                        slot_id: activeSlot.id,
+                                        event_start_at: activeSlot.slot_start,
+                                        status_label: activeSlot.status_label
+                                    })"
+                                    class="px-2.5 py-1 rounded bg-[#001A72] text-white text-xs font-bold hover:bg-[#001250] transition cursor-pointer">
+                                Disposisi DO
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
                 <!-- Detail Penanggung Jawab & Kontak -->
                 <div class="border border-slate-200 rounded-brand p-4 space-y-3">
                     <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">

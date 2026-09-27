@@ -134,6 +134,9 @@
     <!-- Modal Validasi Check-In Dual-Method Component (FR-FO-02) -->
     @include('front_office.partials.modal-checkin')
 
+    <!-- Modal Disposisi Pengawas Ruangan Duty Officer Component (FR-FO-04) -->
+    @include('front_office.partials.modal-duty-officer')
+
     <!-- Alpine.js Store & Handlers -->
     <script>
         function frontOfficeManifest() {
@@ -154,6 +157,25 @@
                 confirmEarlyTolerance: false,
                 isCameraStreaming: false,
                 mediaStream: null,
+                ktpHolderName: '',
+                picWhatsappNumber: '',
+
+                // FR-FO-04 Duty Officer Assignment State
+                showDutyOfficerModal: false,
+                isSubmittingDO: false,
+                doAssignmentError: '',
+                selectedDutyOfficerId: '',
+                dutyOfficerNotes: '',
+                doTargetBooking: {
+                    id: '',
+                    booking_code: '',
+                    event_name: '',
+                    room_name: '',
+                    floor_level: 1,
+                    slot_id: null,
+                    event_start_at: '',
+                    status_label: 'Aktif (Checked-In)'
+                },
 
                 activeSlot: {
                     id: '',
@@ -332,7 +354,9 @@
                         _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                         booking_code: this.verifiedBooking.booking_code,
                         checkin_token: this.checkinToken || null,
-                        confirm_early: this.confirmEarlyTolerance
+                        confirm_early: this.confirmEarlyTolerance,
+                        ktp_holder_name: this.ktpHolderName,
+                        pic_whatsapp_number: this.picWhatsappNumber
                     };
 
                     try {
@@ -349,17 +373,92 @@
                         const data = await response.json();
 
                         if (!response.ok || !data.success) {
-                            const errMessage = data.errors?.early_warning?.[0] || data.errors?.checkin?.[0] || data.message || 'Gagal memproses check-in.';
+                            const errMessage = data.errors?.early_warning?.[0] || data.errors?.ktp_holder_name?.[0] || data.errors?.pic_whatsapp_number?.[0] || data.errors?.checkin?.[0] || data.message || 'Gagal memproses check-in.';
                             this.checkinError = errMessage;
                             this.isSubmittingCheckin = false;
                             return;
                         }
 
-                        // Berhasil -> reload halaman dengan status update
-                        window.location.reload();
+                        // FR-FO-04: Segera setelah check-in sukses, tutup modal checkin & munculkan modal Disposisi DO
+                        const savedBooking = data.booking;
+                        this.closeCheckinModal();
+
+                        this.openDutyOfficerModal(savedBooking);
                     } catch (e) {
                         this.checkinError = 'Terjadi kesalahan saat memproses check-in: ' + e.message;
                         this.isSubmittingCheckin = false;
+                    }
+                },
+
+                // FR-FO-04 Modal Handlers & Dispatch Logic
+                openDutyOfficerModal(bookingData) {
+                    this.doTargetBooking = {
+                        id: bookingData.id,
+                        booking_code: bookingData.booking_code,
+                        event_name: bookingData.event_name,
+                        room_name: bookingData.room_name,
+                        floor_level: bookingData.floor_level || 1,
+                        slot_id: bookingData.slot_id || null,
+                        event_start_at: bookingData.event_start_at || '-',
+                        status_label: bookingData.status_label || 'Aktif (Checked-In)'
+                    };
+
+                    this.selectedDutyOfficerId = '';
+                    this.dutyOfficerNotes = '';
+                    this.doAssignmentError = '';
+                    this.isSubmittingDO = false;
+                    this.showDutyOfficerModal = true;
+                },
+
+                closeDutyOfficerModal() {
+                    this.showDutyOfficerModal = false;
+                    this.doAssignmentError = '';
+                },
+
+                skipDutyOfficerAssignment() {
+                    this.closeDutyOfficerModal();
+                    window.location.reload();
+                },
+
+                async submitDutyOfficerAssignment() {
+                    if (!this.selectedDutyOfficerId || !this.doTargetBooking.id) return;
+                    this.isSubmittingDO = true;
+                    this.doAssignmentError = '';
+
+                    const payload = {
+                        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        booking_id: this.doTargetBooking.id,
+                        slot_id: this.doTargetBooking.slot_id || null,
+                        duty_officer_id: this.selectedDutyOfficerId,
+                        notes: this.dutyOfficerNotes || null
+                    };
+
+                    try {
+                        const response = await fetch('{{ route('front_office.assign_duty_officer') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': payload._token
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            const errMessage = data.errors?.duty_officer_id?.[0] || data.message || 'Gagal menyimpan disposisi Duty Officer.';
+                            this.doAssignmentError = errMessage;
+                            this.isSubmittingDO = false;
+                            return;
+                        }
+
+                        // Berhasil disposisi -> tutup modal dan refresh halaman
+                        this.closeDutyOfficerModal();
+                        window.location.reload();
+                    } catch (e) {
+                        this.doAssignmentError = 'Terjadi kesalahan komunikasi dengan server: ' + e.message;
+                        this.isSubmittingDO = false;
                     }
                 }
             }
