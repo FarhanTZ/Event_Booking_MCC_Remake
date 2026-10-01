@@ -1,5 +1,5 @@
 <!-- ==================================================================== -->
-<!-- MOBILE BOTTOM SHEET: LEMBAR KERJA CEK KELAYAKAN FISIK RUANGAN CHECKOUT (FR-DO-03, FR-DO-04, FR-DO-05) -->
+<!-- MOBILE BOTTOM SHEET: LEMBAR KERJA CEK KELAYAKAN FISIK RUANGAN CHECKOUT (FR-DO-03, FR-DO-04, FR-DO-05, FR-DO-06) -->
 <!-- ==================================================================== -->
 <div x-show="checkoutModalOpen" 
      x-cloak
@@ -61,22 +61,37 @@
                 </button>
             </div>
 
-            <!-- TAB SWITCHER: [ ✅ Verifikasi Aman (Clear) | ⚠️ Laporkan Insiden (Merah) ] -->
-            <div class="grid grid-cols-2 p-1.5 bg-slate-100 border-b border-slate-200 shrink-0">
+            <!-- TAB SWITCHER: [ Kondisi Aman (Clear) | Selesaikan Insiden (Jika ada) | Laporkan Insiden ] -->
+            <div class="p-1.5 bg-slate-100 border-b border-slate-200 shrink-0 grid gap-1.5"
+                 :class="activeTask.incident && !activeTask.incident.isResolved ? 'grid-cols-3' : 'grid-cols-2'">
+                
+                <!-- Tab 1: Sinyal Aman (Clear) -->
                 <button type="button" 
                         @click="inspectionMode = 'clear'"
-                        class="py-2.5 px-3 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer select-none"
+                        class="py-2.5 px-2 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
                         :class="inspectionMode === 'clear' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    <span>Kondisi Aman (Clear)</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span class="truncate">Aman (Clear)</span>
                 </button>
 
+                <!-- Tab 2: Selesaikan Insiden (FR-DO-06) (Tampil jika ada insiden aktif) -->
+                <template x-if="activeTask.incident && !activeTask.incident.isResolved">
+                    <button type="button" 
+                            @click="inspectionMode = 'resolve'"
+                            class="py-2.5 px-2 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
+                            :class="inspectionMode === 'resolve' ? 'bg-indigo-600 text-white shadow-xs' : 'text-indigo-700 hover:bg-indigo-50'">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span class="truncate">Selesaikan</span>
+                    </button>
+                </template>
+
+                <!-- Tab 3: Laporkan Insiden Baru -->
                 <button type="button" 
                         @click="inspectionMode = 'incident'"
-                        class="py-2.5 px-3 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer select-none"
+                        class="py-2.5 px-2 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
                         :class="inspectionMode === 'incident' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:text-rose-700'">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <span>Laporkan Insiden</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-rose-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span class="truncate">Lapor Insiden</span>
                 </button>
             </div>
 
@@ -198,7 +213,68 @@
             </form>
 
             <!-- ======================================================== -->
-            <!-- 2. FORM SINYAL MERAH / PELAPORAN INSIDEN (FR-DO-05) -->
+            <!-- 2. FORM PENYELESAIAN INSIDEN (FR-DO-06: Resolve Incident) -->
+            <!-- ======================================================== -->
+            <form x-show="inspectionMode === 'resolve'" 
+                  :action="`/duty-officer/bookings/${activeTask.bookingId}/incident/resolve`" 
+                  method="POST" 
+                  class="flex flex-col h-full min-h-0 flex-1">
+                @csrf
+                <input type="hidden" name="incident_id" :value="activeTask.incident ? activeTask.incident.id : ''">
+
+                <div class="p-4 sm:p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-slate-800">
+                    
+                    <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-start gap-2.5 text-xs text-indigo-950">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <p class="text-xs text-indigo-900 leading-snug">
+                            Inspeksi ulang setelah tindakan perbaikan oleh panitia. Menandai insiden selesai akan <strong>mengirim sinyal biru (Resolved)</strong> yang membuka kembali tombol pelepasan KTP di Front Office.
+                        </p>
+                    </div>
+
+                    <!-- Detail Insiden Aktif yang Dilaporkan -->
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-rose-700 block">
+                            Temuan Insiden Sebelumnya:
+                        </span>
+                        <div class="space-y-1 text-xs">
+                            <p class="font-black text-slate-900" x-text="activeTask.incident ? activeTask.incident.itemName : '-'"></p>
+                            <p class="text-slate-600 text-xs" x-text="activeTask.incident ? activeTask.incident.description : '-'"></p>
+                        </div>
+                    </div>
+
+                    <!-- Input Kolom Catatan Penyelesaian (Resolution Notes) -->
+                    <div class="space-y-1.5 pt-1">
+                        <label class="text-[10px] font-black uppercase tracking-wider text-slate-700 block">
+                            Catatan Penyelesaian (Resolution Notes) <span class="text-indigo-600">*</span>:
+                        </label>
+                        <textarea name="resolution_notes" 
+                                  rows="3" 
+                                  required 
+                                  placeholder="Contoh: Panitia telah membersihkan seluruh area dan mengganti kabel HDMI baru..." 
+                                  class="w-full px-3.5 py-2.5 text-xs rounded-2xl border border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-slate-900"></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Footer Submit Selesaikan Insiden -->
+                <div class="bg-slate-50 p-3.5 border-t border-slate-200 flex flex-col gap-2 shrink-0">
+                    <button type="submit" 
+                            class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs sm:text-sm shadow-md transition cursor-pointer active:scale-98"
+                            style="min-height: 48px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        <span>TANDAI MASALAH TERSELESAIKAN (RESOLVE INCIDENT)</span>
+                    </button>
+
+                    <button type="button" 
+                            @click="checkoutModalOpen = false" 
+                            class="w-full py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200 transition text-center cursor-pointer">
+                        Batal
+                    </button>
+                </div>
+            </form>
+
+            <!-- ======================================================== -->
+            <!-- 3. FORM SINYAL MERAH / PELAPORAN INSIDEN (FR-DO-05) -->
             <!-- ======================================================== -->
             <form x-show="inspectionMode === 'incident'" 
                   :action="`/duty-officer/bookings/${activeTask.bookingId}/incident`" 
@@ -314,6 +390,13 @@
                 trash: true,
                 tape: true,
                 posters: true
+            },
+            init() {
+                if (this.activeTask && this.activeTask.initialTab) {
+                    this.inspectionMode = this.activeTask.initialTab;
+                } else if (this.activeTask && this.activeTask.incident && !this.activeTask.incident.isResolved) {
+                    this.inspectionMode = 'resolve';
+                }
             },
             isClearChecklistValid() {
                 return this.clearChecklist.trash && this.clearChecklist.tape && this.clearChecklist.posters;

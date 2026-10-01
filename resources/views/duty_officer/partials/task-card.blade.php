@@ -27,6 +27,17 @@
         'unit' => $f->unit,
     ])->values()->toArray() : [];
 
+    $latestIncident = $task->latestIncident;
+    $incidentData = $latestIncident ? [
+        'id' => $latestIncident->id,
+        'category' => $latestIncident->category,
+        'itemName' => $latestIncident->item_name,
+        'description' => $latestIncident->description,
+        'isResolved' => $latestIncident->is_resolved,
+        'resolutionNotes' => $latestIncident->resolution_notes,
+        'photos' => $latestIncident->photos->map(fn($p) => asset('storage/' . $p->photo_url))->toArray(),
+    ] : null;
+
     $taskPayload = [
         'bookingId' => $task->id,
         'bookingCode' => $task->booking_code,
@@ -45,6 +56,7 @@
         'equipmentItems' => $equipmentItems,
         'facilities' => $roomFacilities,
         'description' => $eventDetail?->event_description ?? '',
+        'incident' => $incidentData,
     ];
 @endphp
 
@@ -161,6 +173,30 @@
                     style="min-height: 50px;">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                 <span>Inspeksi Cek Kelayakan Ruangan (Checkout)</span>
+            </button>
+        </div>
+    @elseif($hasIncident)
+        <!-- FR-DO-06: Action Banner for Active Incident Re-inspection & Resolution -->
+        <div class="p-3.5 sm:p-4 bg-rose-50 border-y border-rose-200 text-rose-950 flex flex-col gap-3 shadow-xs">
+            <div class="flex items-center gap-2.5 text-xs">
+                <div class="w-8 h-8 rounded-full bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs font-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div class="min-w-0 leading-tight">
+                    <span class="font-black block uppercase text-xs text-rose-900">Insiden Lapangan Aktif (KTP Ditahan FO)</span>
+                    <span class="text-[11px] sm:text-xs text-rose-800 font-medium truncate block">
+                        {{ $latestIncident?->item_name ?? 'Temuan kerusakan/kebersihan ruangan' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Big Action Touch Target Button to Resolve Incident -->
+            <button type="button"
+                    @click='$dispatch("open-room-checkout", @json(array_merge($taskPayload, ["initialTab" => "resolve"])))'
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-rose-700 hover:bg-rose-800 text-white rounded-2xl font-black text-xs sm:text-sm shadow-md transition active:scale-98 cursor-pointer"
+                    style="min-height: 50px;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                <span>Inspeksi Ulang &amp; Selesaikan Insiden</span>
             </button>
         </div>
     @elseif($needsOpening)

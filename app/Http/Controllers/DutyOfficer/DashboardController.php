@@ -104,4 +104,29 @@ class DashboardController extends Controller
 
         return redirect()->route('duty_officer.dashboard')->with('success', $message);
     }
+
+    /**
+     * Resolve field incident and transmit Resolved Signal (FR-DO-06).
+     */
+    public function resolveIncident(
+        Booking $booking,
+        \App\Http\Requests\DutyOfficer\ResolveRoomIncidentRequest $request,
+        \App\Actions\DutyOfficer\ResolveRoomIncidentAction $action
+    ): RedirectResponse|JsonResponse {
+        $userId = (string) Auth::id();
+        $dto = $request->toDTO($userId, $booking->id);
+        $result = $action->execute($dto);
+
+        $message = "Insiden berhasil diselesaikan! Sinyal Resolved berhasil dikirim ke Front Office untuk membuka kembali tombol pelepasan KTP ({$booking->booking_code}).";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+            ]);
+        }
+
+        return redirect()->route('duty_officer.dashboard')->with('success', $message);
+    }
 }

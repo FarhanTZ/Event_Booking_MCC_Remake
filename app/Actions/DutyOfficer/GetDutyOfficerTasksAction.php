@@ -37,6 +37,7 @@ class GetDutyOfficerTasksAction
                 },
                 'eventDetail',
                 'latestKtpVaultLog',
+                'latestIncident.photos',
                 'user',
                 'dutyOfficer',
                 'checkoutDutyOfficer',

@@ -121,4 +121,5 @@ Route::middleware(['auth', 'role:duty_officer,super_admin'])
         Route::post('/bookings/{booking}/confirm-opening', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'confirmRoomOpening'])->name('confirm_opening');
         Route::post('/bookings/{booking}/clearance', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'submitClearance'])->name('clearance');
         Route::post('/bookings/{booking}/incident', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'reportIncident'])->name('incident');
+        Route::post('/bookings/{booking}/incident/resolve', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'resolveIncident'])->name('incident.resolve');
     });

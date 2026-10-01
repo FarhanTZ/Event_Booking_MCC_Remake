@@ -279,4 +279,60 @@ class DutyOfficerRoomCheckoutInspectionTest extends TestCase
         $this->checkoutBooking->refresh();
         $this->assertEquals(BookingStatus::CHECKED_IN, $this->checkoutBooking->status);
     }
+
+    /**
+     * FR-DO-06: DO re-inspects room after committee fixes issue, resolves incident, setting clearance_status = 'resolved', unlocking FO KTP release
+     */
+    public function test_duty_officer_can_resolve_incident_and_unlocks_front_office_ktp_release(): void
+    {
+        // 1. Setup existing active incident
+        $incident = RoomIncident::create([
+            'booking_id' => $this->checkoutBooking->id,
+            'reported_by_do' => $this->dutyOfficer->id,
+            'category' => 'cleanliness',
+            'item_name' => 'Sampah Makanan Berserakan di Lantai',
+            'description' => 'Sisa nasi kotak dan gelas plastik belum dibuang.',
+            'is_resolved' => false,
+            'created_at' => Carbon::now()->subMinutes(20),
+        ]);
+
+        $this->checkoutBooking->update([
+            'clearance_status' => 'incident_detected',
+        ]);
+
+        // 2. DO inspects and resolves incident
+        $response = $this->actingAs($this->dutyOfficer)->post(
+            route('duty_officer.incident.resolve', $this->checkoutBooking),
+            [
+                'incident_id' => $incident->id,
+                'resolution_notes' => 'Panitia telah memungut seluruh sampah dan menyapu bersih area ruangan.',
+            ]
+        );
+
+        $response->assertRedirect(route('duty_officer.dashboard'));
+        $response->assertSessionHas('success');
+
+        // 3. Verify database updates
+        $incident->refresh();
+        $this->assertTrue($incident->is_resolved);
+        $this->assertNotNull($incident->resolved_at);
+        $this->assertEquals('Panitia telah memungut seluruh sampah dan menyapu bersih area ruangan.', $incident->resolution_notes);
+
+        $this->checkoutBooking->refresh();
+        $this->assertEquals('resolved', $this->checkoutBooking->clearance_status);
+        $this->assertTrue($this->checkoutBooking->isIncidentResolved());
+        $this->assertTrue($this->checkoutBooking->canReleaseKtp());
+
+        // 4. Verify Front Office can now successfully release physical KTP
+        $foResponse = $this->actingAs($this->frontOfficeUser)->post(
+            route('front_office.checkout.release_ktp'),
+            [
+                'booking_id' => $this->checkoutBooking->id,
+            ]
+        );
+
+        $foResponse->assertRedirect(route('front_office.manifest'));
+        $this->checkoutBooking->refresh();
+        $this->assertEquals(BookingStatus::COMPLETED, $this->checkoutBooking->status);
+    }
 }
