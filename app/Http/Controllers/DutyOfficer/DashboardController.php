@@ -129,4 +129,55 @@ class DashboardController extends Controller
 
         return redirect()->route('duty_officer.dashboard')->with('success', $message);
     }
+
+    /**
+     * Confirm abandoned room is clean & safe (FR-DO-07 Opsi A).
+     */
+    public function confirmAbandonedClean(
+        Booking $booking,
+        \App\Http\Requests\DutyOfficer\ConfirmAbandonedCleanRequest $request,
+        \App\Actions\DutyOfficer\ConfirmAbandonedCleanAction $action
+    ): RedirectResponse|JsonResponse {
+        $userId = (string) Auth::id();
+        $dto = $request->toDTO($userId, $booking->id);
+        $result = $action->execute($dto);
+
+        $message = "Konfirmasi selesai! Ruangan {$booking->booking_code} dinyatakan ditinggal bersih dan aman (abandoned_clean).";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+            ]);
+        }
+
+        return redirect()->route('duty_officer.dashboard')->with('success', $message);
+    }
+
+    /**
+     * Report abandoned room incident and trigger user suspension (FR-DO-07 Opsi B).
+     */
+    public function reportAbandonedIncident(
+        Booking $booking,
+        \App\Http\Requests\DutyOfficer\ReportAbandonedIncidentRequest $request,
+        \App\Actions\DutyOfficer\ReportAbandonedIncidentAction $action
+    ): RedirectResponse|JsonResponse {
+        $userId = (string) Auth::id();
+        $dto = $request->toDTO($userId, $booking->id);
+        $result = $action->execute($dto);
+
+        $message = "Laporan insiden kasus ditinggal berhasil dikirim! Status acara diubah menjadi abandoned_incident dan akun pemohon otomatis dibekukan.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+            ]);
+        }
+
+        return redirect()->route('duty_officer.dashboard')->with('success', $message);
+    }
 }
+

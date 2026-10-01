@@ -122,4 +122,6 @@ Route::middleware(['auth', 'role:duty_officer,super_admin'])
         Route::post('/bookings/{booking}/clearance', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'submitClearance'])->name('clearance');
         Route::post('/bookings/{booking}/incident', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'reportIncident'])->name('incident');
         Route::post('/bookings/{booking}/incident/resolve', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'resolveIncident'])->name('incident.resolve');
+        Route::post('/bookings/{booking}/abandoned/clean', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'confirmAbandonedClean'])->name('abandoned.clean');
+        Route::post('/bookings/{booking}/abandoned/incident', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'reportAbandonedIncident'])->name('abandoned.incident');
     });

@@ -41,8 +41,13 @@
     $taskPayload = [
         'bookingId' => $task->id,
         'bookingCode' => $task->booking_code,
+        'statusCode' => $task->status->value,
         'statusLabel' => $task->status->label(),
         'clearanceStatus' => $task->clearance_status,
+        'isAbandoned' => $task->isAbandoned(),
+        'isAbandonedClean' => $task->isAbandonedClean(),
+        'isAbandonedIncident' => $task->isAbandonedIncident(),
+        'isOverdue' => $task->isOverdueForCheckout(),
         'eventName' => $eventDetail?->event_name ?? 'Kegiatan Komunitas MCC',
         'institutionName' => $eventDetail?->institution_name_snapshot ?? ($task->user?->institution_name ?? '-'),
         'roomName' => $room ? $room->name : '-',
@@ -125,8 +130,8 @@
                     Disetujui
                 </span>
             @elseif($task->isAbandoned())
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
-                    Ditinggal
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold {{ $task->status->badgeClasses() }}">
+                    {{ $task->status->label() }}
                 </span>
             @else
                 <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold {{ $task->status->badgeClasses() }}">
@@ -199,6 +204,33 @@
                 <span>Inspeksi Ulang &amp; Selesaikan Insiden</span>
             </button>
         </div>
+    @elseif($task->isAbandoned())
+        <!-- FR-DO-07: Display Status for Abandoned Events -->
+        @if($task->isAbandonedClean())
+            <div class="p-3.5 sm:p-4 bg-amber-50 border-y border-amber-200 text-amber-950 flex flex-col gap-2.5 shadow-xs">
+                <div class="flex items-center gap-2.5 text-xs">
+                    <div class="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs font-black">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </div>
+                    <div class="min-w-0 leading-tight">
+                        <span class="font-black block uppercase text-xs text-amber-950">Panitia Pulang Tanpa Lapor — Ditinggal Bersih</span>
+                        <span class="text-[11px] sm:text-xs text-amber-900 font-medium">Ruangan dikonfirmasi bersih oleh DO. KTP fisik panitia diamankan di Front Office.</span>
+                    </div>
+                </div>
+            </div>
+        @elseif($task->isAbandonedIncident())
+            <div class="p-3.5 sm:p-4 bg-rose-50 border-y border-rose-300 text-rose-950 flex flex-col gap-2.5 shadow-xs">
+                <div class="flex items-center gap-2.5 text-xs">
+                    <div class="w-8 h-8 rounded-full bg-rose-700 text-white flex items-center justify-center shrink-0 shadow-xs font-black">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div class="min-w-0 leading-tight">
+                        <span class="font-black block uppercase text-xs text-rose-950">Panitia Pulang Tanpa Lapor — Bermasalah</span>
+                        <span class="text-[11px] sm:text-xs text-rose-900 font-medium">Terdapat insiden kerusakan/kebersihan. Akun pemohon telah otomatis dibekukan.</span>
+                    </div>
+                </div>
+            </div>
+        @endif
     @elseif($needsOpening)
         <!-- FR-DO-02: Big Mobile Action CTA Banner (If Room Needs Opening) -->
         <div class="p-3.5 sm:p-4 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 text-slate-950 flex flex-col gap-3 shadow-inner">
@@ -219,6 +251,27 @@
                     style="min-height: 50px;">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
                 <span>Buka Akses Ruangan</span>
+            </button>
+        </div>
+    @elseif($timing['status_state'] === 'overdue' && $isCheckedIn)
+        <!-- FR-DO-07: Emergency Abandoned Inspection Prompt Banner (If Overdue without checkout) -->
+        <div class="p-3.5 sm:p-4 bg-gradient-to-r from-rose-500 via-rose-600 to-rose-700 text-white flex flex-col gap-3 shadow-md">
+            <div class="flex items-center gap-2.5 text-xs">
+                <div class="w-8 h-8 rounded-full bg-white text-rose-700 flex items-center justify-center shrink-0 shadow-xs font-black animate-bounce">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div class="min-w-0 leading-tight">
+                    <span class="font-black block uppercase text-xs text-white">Tugas Darurat: Panitia Pulang Tanpa Lapor</span>
+                    <span class="text-[11px] sm:text-xs text-rose-100 font-medium">Sesi melewati batas waktu (>30m). Segera lakukan inspeksi fisik di ruangan.</span>
+                </div>
+            </div>
+
+            <button type="button"
+                    @click='$dispatch("open-room-checkout", @json(array_merge($taskPayload, ["initialTab" => "abandoned"])))'
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-white hover:bg-slate-100 text-rose-900 rounded-2xl font-black text-xs sm:text-sm shadow-md transition active:scale-98 cursor-pointer"
+                    style="min-height: 50px;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Inspeksi Kasus Ditinggal (FR-DO-07)</span>
             </button>
         </div>
     @endif

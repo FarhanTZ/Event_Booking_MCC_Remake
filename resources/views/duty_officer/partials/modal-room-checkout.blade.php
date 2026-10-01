@@ -1,5 +1,5 @@
 <!-- ==================================================================== -->
-<!-- MOBILE BOTTOM SHEET: LEMBAR KERJA CEK KELAYAKAN FISIK RUANGAN CHECKOUT (FR-DO-03, FR-DO-04, FR-DO-05, FR-DO-06) -->
+<!-- MOBILE BOTTOM SHEET: LEMBAR KERJA CEK KELAYAKAN FISIK RUANGAN CHECKOUT (FR-DO-03, FR-DO-04, FR-DO-05, FR-DO-06, FR-DO-07) -->
 <!-- ==================================================================== -->
 <div x-show="checkoutModalOpen" 
      x-cloak
@@ -43,11 +43,11 @@
                             #MCC-BOOKING
                         </span>
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-400 text-slate-950">
-                            FR-DO-03: Inspeksi Fisik Ruangan
+                            Inspeksi Fisik Lapangan
                         </span>
                     </div>
                     <h3 class="text-base font-black text-white tracking-tight leading-snug line-clamp-1" x-text="`Cek Kelayakan: ${activeTask.roomName}`">
-                        Inspeksi Checkout
+                        Inspeksi Ruangan
                     </h3>
                     <p class="text-xs text-indigo-200 mt-0.5 truncate" x-text="`${activeTask.eventName}`">
                         Nama Acara
@@ -55,43 +55,56 @@
                 </div>
 
                 <button type="button" 
-                        @click="checkoutModalOpen = false"
-                        class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer shrink-0">
+                        @click="checkoutModalOpen = false" 
+                        class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer shrink-0"
+                        aria-label="Tutup Lembar Kerja">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
 
-            <!-- TAB SWITCHER: [ Kondisi Aman (Clear) | Selesaikan Insiden (Jika ada) | Laporkan Insiden ] -->
-            <div class="p-1.5 bg-slate-100 border-b border-slate-200 shrink-0 grid gap-1.5"
-                 :class="activeTask.incident && !activeTask.incident.isResolved ? 'grid-cols-3' : 'grid-cols-2'">
+            <!-- TAB SWITCHER -->
+            <div class="p-1.5 bg-slate-100 border-b border-slate-200 shrink-0 grid gap-1"
+                 :class="{
+                     'grid-cols-4': activeTask.incident && !activeTask.incident.isResolved,
+                     'grid-cols-3': !activeTask.incident || activeTask.incident.isResolved
+                 }">
                 
                 <!-- Tab 1: Sinyal Aman (Clear) -->
                 <button type="button" 
                         @click="inspectionMode = 'clear'"
-                        class="py-2.5 px-2 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
+                        class="py-2 px-1.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
                         :class="inspectionMode === 'clear' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    <span class="truncate">Aman (Clear)</span>
+                    <span class="truncate">Aman</span>
                 </button>
 
                 <!-- Tab 2: Selesaikan Insiden (FR-DO-06) (Tampil jika ada insiden aktif) -->
                 <template x-if="activeTask.incident && !activeTask.incident.isResolved">
                     <button type="button" 
                             @click="inspectionMode = 'resolve'"
-                            class="py-2.5 px-2 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
+                            class="py-2 px-1.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
                             :class="inspectionMode === 'resolve' ? 'bg-indigo-600 text-white shadow-xs' : 'text-indigo-700 hover:bg-indigo-50'">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         <span class="truncate">Selesaikan</span>
                     </button>
                 </template>
 
-                <!-- Tab 3: Laporkan Insiden Baru -->
+                <!-- Tab 3: Laporkan Insiden Standar (FR-DO-05) -->
                 <button type="button" 
                         @click="inspectionMode = 'incident'"
-                        class="py-2.5 px-2 rounded-2xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
+                        class="py-2 px-1.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
                         :class="inspectionMode === 'incident' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:text-rose-700'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-rose-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     <span class="truncate">Lapor Insiden</span>
+                </button>
+
+                <!-- Tab 4: FR-DO-07 Kasus Panitia Pulang Tanpa Lapor -->
+                <button type="button" 
+                        @click="inspectionMode = 'abandoned'"
+                        class="py-2 px-1.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1 cursor-pointer select-none"
+                        :class="inspectionMode === 'abandoned' ? 'bg-[#001A72] text-white shadow-xs' : 'text-amber-800 hover:bg-amber-50'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span class="truncate">Kasus Ditinggal</span>
                 </button>
             </div>
 
@@ -274,7 +287,7 @@
             </form>
 
             <!-- ======================================================== -->
-            <!-- 3. FORM SINYAL MERAH / PELAPORAN INSIDEN (FR-DO-05) -->
+            <!-- 3. FORM SINYAL MERAH / PELAPORAN INSIDEN STANDAR (FR-DO-05) -->
             <!-- ======================================================== -->
             <form x-show="inspectionMode === 'incident'" 
                   :action="`/duty-officer/bookings/${activeTask.bookingId}/incident`" 
@@ -344,7 +357,7 @@
                                    name="photos[]" 
                                    multiple 
                                    accept="image/*" 
-                                   capture="environment"
+                                   capture="environment" 
                                    required 
                                    @change="handlePhotoChange($event)"
                                    class="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10">
@@ -377,6 +390,208 @@
                 </div>
             </form>
 
+            <!-- ======================================================== -->
+            <!-- 4. FORM PROTOKOL KASUS DITINGGAL (FR-DO-07) -->
+            <!-- ======================================================== -->
+            <div x-show="inspectionMode === 'abandoned'" class="flex flex-col h-full min-h-0 flex-1">
+                
+                <!-- Sub-toggle for Opsi A vs Opsi B -->
+                <div class="p-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-2 shrink-0">
+                    <button type="button"
+                            @click="abandonedOption = 'clean'"
+                            class="flex-1 py-2 px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer"
+                            :class="abandonedOption === 'clean' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50'">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                        <span>Opsi A: Ditinggal Bersih</span>
+                    </button>
+
+                    <button type="button"
+                            @click="abandonedOption = 'incident'"
+                            class="flex-1 py-2 px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer"
+                            :class="abandonedOption === 'incident' ? 'bg-rose-700 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50'">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-rose-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Opsi B: Ditinggal Rusak/Kotor</span>
+                    </button>
+                </div>
+
+                <!-- 4A. SUB-FORM: OPSI A (Ruangan Ditinggal Bersih & Aman) -->
+                <form x-show="abandonedOption === 'clean'" 
+                      :action="`/duty-officer/bookings/${activeTask.bookingId}/abandoned/clean`" 
+                      method="POST" 
+                      class="flex flex-col h-full min-h-0 flex-1">
+                    @csrf
+
+                    <div class="p-4 sm:p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-slate-800">
+                        <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex items-start gap-2.5 text-xs text-amber-950">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                            <p class="text-xs text-amber-900 leading-snug">
+                                Panitia meninggalkan gedung tanpa melapor ke FO. DO mengonfirmasi ruangan ditinggal dalam kondisi <strong>bersih, rapi, dan fasilitas lengkap (abandoned_clean)</strong>.
+                            </p>
+                        </div>
+
+                        <!-- Checklist Kebersihan -->
+                        <div class="space-y-2">
+                            <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 block">
+                                Verifikasi Kondisi Ditinggal:
+                            </span>
+
+                            <div class="space-y-2">
+                                <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 cursor-pointer transition select-none">
+                                    <input type="checkbox" name="cleanliness_checklist[trash]" value="1" checked class="w-5 h-5 mt-0.5 rounded-lg border-slate-300 text-amber-600 focus:ring-amber-500">
+                                    <div class="text-xs">
+                                        <span class="font-black text-slate-900 block">Ruangan Bebas Sampah</span>
+                                        <span class="text-[11px] text-slate-500 leading-tight">Tidak ada sampah konsumsi berserakan yang ditinggalkan.</span>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 cursor-pointer transition select-none">
+                                    <input type="checkbox" name="cleanliness_checklist[tape_posters]" value="1" checked class="w-5 h-5 mt-0.5 rounded-lg border-slate-300 text-amber-600 focus:ring-amber-500">
+                                    <div class="text-xs">
+                                        <span class="font-black text-slate-900 block">Dekorasi &amp; Lakban Bersih</span>
+                                        <span class="text-[11px] text-slate-500 leading-tight">Poster, spanduk, dan bekas isolasi/lakban lantai telah dicopot.</span>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 cursor-pointer transition select-none">
+                                    <input type="checkbox" name="inventory_checklist[intact]" value="1" checked class="w-5 h-5 mt-0.5 rounded-lg border-slate-300 text-amber-600 focus:ring-amber-500">
+                                    <div class="text-xs">
+                                        <span class="font-black text-slate-900 block">Aset &amp; Fasilitas Utuh</span>
+                                        <span class="text-[11px] text-slate-500 leading-tight">Seluruh peralatan master ruangan lengkap dan tidak ada kerusakan.</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Catatan DO -->
+                        <div class="space-y-1 pt-2 border-t border-slate-100">
+                            <label class="text-[10px] font-black uppercase tracking-wider text-slate-700 block">Catatan Verifikasi Lapangan (Opsional):</label>
+                            <textarea name="notes" 
+                                      rows="2" 
+                                      placeholder="Contoh: Ruangan ditinggal dalam kondisi rapi dan pintu telah dikunci kembali..." 
+                                      class="w-full px-3.5 py-2.5 text-xs rounded-2xl border border-slate-300 focus:ring-amber-500 focus:border-amber-500"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Footer Submit Opsi A -->
+                    <div class="bg-slate-50 p-3.5 border-t border-slate-200 flex flex-col gap-2 shrink-0">
+                        <button type="submit" 
+                                class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm shadow-md transition cursor-pointer active:scale-98"
+                                style="min-height: 48px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                            <span>KONFIRMASI DITINGGAL BERSIH (ABANDONED_CLEAN)</span>
+                        </button>
+
+                        <button type="button" 
+                                @click="checkoutModalOpen = false" 
+                                class="w-full py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200 transition text-center cursor-pointer">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 4B. SUB-FORM: OPSI B (Ruangan Ditinggal Rusak/Kotor - Suspensi Permanen Akun) -->
+                <form x-show="abandonedOption === 'incident'" 
+                      :action="`/duty-officer/bookings/${activeTask.bookingId}/abandoned/incident`" 
+                      method="POST" 
+                      enctype="multipart/form-data" 
+                      class="flex flex-col h-full min-h-0 flex-1">
+                    @csrf
+
+                    <div class="p-4 sm:p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-slate-800">
+                        
+                        <!-- Critical Warning Alert on User Suspension -->
+                        <div class="p-3.5 rounded-2xl bg-rose-100 border border-rose-400 flex items-start gap-2.5 text-xs text-rose-950">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-rose-700 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <p class="text-xs text-rose-950 leading-snug font-semibold">
+                                <strong class="font-black text-rose-900 uppercase block mb-0.5">Sanksi Pelanggaran Berat:</strong>
+                                Mengirim laporan ini akan mengubah status menjadi <strong>abandoned_incident</strong> dan <strong>SECARA OTOMATIS MEMBEKUKAN (SUSPEND) AKUN PEMOHON</strong> dari pengajuan booking di masa mendatang.
+                            </p>
+                        </div>
+
+                        <!-- Kategori Insiden Dropdown -->
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black uppercase tracking-wider text-slate-700 block">
+                                Kategori Insiden Ditinggal <span class="text-rose-600">*</span>:
+                            </label>
+                            <select name="category" required class="w-full px-3.5 py-3 text-xs rounded-2xl border border-slate-300 focus:ring-rose-500 focus:border-rose-500 bg-white font-bold text-slate-800">
+                                <option value="cleanliness" selected>Kebersihan Parah (Sampah Berserakan / Lakban Menempel)</option>
+                                <option value="property_damage">Kerusakan Fasilitas / Properti Ruangan</option>
+                                <option value="equipment_loss">Kehilangan Peralatan Master MCC</option>
+                            </select>
+                        </div>
+
+                        <!-- Nama Barang / Fasilitas Terdampak -->
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black uppercase tracking-wider text-slate-700 block">
+                                Nama Fasilitas / Temuan Terdampak <span class="text-rose-600">*</span>:
+                            </label>
+                            <input type="text" 
+                                   name="item_name" 
+                                   required 
+                                   placeholder="Contoh: Sampah Kotak Makanan Ditinggal, Kabel Putus..." 
+                                   class="w-full px-3.5 py-2.5 text-xs rounded-2xl border border-slate-300 focus:ring-rose-500 focus:border-rose-500 font-medium text-slate-900">
+                        </div>
+
+                        <!-- Deskripsi Kronologis -->
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black uppercase tracking-wider text-slate-700 block">
+                                Uraian Kronologis Kondisi yang Ditinggalkan <span class="text-rose-600">*</span>:
+                            </label>
+                            <textarea name="description" 
+                                      rows="3" 
+                                      required 
+                                      placeholder="Jelaskan secara rinci kondisi kotor/rusak yang ditinggalkan pemohon tanpa melapor ke FO..." 
+                                      class="w-full px-3.5 py-2.5 text-xs rounded-2xl border border-slate-300 focus:ring-rose-500 focus:border-rose-500 font-normal text-slate-900"></textarea>
+                        </div>
+
+                        <!-- Foto Bukti Kamera Lapangan -->
+                        <div class="space-y-2 pt-2 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[10px] font-black uppercase tracking-wider text-slate-700 block">
+                                    Foto Bukti Kamera Lapangan <span class="text-rose-600">*</span>:
+                                </label>
+                                <span class="text-[10px] font-bold text-slate-400">Maks 5 Foto</span>
+                            </div>
+
+                            <div class="relative border-2 border-dashed border-rose-300 hover:border-rose-400 bg-rose-50/50 rounded-2xl p-4 text-center cursor-pointer transition">
+                                <input type="file" 
+                                       name="photos[]" 
+                                       multiple 
+                                       accept="image/*" 
+                                       capture="environment" 
+                                       required 
+                                       @change="handlePhotoChange($event)"
+                                       class="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10">
+                                <div class="space-y-1.5 pointer-events-none">
+                                    <div class="w-10 h-10 mx-auto rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                                    </div>
+                                    <span class="text-xs font-black text-rose-900 block">Ambil Foto Bukti Kamera Lapangan</span>
+                                    <span class="text-[11px] text-slate-500 block" x-text="photoCount > 0 ? `${photoCount} foto dipilih` : 'Wajib melampirkan minimal 1 foto bukti kondisi ditinggal'"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Footer Submit Opsi B -->
+                    <div class="bg-slate-50 p-3.5 border-t border-slate-200 flex flex-col gap-2 shrink-0">
+                        <button type="submit" 
+                                class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-800 text-white font-black text-xs sm:text-sm shadow-md transition cursor-pointer active:scale-98"
+                                style="min-height: 48px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-rose-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>LAPORKAN INSIDEN DITINGGAL &amp; BEKUKAN AKUN</span>
+                        </button>
+
+                        <button type="button" 
+                                @click="checkoutModalOpen = false" 
+                                class="w-full py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200 transition text-center cursor-pointer">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+
         </div>
     </div>
 </div>
@@ -385,6 +600,7 @@
     function roomInspectionForm() {
         return {
             inspectionMode: 'clear',
+            abandonedOption: 'clean',
             photoCount: 0,
             clearChecklist: {
                 trash: true,
