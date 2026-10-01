@@ -110,6 +110,30 @@
                     </span>
                 @endif
             </a>
+
+            <!-- Dasbor Eksekutif & Analitik Utilisasi (FR-ADM-06) -->
+            <a href="{{ route('admin.analytics.index') }}" 
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('admin.analytics.*') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
+                <div class="flex items-center gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('admin.analytics.*') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>Dasbor Eksekutif &amp; KPI</span>
+                </div>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-[#001A72]">
+                    KPI
+                </span>
+            </a>
+
+            <!-- Audit Trail Sistem Menyeluruh (FR-ADM-07) -->
+            <a href="{{ route('admin.audit.index') }}" 
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('admin.audit.*') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
+                <div class="flex items-center gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('admin.audit.*') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span>Audit Trail Sistem</span>
+                </div>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700">
+                    Log
+                </span>
+            </a>
         </div>
 
         <!-- 4. Section: Modul Operasional Lainnya -->

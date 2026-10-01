@@ -168,4 +168,12 @@ Route::middleware(['auth', 'role:super_admin'])
         // FR-ADM-05 Intervensi Reservasi & Pembatalan Paksa Darurat (Super Override)
         Route::get('/interventions', [\App\Http\Controllers\Admin\EmergencyInterventionController::class, 'index'])->name('interventions.index');
         Route::post('/interventions/bookings/{booking}/cancel', [\App\Http\Controllers\Admin\EmergencyInterventionController::class, 'cancel'])->name('interventions.cancel');
+
+        // FR-ADM-06 Dasbor Eksekutif & Analitik Utilisasi Gedung
+        Route::get('/analytics', [\App\Http\Controllers\Admin\ExecutiveAnalyticsController::class, 'index'])->name('analytics.index');
+        Route::get('/analytics/export-pdf', [\App\Http\Controllers\Admin\ExecutiveAnalyticsController::class, 'exportPdf'])->name('analytics.export.pdf');
+        Route::get('/analytics/export-csv', [\App\Http\Controllers\Admin\ExecutiveAnalyticsController::class, 'exportCsv'])->name('analytics.export.csv');
+
+        // FR-ADM-07 Audit Trail Sistem Menyeluruh
+        Route::get('/audit-trail', [\App\Http\Controllers\Admin\SystemAuditTrailController::class, 'index'])->name('audit.index');
     });
