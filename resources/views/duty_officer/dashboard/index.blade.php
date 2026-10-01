@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale() ?? 'id') }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale() ?? 'id') }}" class="h-full bg-slate-200/60">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() ?? '' }}">
+    <meta name="theme-color" content="#001A72">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <title>Dasbor Tugas Lapangan - Duty Officer MCC</title>
+    <title>Duty Officer - Mobile MCC</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -16,158 +19,161 @@
 
     <style>
         html, body {
-            overflow-x: hidden !important;
-            max-width: 100vw;
             font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
         [x-cloak] { display: none !important; }
 
-        /* Custom MCC Scrollbar */
+        /* Hide Scrollbar for Horizontal Swipeable Containers */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none !important;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Smooth horizontal touch scroll */
+        .touch-pan-x {
+            touch-action: pan-x;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Custom Scrollbar for Bottom Sheets */
         .custom-scrollbar {
             scrollbar-width: thin;
-            scrollbar-color: #94A3B8 #F1F5F9;
+            scrollbar-color: #CBD5E1 #F8FAFC;
         }
         .custom-scrollbar::-webkit-scrollbar {
-            width: 7px;
-            height: 7px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #F1F5F9;
-            border-radius: 9999px;
+            width: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #94A3B8;
+            background: #CBD5E1;
             border-radius: 9999px;
-            border: 1px solid #F1F5F9;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #64748B;
+
+        /* Safe area bottom padding for iPhone home indicator */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 0.5rem);
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-[#001A72] selection:text-white"
-      x-data="dutyOfficerDashboard()"
+<body class="bg-slate-200/50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-[#001A72] selection:text-white"
+      x-data="dutyOfficerMobileApp()"
       @open-room-opening.window="openRoomOpeningModal($event.detail)"
       @open-detail-modal.window="openDetailModal($event.detail)">
 
-    <!-- Flash Messages Notification -->
+    <!-- Flash Message Notification -->
     @if(session('success'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" 
-             class="bg-emerald-600 text-white px-4 py-3 shadow-lg fixed top-6 right-6 z-50 rounded-brand flex items-center gap-3 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <span class="text-xs sm:text-sm font-semibold">{{ session('success') }}</span>
-            <button @click="show = false" class="ml-2 hover:opacity-80 cursor-pointer">
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 -translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-4"
+             class="fixed top-4 inset-x-4 max-w-md mx-auto z-50 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span class="text-xs font-bold leading-tight line-clamp-2">{{ session('success') }}</span>
+            </div>
+            <button @click="show = false" class="text-emerald-200 hover:text-white p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
         </div>
     @endif
 
     <!-- ======================================================================== -->
-    <!-- 3-COLUMN WORKSPACE WRAPPER (FIXED SIDES, SCROLLABLE CENTER) -->
+    <!-- MOBILE APP CONTAINER (NATIVE APP FEEL) -->
     <!-- ======================================================================== -->
-    <div class="flex-1 w-full max-w-[1720px] 2xl:max-w-[1920px] mx-auto p-3 sm:p-4 lg:p-5 flex flex-col lg:flex-row gap-4 lg:gap-5 items-start min-h-screen">
+    <div class="w-full max-w-lg mx-auto min-h-screen bg-slate-100 flex flex-col pb-24 shadow-2xl md:my-0 md:border-x md:border-slate-300 relative">
         
-        <!-- 1. SISI KIRI: Sidebar Navigasi & Menu Duty Officer -->
-        @include('duty_officer.partials.sidebar-left')
-
-        <!-- 2. BAGIAN TENGAH: Workspace Utama Dasbor Tugas Lapangan -->
-        <main class="flex-1 min-w-0 w-full space-y-4">
-            
-            <!-- Top Control Bar: Title & Sidebar Toggles -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-brand border border-slate-200 shadow-card">
-                
-                <!-- Left Section: Toggle Left Sidebar & Dashboard Title -->
-                <div class="flex items-center gap-3">
-                    <button type="button" 
-                            @click="toggleLeft()"
-                            :class="sidebarLeft ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-[#001A72] text-white hover:bg-[#001250]'"
-                            class="w-9 h-9 inline-flex items-center justify-center rounded-brand transition cursor-pointer shrink-0 shadow-2xs"
-                            title="Buka / Tutup Menu Navigasi Kiri">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
-                    </button>
-
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
-                                Dasbor Tugas Duty Officer
-                            </h1>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EEF2FF] text-[#001A72] border border-indigo-100">
-                                FR-DO-01
-                            </span>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-0.5">
-                            Panel kontrol pengawasan sesi ruangan dan pendampingan lapangan ({{ $target_date->translatedFormat('d F Y') }})
-                        </p>
-                    </div>
+        <!-- 1. STICKY TOP APP HEADER -->
+        <header class="sticky top-0 z-30 bg-[#001A72] text-white px-4 py-3 shadow-md flex items-center justify-between gap-3">
+            <!-- Brand & App Identity -->
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center p-1.5 shadow-inner shrink-0">
+                    <img src="{{ asset('assets/images/media/branding/mcc-aset-logo blue 1.png') }}" 
+                         alt="MCC Logo" 
+                         class="h-full w-auto object-contain brightness-0 invert">
                 </div>
-
-                <!-- Right Section: Live Shift & Toggle Right Sidebar -->
-                <div class="flex items-center gap-2.5 self-end sm:self-auto">
-                    <!-- Shift Pill -->
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-brand bg-[#EEF2FF] text-xs text-[#001A72] font-semibold border border-indigo-100 shrink-0">
-                        <span class="w-2 h-2 rounded-full bg-[#001A72] animate-pulse"></span>
-                        @if($filter->shift === 'morning')
-                            <span>Shift Pagi (08:00 - 16:00)</span>
-                        @elseif($filter->shift === 'evening')
-                            <span>Shift Sore (16:00 - 22:00)</span>
-                        @else
-                            <span>Semua Shift Operasional</span>
-                        @endif
+                <div class="min-w-0">
+                    <span class="font-black text-sm tracking-tight text-white block leading-tight">
+                        MCC Duty Officer
+                    </span>
+                    <!-- Live Clock & Date -->
+                    <div class="flex items-center gap-2 text-[11px] text-indigo-200 font-medium leading-tight mt-0.5">
+                        <span class="font-mono font-bold text-emerald-400" x-text="currentTimeString">--:--:-- WIB</span>
+                        <span>•</span>
+                        <span class="truncate">{{ $target_date->translatedFormat('d M Y') }}</span>
                     </div>
-
-                    <!-- Right Sidebar Toggle -->
-                    <button type="button" 
-                            @click="toggleRight()"
-                            :class="sidebarRight ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-[#001A72] text-white hover:bg-[#001250]'"
-                            class="w-9 h-9 inline-flex items-center justify-center rounded-brand transition cursor-pointer shrink-0 shadow-2xs"
-                            title="Buka / Tutup Panel Profil & Metrik Kanan">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
-                    </button>
                 </div>
             </div>
 
-            <!-- Multi-Parameter Realtime Search & Filter Panel Component -->
+            <!-- Profile & Quick Sheet Trigger Button -->
+            <button type="button" 
+                    @click="profileSheetOpen = true"
+                    class="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer shrink-0">
+                <div class="w-7 h-7 rounded-xl bg-white text-[#001A72] flex items-center justify-center font-black text-xs shadow-xs">
+                    {{ strtoupper(substr(auth()->user()->full_name ?? 'D', 0, 1)) }}
+                </div>
+                <div class="hidden sm:block text-left text-xs leading-tight">
+                    <span class="font-bold block text-white truncate max-w-[80px]">
+                        {{ auth()->user()->full_name ?? 'DO' }}
+                    </span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+        </header>
+
+        <!-- 2. MAIN APP CONTENT FEED -->
+        <main class="flex-1 p-4 sm:p-5 space-y-5 min-w-0">
+
+            <!-- Mobile Instant Search & Horizontal Drag/Swipe Chips Filter -->
             @include('duty_officer.partials.filter-bar')
 
-            <!-- Daftar Penugasan Lapangan Cards -->
-            <div class="space-y-4">
-                <div class="flex items-center justify-between px-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-black uppercase tracking-wider text-slate-700">
-                            Daftar Penugasan Lapangan
-                        </span>
-                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#001A72] text-white">
-                            {{ count($tasks) }} Acara
-                        </span>
-                    </div>
-
-                    @if($filter->floor)
-                        <span class="text-xs font-bold text-[#001A72] px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-100">
-                            Terfilter: Lantai {{ $filter->floor }}
-                        </span>
-                    @endif
+            <!-- Section Title & Counter -->
+            <div class="flex items-center justify-between pt-1 px-1">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-800">
+                        {{ $filter->scope === 'assigned' ? 'Penugasan Saya' : 'Daftar Tugas Lapangan' }}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#001A72] text-white shadow-2xs">
+                        {{ count($tasks) }} Acara
+                    </span>
                 </div>
 
+                <div class="text-xs font-bold text-slate-500">
+                    {{ $target_date->translatedFormat('d F Y') }}
+                </div>
+            </div>
+
+            <!-- Task Cards Feed -->
+            <div class="space-y-4">
                 @forelse($tasks as $task)
                     @include('duty_officer.partials.task-card', ['task' => $task])
                 @empty
-                    <!-- Empty State -->
-                    <div class="bg-white rounded-brand border border-slate-200 p-8 sm:p-14 text-center shadow-card space-y-3">
-                        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                    <!-- Mobile Empty State (Spacious & Extended Downwards) -->
+                    <div class="bg-white rounded-3xl border border-slate-200/90 py-12 sm:py-16 px-6 text-center shadow-card space-y-4 my-2 flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 rounded-3xl bg-[#EEF2FF] text-[#001A72] border border-indigo-100 flex items-center justify-center shadow-2xs">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
                         </div>
-                        <h3 class="text-base sm:text-lg font-black text-slate-800">
-                            Tidak Ada Jadwal Tugas Lapangan
-                        </h3>
-                        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-                            Tidak ditemukan penugasan sesi ruangan yang cocok dengan kriteria filter untuk tanggal {{ $target_date->translatedFormat('d F Y') }}.
-                        </p>
-                        <div class="pt-2">
+                        <div class="space-y-1 max-w-xs">
+                            <h3 class="text-base font-black text-slate-800 tracking-tight">
+                                Tidak Ada Jadwal Tugas
+                            </h3>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                Tidak ditemukan penugasan sesi ruangan yang cocok untuk kriteria filter saat ini.
+                            </p>
+                        </div>
+                        <div class="pt-3 pb-2">
                             <a href="{{ route('duty_officer.dashboard') }}" 
-                               class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#001A72] text-white font-bold text-xs sm:text-sm rounded-brand hover:bg-[#001250] transition cursor-pointer shadow-xs"
-                               style="min-height: 40px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                                <span>Reset Filter</span>
+                               class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#001A72] hover:bg-[#001250] text-white font-black text-xs sm:text-sm rounded-2xl transition shadow-md active:scale-95 cursor-pointer"
+                               style="min-height: 46px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                                <span>Reset Semua Filter</span>
                             </a>
                         </div>
                     </div>
@@ -176,23 +182,50 @@
 
         </main>
 
-        <!-- 3. SISI KANAN: Profil Petugas & Kartu KPI Metrik Lapangan -->
-        @include('duty_officer.partials.sidebar-right')
+        <!-- 3. FIXED BOTTOM NAVIGATION BAR -->
+        @include('duty_officer.partials.bottom-nav')
 
     </div>
 
-    <!-- Modal Detail Operasional & Peralatan Mandiri Component -->
+    <!-- 4. PROFILE & SOP BOTTOM SHEET -->
+    @include('duty_officer.partials.mobile-profile-sheet')
+
+    <!-- 5. MODAL DETAIL OPERASIONAL & PERALATAN MANDIRI (BOTTOM SHEET) -->
     @include('duty_officer.partials.modal-detail')
 
-    <!-- Modal Pendampingan Check-in & Pembukaan Akses Ruangan (FR-DO-02) -->
+    <!-- 6. MODAL BUKA AKSES RUANGAN & CHECKLIST (FR-DO-02) (BOTTOM SHEET) -->
     @include('duty_officer.partials.modal-room-opening')
 
     <!-- Alpine.js Store & Timing Handlers -->
     <script>
-        function dutyOfficerDashboard() {
+        function horizontalScrollDrag() {
             return {
-                sidebarLeft: true,
-                sidebarRight: true,
+                isDown: false,
+                startX: 0,
+                scrollLeft: 0,
+                startDrag(e) {
+                    this.isDown = true;
+                    const container = this.$refs.scrollContainer;
+                    this.startX = e.pageX - container.offsetLeft;
+                    this.scrollLeft = container.scrollLeft;
+                },
+                stopDrag() {
+                    this.isDown = false;
+                },
+                onDrag(e) {
+                    if (!this.isDown) return;
+                    e.preventDefault();
+                    const container = this.$refs.scrollContainer;
+                    const x = e.pageX - container.offsetLeft;
+                    const walk = (x - this.startX) * 1.5;
+                    container.scrollLeft = this.scrollLeft - walk;
+                }
+            };
+        }
+
+        function dutyOfficerMobileApp() {
+            return {
+                profileSheetOpen: false,
                 currentTimeString: '',
                 detailModalOpen: false,
                 openingModalOpen: false,
@@ -227,14 +260,6 @@
                     const minutes = String(now.getMinutes()).padStart(2, '0');
                     const seconds = String(now.getSeconds()).padStart(2, '0');
                     this.currentTimeString = `${hours}:${minutes}:${seconds} WIB`;
-                },
-
-                toggleLeft() {
-                    this.sidebarLeft = !this.sidebarLeft;
-                },
-
-                toggleRight() {
-                    this.sidebarRight = !this.sidebarRight;
                 },
 
                 openDetailModal(data) {
@@ -283,7 +308,7 @@
                         const diff = Math.floor((start - now) / 1000);
                         const hours = Math.floor(diff / 3600);
                         const mins = Math.floor((diff % 3600) / 60);
-                        this.countdownText = hours > 0 ? `Mulai dlm ${hours}j ${mins}m` : `Mulai dlm ${mins} menit`;
+                        this.countdownText = hours > 0 ? `Mulai ${hours}j ${mins}m` : `Mulai ${mins}m`;
                         this.progressPercent = 0;
                         this.statusState = 'upcoming';
                         return;
@@ -297,7 +322,7 @@
                         
                         if (this.statusCode === 'checked_in' && overdue > 1800) {
                             this.statusState = 'overdue';
-                            this.countdownText = `Lewat Jadwal (${hours > 0 ? hours + 'j ' : ''}${mins}m)`;
+                            this.countdownText = `Lewat (${hours > 0 ? hours + 'j ' : ''}${mins}m)`;
                         } else {
                             this.statusState = 'ended';
                             this.countdownText = `Selesai (${hours > 0 ? hours + 'j ' : ''}${mins}m lalu)`;
