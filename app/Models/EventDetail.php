@@ -66,4 +66,37 @@ class EventDetail extends Model
     {
         return $this->belongsTo(Booking::class, 'booking_id');
     }
+
+    /**
+     * Accessor for external equipment brought (alias for equipment_needed / external gear).
+     */
+    public function getEquipmentBroughtAttribute(): ?string
+    {
+        return $this->equipment_needed;
+    }
+
+    /**
+     * Get equipment items parsed as a structured array for clean chip display.
+     *
+     * @return array<string>
+     */
+    public function getEquipmentBroughtItemsAttribute(): array
+    {
+        $raw = trim($this->equipment_needed ?? '');
+        if (empty($raw)) {
+            return [];
+        }
+
+        // Split by newlines, commas, or semicolons
+        $parts = preg_split('/[\r\n,;]+/', $raw);
+        $items = [];
+        foreach ($parts as $part) {
+            $cleaned = trim(preg_replace('/^[-*•\d\.\s]+/', '', $part));
+            if (! empty($cleaned)) {
+                $items[] = $cleaned;
+            }
+        }
+
+        return ! empty($items) ? $items : [$raw];
+    }
 }

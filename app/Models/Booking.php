@@ -47,6 +47,10 @@ class Booking extends Model
         'checked_in_by',
         'duty_officer_id',
         'do_notified_at',
+        'room_opened_at',
+        'room_opened_by',
+        'room_open_notes',
+        'facility_checklist',
         'assigned_checkout_do_id',
         'checkout_duty_officer_id',
         'checkout_do_assigned_at',
@@ -66,6 +70,8 @@ class Booking extends Model
         'paid_at' => 'datetime',
         'checked_in_at' => 'datetime',
         'do_notified_at' => 'datetime',
+        'room_opened_at' => 'datetime',
+        'facility_checklist' => 'array',
         'checkout_do_assigned_at' => 'datetime',
         'checkout_initiated_at' => 'datetime',
         'checkout_do_notified_at' => 'datetime',
@@ -297,6 +303,27 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'duty_officer_id');
     }
 
+    public function roomOpenedBy()
+    {
+        return $this->belongsTo(User::class, 'room_opened_by');
+    }
+
+    /**
+     * Determine if checked-in booking needs physical room opening & initial facility handover (FR-DO-02).
+     */
+    public function needsRoomOpening(): bool
+    {
+        return $this->isCheckedIn() && empty($this->room_opened_at);
+    }
+
+    /**
+     * Determine if physical room access has been opened by Duty Officer.
+     */
+    public function isRoomOpened(): bool
+    {
+        return ! empty($this->room_opened_at);
+    }
+
     public function checkoutDutyOfficer()
     {
         return $this->belongsTo(User::class, 'assigned_checkout_do_id')
@@ -327,5 +354,175 @@ class Booking extends Model
     public function latestIncident()
     {
         return $this->hasOne(RoomIncident::class, 'booking_id')->latestOfMany('id');
+    }
+
+    /**
+     * Get PIC Contact Name for field operations.
+     */
+    public function getPicName(): string
+    {
+        return $this->latestKtpVaultLog?->ktp_holder_name
+            ?? ($this->eventDetail?->pic_name_snapshot ?? ($this->user?->full_name ?? 'Penanggung Jawab Lapangan'));
+    }
+
+    /**
+     * Get PIC Phone / WhatsApp Number for field operations.
+     */
+    public function getPicPhoneNumber(): string
+    {
+        return $this->latestKtpVaultLog?->pic_whatsapp_number
+            ?? ($this->eventDetail?->pic_phone_snapshot ?? ($this->user?->phone_number ?? '-'));
+    }
+
+    /**
+     * Generate direct Click-to-WhatsApp URL to communicate with field PIC.
+     */
+    public function getPicWhatsAppUrl(?string $dutyOfficerName = null): string
+    {
+        $phone = $this->getPicPhoneNumber();
+        if (empty($phone) || $phone === '-') {
+            return '';
+        }
+
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        if (str_starts_with($cleanPhone, '0')) {
+            $cleanPhone = '62' . substr($cleanPhone, 1);
+        }
+
+        $doName = $dutyOfficerName ?? 'Duty Officer MCC';
+        $picName = $this->getPicName();
+        $eventName = $this->eventDetail?->event_name ?? 'Acara di MCC';
+        $firstSlot = $this->slots->sortBy('event_start_at')->first();
+        $roomName = $firstSlot?->room ? "{$firstSlot->room->name} (Lantai {$firstSlot->room->floor_level})" : 'Gedung MCC';
+
+        $text = "Halo Kak {$picName}, saya {$doName} (Petugas Duty Officer MCC) yang bertugas mendampingi sesi acara \"{$eventName}\" di {$roomName}. Apakah ruangan dan fasilitas telah siap digunakan dengan baik, atau ada kebutuhan operasional yang perlu kami bantu?";
+        $encodedText = urlencode($text);
+
+        return "https://api.whatsapp.com/send?phone={$cleanPhone}&text={$encodedText}";
+    }
+
+    /**
+     * Get operational remaining time and progress countdown data for active building usage.
+     *
+     * @return array{
+     *   start_time: ?\Carbon\Carbon,
+     *   end_time: ?\Carbon\Carbon,
+     *   schedule_formatted: string,
+     *   total_seconds: int,
+     *   remaining_seconds: int,
+     *   elapsed_seconds: int,
+     *   progress_percent: float,
+     *   is_active_now: bool,
+     *   is_upcoming: bool,
+     *   is_ended: bool,
+     *   is_overdue: bool,
+     *   status_state: string,
+     *   countdown_text: string
+     * }
+     */
+    public function getOperationalCountdownInfo(?\Carbon\Carbon $currentTime = null): array
+    {
+        $now = $currentTime ?? \Carbon\Carbon::now('Asia/Jakarta');
+        $slotsSorted = $this->slots->sortBy('event_start_at');
+        $firstSlot = $slotsSorted->first();
+        $lastSlot = $this->slots->sortByDesc('event_end_at')->first();
+
+        $start = $firstSlot ? \Carbon\Carbon::parse($firstSlot->event_start_at, 'Asia/Jakarta') : null;
+        $end = $lastSlot ? \Carbon\Carbon::parse($lastSlot->event_end_at, 'Asia/Jakarta') : null;
+
+        if (! $start || ! $end) {
+            return [
+                'start_time' => null,
+                'end_time' => null,
+                'schedule_formatted' => '-',
+                'total_seconds' => 0,
+                'remaining_seconds' => 0,
+                'elapsed_seconds' => 0,
+                'progress_percent' => 0,
+                'is_active_now' => false,
+                'is_upcoming' => false,
+                'is_ended' => false,
+                'is_overdue' => false,
+                'status_state' => 'unknown',
+                'countdown_text' => 'Jadwal belum disetel',
+            ];
+        }
+
+        $scheduleFormatted = $start->format('H:i') . ' - ' . $end->format('H:i') . ' WIB';
+        $totalSeconds = max(1, $end->timestamp - $start->timestamp);
+
+        if ($now->lessThan($start)) {
+            $diffSeconds = $start->timestamp - $now->timestamp;
+            $hours = floor($diffSeconds / 3600);
+            $minutes = floor(($diffSeconds % 3600) / 60);
+            $text = $hours > 0 ? "Mulai dalam {$hours}j {$minutes}m" : "Mulai dalam {$minutes} menit";
+
+            return [
+                'start_time' => $start,
+                'end_time' => $end,
+                'schedule_formatted' => $scheduleFormatted,
+                'total_seconds' => $totalSeconds,
+                'remaining_seconds' => $totalSeconds,
+                'elapsed_seconds' => 0,
+                'progress_percent' => 0.0,
+                'is_active_now' => false,
+                'is_upcoming' => true,
+                'is_ended' => false,
+                'is_overdue' => false,
+                'status_state' => 'upcoming',
+                'countdown_text' => $text,
+            ];
+        }
+
+        if ($now->greaterThan($end)) {
+            $overdueSeconds = $now->timestamp - $end->timestamp;
+            $hours = floor($overdueSeconds / 3600);
+            $minutes = floor(($overdueSeconds % 3600) / 60);
+            $isOverdue = $this->isCheckedIn() && $overdueSeconds > 1800; // > 30 minutes
+            $text = $hours > 0 ? "Sesi Berakhir ({$hours}j {$minutes}m lalu)" : "Sesi Berakhir ({$minutes}m lalu)";
+
+            return [
+                'start_time' => $start,
+                'end_time' => $end,
+                'schedule_formatted' => $scheduleFormatted,
+                'total_seconds' => $totalSeconds,
+                'remaining_seconds' => 0,
+                'elapsed_seconds' => $totalSeconds,
+                'progress_percent' => 100.0,
+                'is_active_now' => false,
+                'is_upcoming' => false,
+                'is_ended' => true,
+                'is_overdue' => $isOverdue,
+                'status_state' => $isOverdue ? 'overdue' : 'ended',
+                'countdown_text' => $text,
+            ];
+        }
+
+        // Active ongoing session
+        $elapsedSeconds = $now->timestamp - $start->timestamp;
+        $remainingSeconds = max(0, $end->timestamp - $now->timestamp);
+        $percent = min(100.0, round(($elapsedSeconds / $totalSeconds) * 100, 1));
+
+        $remHours = floor($remainingSeconds / 3600);
+        $remMinutes = floor(($remainingSeconds % 3600) / 60);
+        $text = $remHours > 0 ? "Sisa {$remHours}j {$remMinutes}m" : "Sisa {$remMinutes} menit";
+
+        $statusState = $remainingSeconds <= 900 ? 'ending_soon' : 'active';
+
+        return [
+            'start_time' => $start,
+            'end_time' => $end,
+            'schedule_formatted' => $scheduleFormatted,
+            'total_seconds' => $totalSeconds,
+            'remaining_seconds' => $remainingSeconds,
+            'elapsed_seconds' => $elapsedSeconds,
+            'progress_percent' => $percent,
+            'is_active_now' => true,
+            'is_upcoming' => false,
+            'is_ended' => false,
+            'is_overdue' => false,
+            'status_state' => $statusState,
+            'countdown_text' => $text,
+        ];
     }
 }
