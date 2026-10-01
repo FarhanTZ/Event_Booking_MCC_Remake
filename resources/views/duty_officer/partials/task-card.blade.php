@@ -127,7 +127,7 @@
     @if($needsOpening)
         <div class="p-3.5 sm:p-4 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 text-slate-950 flex flex-col gap-3 shadow-inner">
             <div class="flex items-center gap-2.5 text-xs">
-                <div class="w-8 h-8 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+                <div class="w-8 h-8 rounded-full bg-[#001A72] text-white flex items-center justify-center shrink-0 shadow-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
                 </div>
                 <div class="min-w-0 leading-tight">
@@ -136,12 +136,12 @@
                 </div>
             </div>
 
-            <!-- Big Action Touch Target Button (min 48px) -->
+            <!-- Big Action Touch Target Button (min 48px) in Brand Blue with White Text -->
             <button type="button"
                     @click='$dispatch("open-room-opening", @json($taskPayload))'
-                    class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-slate-950 hover:bg-slate-900 text-amber-300 hover:text-amber-200 rounded-2xl font-black text-xs sm:text-sm shadow-md transition active:scale-98 cursor-pointer"
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-[#001A72] hover:bg-[#001250] text-white rounded-2xl font-black text-xs sm:text-sm shadow-md transition active:scale-98 cursor-pointer"
                     style="min-height: 50px;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
                 <span>Buka Akses Ruangan</span>
             </button>
         </div>
