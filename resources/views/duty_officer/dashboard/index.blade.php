@@ -63,6 +63,7 @@
 <body class="bg-slate-200/50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-[#001A72] selection:text-white"
       x-data="dutyOfficerMobileApp()"
       @open-room-opening.window="openRoomOpeningModal($event.detail)"
+      @open-room-checkout.window="openRoomCheckoutModal($event.detail)"
       @open-detail-modal.window="openDetailModal($event.detail)">
 
     <!-- Flash Message Notification -->
@@ -196,6 +197,9 @@
     <!-- 6. MODAL BUKA AKSES RUANGAN & CHECKLIST (FR-DO-02) (BOTTOM SHEET) -->
     @include('duty_officer.partials.modal-room-opening')
 
+    <!-- 7. MODAL CEK KELAYAKAN CHECKOUT & LAPOR INSIDEN (FR-DO-03, FR-DO-04, FR-DO-05) (BOTTOM SHEET) -->
+    @include('duty_officer.partials.modal-room-checkout')
+
     <!-- Alpine.js Store & Timing Handlers -->
     <script>
         function horizontalScrollDrag() {
@@ -229,6 +233,7 @@
                 currentTimeString: '',
                 detailModalOpen: false,
                 openingModalOpen: false,
+                checkoutModalOpen: false,
                 openingActionUrl: '',
                 activeTask: {
                     bookingId: null,
@@ -271,6 +276,11 @@
                     this.activeTask = data;
                     this.openingActionUrl = '/duty-officer/bookings/' + data.bookingId + '/confirm-opening';
                     this.openingModalOpen = true;
+                },
+
+                openRoomCheckoutModal(data) {
+                    this.activeTask = data;
+                    this.checkoutModalOpen = true;
                 }
             };
         }

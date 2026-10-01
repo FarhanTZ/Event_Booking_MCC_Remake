@@ -324,6 +324,17 @@ class Booking extends Model
         return ! empty($this->room_opened_at);
     }
 
+    /**
+     * Determine if booking is awaiting checkout room inspection (FR-DO-03).
+     * Occurs when checkout was initiated at Front Office or booking is pending clearance.
+     */
+    public function isAwaitingCheckoutInspection(): bool
+    {
+        return ($this->isCheckedIn() || $this->isCompleted())
+            && ! empty($this->checkout_initiated_at)
+            && $this->isClearancePending();
+    }
+
     public function checkoutDutyOfficer()
     {
         return $this->belongsTo(User::class, 'assigned_checkout_do_id')

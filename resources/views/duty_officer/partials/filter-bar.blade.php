@@ -91,6 +91,16 @@
                         </span>
                     </a>
 
+                    <!-- Awaiting Checkout Inspection (FR-DO-03) -->
+                    <a href="{{ route('duty_officer.dashboard', array_merge(request()->except(['status']), ['status' => 'awaiting_checkout'])) }}"
+                       class="shrink-0 snap-start px-3.5 py-2 rounded-2xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-2xs {{ $filter->status === 'awaiting_checkout' ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-400/40' : 'bg-amber-50 text-amber-950 border border-amber-300 hover:bg-amber-100' }}">
+                        <span class="w-2 h-2 rounded-full bg-slate-950 animate-pulse"></span>
+                        <span>Inspeksi Checkout</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black {{ $filter->status === 'awaiting_checkout' ? 'bg-slate-950 text-amber-300' : 'bg-amber-300 text-slate-950' }}">
+                            {{ $metrics['awaiting_checkout'] ?? 0 }}
+                        </span>
+                    </a>
+
                     <!-- Checked In / Ongoing -->
                     <a href="{{ route('duty_officer.dashboard', array_merge(request()->except(['status']), ['status' => 'checked_in'])) }}"
                        class="shrink-0 snap-start px-3.5 py-2 rounded-2xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-2xs {{ $filter->status === 'checked_in' ? 'bg-teal-600 text-white ring-2 ring-teal-600/30' : 'bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100' }}">

@@ -123,6 +123,7 @@ class GetDutyOfficerTasksAction
         $metrics = [
             'total' => $allTasksForMetrics->count(),
             'needs_opening' => $allTasksForMetrics->filter(fn ($b) => $b->needsRoomOpening())->count(),
+            'awaiting_checkout' => $allTasksForMetrics->filter(fn ($b) => $b->isAwaitingCheckoutInspection())->count(),
             'checked_in' => $allTasksForMetrics->where('status', BookingStatus::CHECKED_IN)->count(),
             'upcoming' => $allTasksForMetrics->where('status', BookingStatus::CONFIRMED)->count(),
             'completed' => $allTasksForMetrics->filter(fn ($b) => in_array($b->status, [
@@ -136,6 +137,14 @@ class GetDutyOfficerTasksAction
         if ($dto->status === 'needs_opening') {
             $baseQuery->where('status', BookingStatus::CHECKED_IN->value)
                 ->whereNull('room_opened_at');
+        } elseif ($dto->status === 'awaiting_checkout') {
+            $baseQuery->where(function (Builder $query) {
+                $query->whereIn('status', [BookingStatus::CHECKED_IN->value, BookingStatus::COMPLETED->value])
+                    ->whereNotNull('checkout_initiated_at')
+                    ->where(function ($sq) {
+                        $sq->whereNull('clearance_status')->orWhere('clearance_status', 'pending');
+                    });
+            });
         } elseif ($dto->status === 'checked_in') {
             $baseQuery->where('status', BookingStatus::CHECKED_IN->value);
         } elseif ($dto->status === 'upcoming') {
@@ -148,8 +157,12 @@ class GetDutyOfficerTasksAction
             ]);
         }
 
-        // Execute query and order: Needs opening first, Checked-in second, then earliest start time
+        // Execute query and order: Awaiting Checkout / Needs opening first, Checked-in second, then earliest start time
         $tasks = $baseQuery->get()->sort(function (Booking $a, Booking $b) {
+            // Priority -1: Awaiting checkout inspection
+            if ($a->isAwaitingCheckoutInspection() && ! $b->isAwaitingCheckoutInspection()) return -1;
+            if (! $a->isAwaitingCheckoutInspection() && $b->isAwaitingCheckoutInspection()) return 1;
+
             // Priority 0: Needs room opening first
             if ($a->needsRoomOpening() && ! $b->needsRoomOpening()) return -1;
             if (! $a->needsRoomOpening() && $b->needsRoomOpening()) return 1;

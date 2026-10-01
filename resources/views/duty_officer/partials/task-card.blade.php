@@ -17,6 +17,9 @@
     $isCompleted = $task->isCompleted() || $task->isAbandoned();
     $needsOpening = $task->needsRoomOpening();
     $isRoomOpened = $task->isRoomOpened();
+    $isAwaitingCheckout = $task->isAwaitingCheckoutInspection();
+    $isCleared = $task->isCleared();
+    $hasIncident = $task->hasIncident();
     $roomFacilities = $room ? $room->facilities->map(fn($f) => [
         'id' => $f->id,
         'facility_name' => $f->facility_name,
@@ -28,6 +31,7 @@
         'bookingId' => $task->id,
         'bookingCode' => $task->booking_code,
         'statusLabel' => $task->status->label(),
+        'clearanceStatus' => $task->clearance_status,
         'eventName' => $eventDetail?->event_name ?? 'Kegiatan Komunitas MCC',
         'institutionName' => $eventDetail?->institution_name_snapshot ?? ($task->user?->institution_name ?? '-'),
         'roomName' => $room ? $room->name : '-',
@@ -64,7 +68,7 @@
             <!-- Room & Floor Pill -->
             <div class="flex flex-wrap items-center gap-2 mb-1.5">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-[#001A72] text-white shadow-2xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     <span class="truncate max-w-[170px] sm:max-w-[220px]">{{ $room ? $room->name : 'Ruangan MCC' }}</span>
                 </span>
                 
@@ -90,7 +94,11 @@
 
         <!-- Status Pill -->
         <div class="shrink-0 text-right space-y-1">
-            @if($needsOpening)
+            @if($isAwaitingCheckout)
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-400 text-slate-950 border border-amber-500 shadow-xs animate-pulse shrink-0 cursor-help" title="Menunggu Inspeksi Checkout">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 font-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </span>
+            @elseif($needsOpening)
                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-amber-100 text-amber-950 border border-amber-300 shadow-2xs animate-pulse">
                     <span class="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span>
                     <span>Perlu Dibuka</span>
@@ -114,7 +122,17 @@
                 </span>
             @endif
 
-            @if($isRoomOpened)
+            @if($isCleared)
+                <div class="text-[11px] text-emerald-700 font-extrabold flex items-center justify-end gap-1 pt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Ruangan Clear (Aman)</span>
+                </div>
+            @elseif($hasIncident)
+                <div class="text-[11px] text-rose-700 font-extrabold flex items-center justify-end gap-1 pt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>Insiden Dilaporkan</span>
+                </div>
+            @elseif($isRoomOpened)
                 <div class="text-[11px] text-emerald-700 font-bold flex items-center justify-end gap-1 pt-0.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                     <span>Terbuka {{ $task->room_opened_at->format('H:i') }}</span>
@@ -123,8 +141,30 @@
         </div>
     </div>
 
-    <!-- FR-DO-02: Big Mobile Action CTA Banner (If Room Needs Opening) -->
-    @if($needsOpening)
+    <!-- FR-DO-03 / FR-DO-04 / FR-DO-05: Big Mobile Action CTA Banner (If Awaiting Checkout Inspection) -->
+    @if($isAwaitingCheckout)
+        <div class="p-3.5 sm:p-4 bg-[#EEF2FF] border-y border-indigo-100 text-[#001A72] flex flex-col gap-3 shadow-xs">
+            <div class="flex items-center gap-2.5 text-xs">
+                <div class="w-8 h-8 rounded-full bg-[#001A72] text-white flex items-center justify-center shrink-0 shadow-xs font-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </div>
+                <div class="min-w-0 leading-tight">
+                    <span class="font-black block uppercase text-xs text-[#001A72]">Panitia Mengajukan Checkout di FO</span>
+                    <span class="text-[11px] sm:text-xs text-indigo-900 font-semibold">Lakukan inspeksi fisik kebersihan &amp; aset ruangan untuk sinyal clearance KTP.</span>
+                </div>
+            </div>
+
+            <!-- Big Action Touch Target Button for Checkout Inspection -->
+            <button type="button"
+                    @click='$dispatch("open-room-checkout", @json($taskPayload))'
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-[#001A72] hover:bg-[#001250] text-white rounded-2xl font-black text-xs sm:text-sm shadow-md transition active:scale-98 cursor-pointer"
+                    style="min-height: 50px;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Inspeksi Cek Kelayakan Ruangan (Checkout)</span>
+            </button>
+        </div>
+    @elseif($needsOpening)
+        <!-- FR-DO-02: Big Mobile Action CTA Banner (If Room Needs Opening) -->
         <div class="p-3.5 sm:p-4 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 text-slate-950 flex flex-col gap-3 shadow-inner">
             <div class="flex items-center gap-2.5 text-xs">
                 <div class="w-8 h-8 rounded-full bg-[#001A72] text-white flex items-center justify-center shrink-0 shadow-xs">
