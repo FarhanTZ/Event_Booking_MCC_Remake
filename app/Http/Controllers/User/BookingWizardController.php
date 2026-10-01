@@ -16,8 +16,15 @@ class BookingWizardController extends Controller
     /**
      * Render the booking wizard form supporting single-slot and multi-session baskets.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        if ($request->user() && $request->user()->isSuspended()) {
+            return redirect()->route('dashboard')->with(
+                'error',
+                'Akun Anda sedang dibekukan / masuk daftar sanksi (Blacklist) MCC: ' . ($request->user()->suspension_reason ?? 'Pelanggaran aturan gedung.') . '. Pengajuan reservasi tidak diizinkan.'
+            );
+        }
+
         $sessions = [];
         $rawSessions = [];
 

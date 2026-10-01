@@ -120,6 +120,115 @@
                     <p class="text-[10px] text-rose-700 mt-0.5">Akses operasional ditutup</p>
                 </div>
             </div>
+
+        @elseif(request()->routeIs('admin.sanctions.*'))
+            <!-- 2. Ringkasan Status Sanksi & Blacklist (FR-ADM-04) -->
+            <div class="flex items-center justify-between px-1 pt-1">
+                <div class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                        Kedisiplinan Pemohon
+                    </span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span>Pengawasan</span>
+                </span>
+            </div>
+
+            <!-- KPI Sanksi -->
+            <div class="space-y-2.5">
+                <!-- Total Suspended / Blacklist -->
+                <div class="bg-rose-50/60 rounded-brand border border-rose-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-rose-900">Akun Dibekukan (Blacklist)</span>
+                        <span class="text-base font-black text-rose-700">{{ $metrics['total_suspended'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-rose-600 mt-0.5">Akses booking kalender ditutup</p>
+                </div>
+
+                <!-- Abandoned Incidents -->
+                <div class="bg-amber-50/50 rounded-brand border border-amber-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-amber-900">Panitia Kabur (Abandoned)</span>
+                        <span class="text-base font-black text-amber-700">{{ $metrics['pending_abandoned'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-amber-700 mt-0.5">Ditinggal tanpa checkout resmi</p>
+                </div>
+
+                <!-- Active Incidents -->
+                <div class="bg-slate-50 rounded-brand border border-slate-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-700">Kerusakan Belum Selesai</span>
+                        <span class="text-base font-black text-slate-900">{{ $metrics['active_incidents'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Klaim ganti rugi aset fisik</p>
+                </div>
+
+                <!-- Total Applicants -->
+                <div class="bg-white rounded-brand border border-slate-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-600">Total Akun Pemohon</span>
+                        <span class="text-base font-black text-[#001A72]">{{ $metrics['total_applicants'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Komunitas, instansi, &amp; sekolah</p>
+                </div>
+            </div>
+
+        @elseif(request()->routeIs('admin.interventions.*'))
+            <!-- 2. Ringkasan Status Intervensi Darurat (FR-ADM-05) -->
+            <div class="flex items-center justify-between px-1 pt-1">
+                <div class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                        Kontrol Darurat Gedung
+                    </span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-[#001A72] border border-indigo-200 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                    <span>Super Override</span>
+                </span>
+            </div>
+
+            <!-- KPI Intervensi -->
+            <div class="space-y-2.5">
+                <!-- Total Active Events -->
+                <div class="bg-indigo-50/50 rounded-brand border border-indigo-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-[#001A72]">Reservasi Aktif / Terjadwal</span>
+                        <span class="text-base font-black text-[#001A72]">{{ $metrics['total_active'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-indigo-700 mt-0.5">Disetujui, check-in, &amp; pending</p>
+                </div>
+
+                <!-- Today's Events -->
+                <div class="bg-emerald-50/50 rounded-brand border border-emerald-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-emerald-900">Acara Berlangsung Hari Ini</span>
+                        <span class="text-base font-black text-emerald-700">{{ $metrics['today_events'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-emerald-700 mt-0.5">Sesi aktif di lantai 1 s/d 8</p>
+                </div>
+
+                <!-- Emergency Cancelled -->
+                <div class="bg-rose-50/50 rounded-brand border border-rose-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-rose-900">Dibatalkan Super Override</span>
+                        <span class="text-base font-black text-rose-700">{{ $metrics['emergency_cancelled'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-rose-700 mt-0.5">Tercatat permanen pada audit log</p>
+                </div>
+
+                <!-- Total All Bookings -->
+                <div class="bg-white rounded-brand border border-slate-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-600">Total Riwayat Reservasi</span>
+                        <span class="text-base font-black text-slate-800">{{ $metrics['total_bookings'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Keseluruhan database MCC</p>
+                </div>
+            </div>
+
         @else
             <!-- 2. Ringkasan Status Fisik Gedung (FR-ADM-01 & FR-ADM-02) -->
             <div class="flex items-center justify-between px-1 pt-1">

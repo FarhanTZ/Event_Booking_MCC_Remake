@@ -82,6 +82,34 @@
                     </span>
                 @endif
             </a>
+
+            <!-- Penegakan Sanksi & Blacklist Pemohon (FR-ADM-04) -->
+            <a href="{{ route('admin.sanctions.index') }}" 
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('admin.sanctions.*') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
+                <div class="flex items-center gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('admin.sanctions.*') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    <span>Sanksi &amp; Blacklist Pemohon</span>
+                </div>
+                @if(isset($metrics['total_suspended']) && request()->routeIs('admin.sanctions.*'))
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white shadow-2xs">
+                        {{ $metrics['total_suspended'] }}
+                    </span>
+                @endif
+            </a>
+
+            <!-- Intervensi & Pembatalan Darurat (FR-ADM-05) -->
+            <a href="{{ route('admin.interventions.index') }}" 
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('admin.interventions.*') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
+                <div class="flex items-center gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('admin.interventions.*') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>Intervensi Darurat Gedung</span>
+                </div>
+                @if(isset($metrics['total_active']) && request()->routeIs('admin.interventions.*'))
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-[#001A72] shadow-2xs">
+                        {{ $metrics['total_active'] }}
+                    </span>
+                @endif
+            </a>
         </div>
 
         <!-- 4. Section: Modul Operasional Lainnya -->

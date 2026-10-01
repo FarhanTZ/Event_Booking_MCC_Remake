@@ -83,6 +83,13 @@ class CalendarController extends Controller
         LockSlotRequest $request,
         LockRoomSlotAction $action
     ): JsonResponse {
+        if (auth()->check() && auth()->user()->isSuspended()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Anda sedang dibekukan / masuk daftar sanksi (Blacklist) MCC: ' . (auth()->user()->suspension_reason ?? 'Pelanggaran aturan gedung.') . '. Pemilihan jadwal diblokir.',
+            ], 403);
+        }
+
         $result = $action->execute($request->toDto());
 
         return response()->json($result, $result['success'] ? 200 : 422);
@@ -110,6 +117,13 @@ class CalendarController extends Controller
         BatchLockSlotRequest $request,
         BatchLockSlotsAction $action
     ): JsonResponse {
+        if (auth()->check() && auth()->user()->isSuspended()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Anda sedang dibekukan / masuk daftar sanksi (Blacklist) MCC: ' . (auth()->user()->suspension_reason ?? 'Pelanggaran aturan gedung.') . '. Pemilihan jadwal diblokir.',
+            ], 403);
+        }
+
         $userId = auth()->id() ? (string) auth()->id() : 'guest_' . session()->getId();
         $slotDtos = $request->toSlotDtos($userId);
         $result = $action->execute($slotDtos, $userId);

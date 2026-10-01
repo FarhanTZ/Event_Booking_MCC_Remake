@@ -159,4 +159,13 @@ Route::middleware(['auth', 'role:super_admin'])
         Route::delete('/staff/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'destroy'])->name('staff.destroy');
         Route::patch('/staff/{staff}/reset-password', [\App\Http\Controllers\Admin\StaffManagementController::class, 'resetPassword'])->name('staff.reset_password');
         Route::patch('/staff/{staff}/toggle-status', [\App\Http\Controllers\Admin\StaffManagementController::class, 'toggleStatus'])->name('staff.toggle_status');
+
+        // FR-ADM-04 Penegakan Sanksi & Blacklist Akun Pemohon
+        Route::get('/sanctions', [\App\Http\Controllers\Admin\SanctionManagementController::class, 'index'])->name('sanctions.index');
+        Route::patch('/sanctions/{user}/suspend', [\App\Http\Controllers\Admin\SanctionManagementController::class, 'suspend'])->name('sanctions.suspend');
+        Route::patch('/sanctions/{user}/lift', [\App\Http\Controllers\Admin\SanctionManagementController::class, 'lift'])->name('sanctions.lift');
+
+        // FR-ADM-05 Intervensi Reservasi & Pembatalan Paksa Darurat (Super Override)
+        Route::get('/interventions', [\App\Http\Controllers\Admin\EmergencyInterventionController::class, 'index'])->name('interventions.index');
+        Route::post('/interventions/bookings/{booking}/cancel', [\App\Http\Controllers\Admin\EmergencyInterventionController::class, 'cancel'])->name('interventions.cancel');
     });

@@ -10,7 +10,7 @@ class CreateBookingProposalRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->check() && ! auth()->user()->isSuspended();
     }
 
     public function rules(): array
