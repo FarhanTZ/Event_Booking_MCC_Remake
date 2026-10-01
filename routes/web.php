@@ -124,4 +124,29 @@ Route::middleware(['auth', 'role:duty_officer,super_admin'])
         Route::post('/bookings/{booking}/incident/resolve', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'resolveIncident'])->name('incident.resolve');
         Route::post('/bookings/{booking}/abandoned/clean', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'confirmAbandonedClean'])->name('abandoned.clean');
         Route::post('/bookings/{booking}/abandoned/incident', [\App\Http\Controllers\DutyOfficer\DashboardController::class, 'reportAbandonedIncident'])->name('abandoned.incident');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Super Admin Routes (Role: super_admin)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:super_admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // FR-ADM-01 Master Rooms Management
+        Route::get('/rooms', [\App\Http\Controllers\Admin\RoomController::class, 'index'])->name('rooms.index');
+        Route::get('/rooms/create', [\App\Http\Controllers\Admin\RoomController::class, 'create'])->name('rooms.create');
+        Route::post('/rooms', [\App\Http\Controllers\Admin\RoomController::class, 'store'])->name('rooms.store');
+        Route::get('/rooms/{room}', [\App\Http\Controllers\Admin\RoomController::class, 'show'])->name('rooms.show');
+        Route::get('/rooms/{room}/edit', [\App\Http\Controllers\Admin\RoomController::class, 'edit'])->name('rooms.edit');
+        Route::put('/rooms/{room}', [\App\Http\Controllers\Admin\RoomController::class, 'update'])->name('rooms.update');
+        Route::delete('/rooms/{room}', [\App\Http\Controllers\Admin\RoomController::class, 'destroy'])->name('rooms.destroy');
+        Route::patch('/rooms/{room}/toggle-status', [\App\Http\Controllers\Admin\RoomController::class, 'toggleStatus'])->name('rooms.toggle_status');
+
+        // FR-ADM-02 Room Facilities Inventory Management
+        Route::post('/rooms/{room}/facilities', [\App\Http\Controllers\Admin\RoomFacilityController::class, 'store'])->name('rooms.facilities.store');
+        Route::put('/rooms/{room}/facilities/{facility}', [\App\Http\Controllers\Admin\RoomFacilityController::class, 'update'])->name('rooms.facilities.update');
+        Route::delete('/rooms/{room}/facilities/{facility}', [\App\Http\Controllers\Admin\RoomFacilityController::class, 'destroy'])->name('rooms.facilities.destroy');
     });

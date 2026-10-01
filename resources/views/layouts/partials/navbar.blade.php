@@ -56,6 +56,13 @@
                              x-transition:leave-start="transform opacity-100 scale-100"
                              x-transition:leave-end="transform opacity-0 scale-95"
                              class="absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-elevated border border-slate-200 py-2 z-50 text-slate-900">
+                            @if(auth()->user()->isSuperAdmin())
+                                <a href="{{ route('admin.rooms.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-[#001A72] hover:bg-[#001250]">
+                                    <i data-lucide="building-2" class="w-4 h-4 text-emerald-300"></i>
+                                    <span>Master Ruangan &amp; Layout</span>
+                                </a>
+                                <div class="border-t border-slate-100 my-1"></div>
+                            @endif
                             @if(auth()->user()->isDutyOfficer() || auth()->user()->isSuperAdmin())
                                 <a href="{{ route('duty_officer.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#001A72] bg-[#EEF2FF] hover:bg-indigo-100">
                                     <i data-lucide="clipboard-list" class="w-4 h-4 text-[#001A72]"></i>
