@@ -154,4 +154,20 @@ class User extends Authenticatable implements AuthenticatableContract
     {
         return $this->hasMany(Booking::class, 'user_id');
     }
+
+    /**
+     * Accessor for name to alias full_name.
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->attributes['full_name'] ?? null;
+    }
+
+    /**
+     * Mutator for name to alias full_name.
+     */
+    public function setNameAttribute($value): void
+    {
+        $this->attributes['full_name'] = $value;
+    }
 }

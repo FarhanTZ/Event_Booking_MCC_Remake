@@ -149,4 +149,14 @@ Route::middleware(['auth', 'role:super_admin'])
         Route::post('/rooms/{room}/facilities', [\App\Http\Controllers\Admin\RoomFacilityController::class, 'store'])->name('rooms.facilities.store');
         Route::put('/rooms/{room}/facilities/{facility}', [\App\Http\Controllers\Admin\RoomFacilityController::class, 'update'])->name('rooms.facilities.update');
         Route::delete('/rooms/{room}/facilities/{facility}', [\App\Http\Controllers\Admin\RoomFacilityController::class, 'destroy'])->name('rooms.facilities.destroy');
+
+        // FR-ADM-03 Cross-Division Staff Accounts Management
+        Route::get('/staff', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('staff.index');
+        Route::get('/staff/create', [\App\Http\Controllers\Admin\StaffManagementController::class, 'create'])->name('staff.create');
+        Route::post('/staff', [\App\Http\Controllers\Admin\StaffManagementController::class, 'store'])->name('staff.store');
+        Route::get('/staff/{staff}/edit', [\App\Http\Controllers\Admin\StaffManagementController::class, 'edit'])->name('staff.edit');
+        Route::put('/staff/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'update'])->name('staff.update');
+        Route::delete('/staff/{staff}', [\App\Http\Controllers\Admin\StaffManagementController::class, 'destroy'])->name('staff.destroy');
+        Route::patch('/staff/{staff}/reset-password', [\App\Http\Controllers\Admin\StaffManagementController::class, 'resetPassword'])->name('staff.reset_password');
+        Route::patch('/staff/{staff}/toggle-status', [\App\Http\Controllers\Admin\StaffManagementController::class, 'toggleStatus'])->name('staff.toggle_status');
     });

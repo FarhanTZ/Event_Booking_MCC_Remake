@@ -58,67 +58,131 @@
             </div>
         </div>
 
-        <!-- 2. Ringkasan Status Fisik Gedung -->
-        <div class="flex items-center justify-between px-1 pt-1">
-            <div class="flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                    Status Entitas Ruangan
+        @if(request()->routeIs('admin.staff.*'))
+            <!-- 2. Ringkasan Status Akun Staf (FR-ADM-03) -->
+            <div class="flex items-center justify-between px-1 pt-1">
+                <div class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                        Distribusi Divisi Staf
+                    </span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Realtime</span>
                 </span>
             </div>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Realtime</span>
-            </span>
-        </div>
 
-        <!-- 3. KPI Status Ruangan -->
-        <div class="space-y-2.5">
-            <!-- 1. Total Ruangan -->
-            <div class="bg-white rounded-brand border border-slate-200 p-3 shadow-2xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-slate-600">Total Ruangan Master</span>
-                    <span class="text-base font-black text-[#001A72]">{{ $metrics['total'] ?? 0 }}</span>
+            <!-- KPI Status Akun Staf -->
+            <div class="space-y-2.5">
+                <!-- Total Staf -->
+                <div class="bg-white rounded-brand border border-slate-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-600">Total Akun Internal</span>
+                        <span class="text-base font-black text-[#001A72]">{{ $metrics['total'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Marketing, FO, DO, &amp; Admin</p>
                 </div>
-                <p class="text-[10px] text-slate-400 mt-0.5">Tercatat di Lantai 1 s/d Lantai 8</p>
+
+                <!-- Marketing -->
+                <div class="bg-indigo-50/50 rounded-brand border border-indigo-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-[#001A72]">Marketing &amp; Kurasi</span>
+                        <span class="text-base font-black text-[#001A72]">{{ $metrics['marketing'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-indigo-700 mt-0.5">Kurasi proposal &amp; tarif event</p>
+                </div>
+
+                <!-- Front Office -->
+                <div class="bg-blue-50/50 rounded-brand border border-blue-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-blue-900">Front Office (FO)</span>
+                        <span class="text-base font-black text-blue-700">{{ $metrics['front_office'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-blue-700 mt-0.5">Manifes harian &amp; kustodian KTP</p>
+                </div>
+
+                <!-- Duty Officer -->
+                <div class="bg-amber-50/50 rounded-brand border border-amber-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-amber-900">Duty Officer (DO)</span>
+                        <span class="text-base font-black text-amber-700">{{ $metrics['duty_officer'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-amber-700 mt-0.5">Inspeksi fisik &amp; clearance KTP</p>
+                </div>
+
+                <!-- Nonaktif / Mutasi -->
+                <div class="bg-rose-50/50 rounded-brand border border-rose-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-rose-900">Nonaktif / Mutasi</span>
+                        <span class="text-base font-black text-rose-700">{{ $metrics['inactive'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-rose-700 mt-0.5">Akses operasional ditutup</p>
+                </div>
+            </div>
+        @else
+            <!-- 2. Ringkasan Status Fisik Gedung (FR-ADM-01 & FR-ADM-02) -->
+            <div class="flex items-center justify-between px-1 pt-1">
+                <div class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#001A72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                        Status Entitas Ruangan
+                    </span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Realtime</span>
+                </span>
             </div>
 
-            <!-- 2. Ruangan Aktif -->
-            <div class="bg-emerald-50/50 rounded-brand border border-emerald-200 p-3 shadow-2xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-emerald-900">Ruangan Aktif</span>
-                    <span class="text-base font-black text-emerald-700">{{ $metrics['active'] ?? 0 }}</span>
+            <!-- 3. KPI Status Ruangan -->
+            <div class="space-y-2.5">
+                <!-- 1. Total Ruangan -->
+                <div class="bg-white rounded-brand border border-slate-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-600">Total Ruangan Master</span>
+                        <span class="text-base font-black text-[#001A72]">{{ $metrics['total'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Tercatat di Lantai 1 s/d Lantai 8</p>
                 </div>
-                <p class="text-[10px] text-emerald-700 mt-0.5">Tampil &amp; dapat dipesan di kalender publik</p>
-            </div>
 
-            <!-- 3. Maintenance / Nonaktif -->
-            <div class="bg-rose-50/50 rounded-brand border border-rose-200 p-3 shadow-2xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-rose-900">Ruangan Maintenance</span>
-                    <span class="text-base font-black text-rose-700">{{ $metrics['inactive'] ?? 0 }}</span>
+                <!-- 2. Ruangan Aktif -->
+                <div class="bg-emerald-50/50 rounded-brand border border-emerald-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-emerald-900">Ruangan Aktif</span>
+                        <span class="text-base font-black text-emerald-700">{{ $metrics['active'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-emerald-700 mt-0.5">Tampil &amp; dapat dipesan di kalender publik</p>
                 </div>
-                <p class="text-[10px] text-rose-700 mt-0.5">Dinonaktifkan dari pemesanan publik</p>
-            </div>
 
-            <!-- 4. Izin Komersial -->
-            <div class="bg-indigo-50/50 rounded-brand border border-indigo-200 p-3 shadow-2xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-[#001A72]">Skema Komersial</span>
-                    <span class="text-base font-black text-[#001A72]">{{ $metrics['commercial'] ?? 0 }}</span>
+                <!-- 3. Maintenance / Nonaktif -->
+                <div class="bg-rose-50/50 rounded-brand border border-rose-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-rose-900">Ruangan Maintenance</span>
+                        <span class="text-base font-black text-rose-700">{{ $metrics['inactive'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-rose-700 mt-0.5">Dinonaktifkan dari pemesanan publik</p>
                 </div>
-                <p class="text-[10px] text-indigo-700 mt-0.5">Mendukung tarif berbayar per jam</p>
-            </div>
 
-            <!-- 5. Total Aset Inventaris -->
-            <div class="bg-slate-50 rounded-brand border border-slate-200 p-3 shadow-2xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-slate-700">Total Fasilitas Terdata</span>
-                    <span class="text-base font-black text-slate-900">{{ $metrics['total_facilities'] ?? 0 }}</span>
+                <!-- 4. Izin Komersial -->
+                <div class="bg-indigo-50/50 rounded-brand border border-indigo-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-[#001A72]">Skema Komersial</span>
+                        <span class="text-base font-black text-[#001A72]">{{ $metrics['commercial'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-indigo-700 mt-0.5">Mendukung tarif berbayar per jam</p>
                 </div>
-                <p class="text-[10px] text-slate-500 mt-0.5">Acuan checklist inspeksi Duty Officer</p>
+
+                <!-- 5. Total Aset Inventaris -->
+                <div class="bg-slate-50 rounded-brand border border-slate-200 p-3 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-700">Total Fasilitas Terdata</span>
+                        <span class="text-base font-black text-slate-900">{{ $metrics['total_facilities'] ?? 0 }}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Acuan checklist inspeksi Duty Officer</p>
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 
     <!-- 4. Quick Help Box -->

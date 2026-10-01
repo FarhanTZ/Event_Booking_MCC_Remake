@@ -55,15 +55,29 @@
                 Manajemen Gedung (L1 - L8)
             </span>
 
-            <!-- Master Ruangan (Active) -->
+            <!-- Master Ruangan -->
             <a href="{{ route('admin.rooms.index') }}" 
                class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('admin.rooms.*') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
                 <div class="flex items-center gap-2.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('admin.rooms.*') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     <span>Master Ruangan &amp; Layout</span>
                 </div>
-                @if(isset($metrics['total']))
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ request()->routeIs('admin.rooms.*') ? 'bg-white text-[#001A72]' : 'bg-slate-100 text-slate-700' }} shadow-2xs">
+                @if(isset($metrics['total']) && request()->routeIs('admin.rooms.*'))
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-[#001A72] shadow-2xs">
+                        {{ $metrics['total'] }}
+                    </span>
+                @endif
+            </a>
+
+            <!-- Manajemen Akun Staf (FR-ADM-03) -->
+            <a href="{{ route('admin.staff.index') }}" 
+               class="flex items-center justify-between px-3.5 py-2.5 rounded-brand font-bold text-xs {{ request()->routeIs('admin.staff.*') ? 'bg-[#001A72] text-white shadow-xs' : 'text-slate-600 hover:text-[#001A72] hover:bg-slate-50' }} transition">
+                <div class="flex items-center gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 {{ request()->routeIs('admin.staff.*') ? 'text-white' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Akun Staf Lintas Divisi</span>
+                </div>
+                @if(isset($metrics['total']) && request()->routeIs('admin.staff.*'))
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-[#001A72] shadow-2xs">
                         {{ $metrics['total'] }}
                     </span>
                 @endif
